@@ -2,7 +2,9 @@
 
 RecordLive 的 Android 版本，使用 uni-app、Vue 3 和 TypeScript 开发。
 
-当前进度：Milestone 0（架构、本地备份契约和工程基础）。可见产品界面将在 Milestone 1 根据确认后的设计实现。
+当前进度：Milestone 1 应用骨架已实现，Milestone 2 的 M2.1 数据基础自动化门已通过，下一步进入 M2.2 分类与标签。Android 本地备份与恢复已调整到 Milestone 5。
+
+iOS 工程只作为产品行为和页面信息结构的只读参照。Android 开发不得修改 iOS 源码、资源、项目配置或测试，也不实现 iOS/Android 数据迁移。
 
 ## 本地开发
 

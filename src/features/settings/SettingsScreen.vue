@@ -91,7 +91,7 @@ const themeLabel = computed(() => THEME_LABELS[props.themePreference])
           class="settings-row settings-row--supporting"
           aria-label="本地备份与恢复"
           hover-class="settings-row--pressed"
-          @tap="$emit('plannedAction', 'Android 本地备份将在 Milestone 2 开放')"
+          @tap="$emit('plannedAction', 'Android 本地备份将在 Milestone 5 开放')"
         >
           <view class="settings-row__icon"><AppIcon name="backup" /></view>
           <view class="settings-row__body">

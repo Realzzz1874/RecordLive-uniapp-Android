@@ -1,5 +1,7 @@
 # RecordLive Android Local Backup Contract v1
 
+状态：Milestone 0 未来契约，运行时实现已调整到 Milestone 5；Milestone 2 不接入备份或恢复功能。
+
 本契约只用于 RecordLive Android 应用自身的本地备份和恢复，不用于 iOS 与 Android 之间的数据迁移、导入、导出或同步。
 
 ## 1. 容器
@@ -141,4 +143,3 @@ media/
 - 旧版本通过独立的 Android 本地备份升级器转换；
 - 不支持的更高版本只显示“需要更新应用”，不得尝试降级解析；
 - 每次契约升级必须增加旧版恢复测试和损坏文件测试。
-

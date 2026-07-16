@@ -109,7 +109,3 @@ CREATE INDEX IF NOT EXISTS idx_performance_facets_kind_value
 
 CREATE INDEX IF NOT EXISTS idx_media_assets_performance
   ON media_assets(performance_id);
-
-INSERT OR IGNORE INTO schema_migrations(version, applied_at_ms)
-VALUES (1, CAST(strftime('%s', 'now') AS INTEGER) * 1000);
-

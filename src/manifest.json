@@ -1,0 +1,33 @@
+{
+  "name": "记录现场",
+  "appid": "__UNI__81D23FB",
+  "description": "记录和回顾现场演出",
+  "versionName": "0.1.0",
+  "versionCode": 100,
+  "transformPx": false,
+  "uniStatistics": {
+    "enable": false
+  },
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    },
+    "modules": {
+      "SQLite": {}
+    },
+    "distribute": {
+      "android": {
+        "enableOAID": false,
+        "permissions": []
+      },
+      "sdkConfigs": {}
+    }
+  },
+  "vueVersion": "3"
+}

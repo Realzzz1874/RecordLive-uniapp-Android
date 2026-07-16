@@ -100,4 +100,35 @@ describe('in-memory reference data repository', () => {
     await expect(repository.saveTag({ name: 'live' })).rejects.toBeInstanceOf(DomainConflictError)
     await expect(repository.listTags()).resolves.toMatchObject([{ name: 'Live' }])
   })
+
+  it('updates an existing item without changing its identity or creation time', async () => {
+    let timestamp = 100
+    const repository = new InMemoryReferenceDataRepository({
+      generateId: () => 'category-1',
+      now: () => timestamp,
+    })
+    const created = await repository.saveCategory({ name: '演唱会', sortOrder: 2 })
+
+    timestamp = 200
+    const updated = await repository.saveCategory({
+      id: created.id,
+      name: '音乐现场',
+      sortOrder: created.sortOrder,
+    })
+
+    expect(updated).toEqual({
+      id: 'category-1',
+      name: '音乐现场',
+      sortOrder: 2,
+      createdAtMs: 100,
+      updatedAtMs: 200,
+    })
+  })
+
+  it('reports missing items instead of silently accepting repeated deletion', async () => {
+    const repository = new InMemoryReferenceDataRepository()
+
+    await expect(repository.removeCategory('missing')).rejects.toBeInstanceOf(DomainNotFoundError)
+    await expect(repository.removeTag('missing')).rejects.toBeInstanceOf(DomainNotFoundError)
+  })
 })

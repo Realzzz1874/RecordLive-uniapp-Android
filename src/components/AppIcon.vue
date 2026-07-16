@@ -15,6 +15,11 @@ defineProps<{
     | 'info'
     | 'award'
     | 'chevron'
+    | 'arrow-left'
+    | 'edit'
+    | 'trash'
+    | 'check'
+    | 'close'
 }>()
 </script>
 
@@ -93,6 +98,27 @@ defineProps<{
 
     <template v-else-if="name === 'chevron'">
       <path d="m9 5 7 7-7 7" />
+    </template>
+
+    <template v-else-if="name === 'arrow-left'">
+      <path d="m15 5-7 7 7 7M8 12h11" />
+    </template>
+
+    <template v-else-if="name === 'edit'">
+      <path d="M4 20h4l11-11a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+      <path d="m13.8 6.2 4 4" />
+    </template>
+
+    <template v-else-if="name === 'trash'">
+      <path d="M4.5 7h15M9 3.8h6l1 3.2H8l1-3.2ZM7 7l.8 13.2h8.4L17 7M10 10.5v6M14 10.5v6" />
+    </template>
+
+    <template v-else-if="name === 'check'">
+      <path d="m5 12.5 4.2 4.2L19 7" />
+    </template>
+
+    <template v-else-if="name === 'close'">
+      <path d="m6 6 12 12M18 6 6 18" />
     </template>
   </svg>
 </template>

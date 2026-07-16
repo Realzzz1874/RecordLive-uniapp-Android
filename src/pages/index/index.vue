@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { onBackPress, onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
 
 import BottomTabBar from '@/components/BottomTabBar.vue'
 import { getBackDestination, type ThemePreference } from '@/features/app-shell/model'
 import ImprintsScreen from '@/features/imprints/ImprintsScreen.vue'
 import RecordsScreen from '@/features/performances/RecordsScreen.vue'
+import ReferenceDataScreen from '@/features/reference-data/ReferenceDataScreen.vue'
 import SettingsScreen from '@/features/settings/SettingsScreen.vue'
 import WantSeeScreen from '@/features/want-see/WantSeeScreen.vue'
 import { useAppShellStore } from '@/stores/app-shell'
 
 const appShellStore = useAppShellStore()
 const { activeTab, resolvedTheme, themePreference } = storeToRefs(appShellStore)
+const settingsDestination = ref<'root' | 'category' | 'tag'>('root')
 
 function synchronizeSystemTheme(): void {
   appShellStore.initialize()
@@ -50,9 +52,27 @@ function showAbout(): void {
   })
 }
 
+function selectTab(tab: Parameters<typeof appShellStore.setActiveTab>[0]): void {
+  settingsDestination.value = 'root'
+  appShellStore.setActiveTab(tab)
+}
+
+function openReferenceData(kind: 'category' | 'tag'): void {
+  settingsDestination.value = kind
+}
+
+function closeReferenceData(): void {
+  settingsDestination.value = 'root'
+}
+
 onShow(synchronizeSystemTheme)
 
 onBackPress(() => {
+  if (activeTab.value === 'settings' && settingsDestination.value !== 'root') {
+    closeReferenceData()
+    return true
+  }
+
   const destination = getBackDestination(activeTab.value)
   if (!destination) {
     return false
@@ -94,18 +114,28 @@ watch(
         v-else-if="activeTab === 'imprints'"
         @planned-action="showPlannedAction"
       />
-      <SettingsScreen
-        v-else
-        :theme-preference="themePreference"
-        @select-theme="selectTheme"
-        @planned-action="showPlannedAction"
-        @show-about="showAbout"
-      />
+      <template v-else>
+        <SettingsScreen
+          v-if="settingsDestination === 'root'"
+          :theme-preference="themePreference"
+          @select-theme="selectTheme"
+          @planned-action="showPlannedAction"
+          @show-about="showAbout"
+          @open-categories="openReferenceData('category')"
+          @open-tags="openReferenceData('tag')"
+        />
+        <ReferenceDataScreen
+          v-else
+          :kind="settingsDestination"
+          @back="closeReferenceData"
+        />
+      </template>
     </main>
 
     <BottomTabBar
+      v-if="activeTab !== 'settings' || settingsDestination === 'root'"
       :active-tab="activeTab"
-      @select="appShellStore.setActiveTab"
+      @select="selectTab"
     />
   </view>
 </template>

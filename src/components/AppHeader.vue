@@ -8,12 +8,14 @@ withDefaults(
     showSearch?: boolean
     showAdd?: boolean
     showCalendar?: boolean
+    showBack?: boolean
   }>(),
   {
     count: '',
     showSearch: false,
     showAdd: false,
     showCalendar: false,
+    showBack: false,
   },
 )
 
@@ -21,12 +23,23 @@ defineEmits<{
   search: []
   add: []
   calendar: []
+  back: []
 }>()
 </script>
 
 <template>
   <view class="app-header">
-    <view class="app-header__titles">
+    <button
+      v-if="showBack"
+      class="icon-button icon-button--plain app-header__back"
+      aria-label="返回"
+      hover-class="icon-button--pressed"
+      @tap="$emit('back')"
+    >
+      <AppIcon name="arrow-left" />
+    </button>
+
+    <view class="app-header__titles" :class="{ 'app-header__titles--secondary': showBack }">
       <text class="app-header__title">{{ title }}</text>
       <text v-if="count" class="app-header__count">{{ count }}</text>
     </view>
@@ -81,6 +94,22 @@ defineEmits<{
   min-width: 0;
   flex-direction: column;
   gap: 8rpx;
+}
+
+.app-header__titles--secondary {
+  flex: 1;
+}
+
+.app-header__back {
+  width: 72rpx;
+  height: 72rpx;
+  margin: 0 4rpx 2rpx -16rpx;
+  padding: 19rpx;
+  flex: none;
+}
+
+.app-header__titles--secondary .app-header__title {
+  font-size: 40rpx;
 }
 
 .app-header__title {

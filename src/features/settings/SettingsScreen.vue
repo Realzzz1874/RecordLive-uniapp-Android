@@ -16,6 +16,8 @@ const emit = defineEmits<{
   selectTheme: []
   plannedAction: [message: string]
   showAbout: []
+  openCategories: []
+  openTags: []
 }>()
 
 const themeLabel = computed(() => THEME_LABELS[props.themePreference])
@@ -65,7 +67,7 @@ const themeLabel = computed(() => THEME_LABELS[props.themePreference])
           class="settings-row"
           aria-label="分类管理"
           hover-class="settings-row--pressed"
-          @tap="$emit('plannedAction', '分类管理将在 Milestone 2 开放')"
+          @tap="$emit('openCategories')"
         >
           <view class="settings-row__icon"><AppIcon name="folder" /></view>
           <view class="settings-row__body">
@@ -78,7 +80,7 @@ const themeLabel = computed(() => THEME_LABELS[props.themePreference])
           class="settings-row"
           aria-label="标签管理"
           hover-class="settings-row--pressed"
-          @tap="$emit('plannedAction', '标签管理将在 Milestone 2 开放')"
+          @tap="$emit('openTags')"
         >
           <view class="settings-row__icon"><AppIcon name="tag" /></view>
           <view class="settings-row__body">

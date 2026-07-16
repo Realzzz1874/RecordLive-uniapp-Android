@@ -3,6 +3,8 @@ import {
   PerformanceStatus,
   type Performance,
   type PerformanceFacetKind,
+  type MediaAsset,
+  type MediaAssetKind,
 } from '@/domain/performance'
 import type {
   PerformanceDraft,
@@ -53,6 +55,18 @@ interface FacetRow extends DatabaseRow {
 
 interface CountRow extends DatabaseRow {
   count: number
+}
+
+interface MediaRow extends DatabaseRow {
+  id: string
+  kind: string
+  relative_path: string
+  mime_type: string
+  byte_size: number
+  sha256: string
+  width: number | null
+  height: number | null
+  created_at_ms: number
 }
 
 interface SQLitePerformanceRepositoryOptions {
@@ -166,6 +180,7 @@ export class SQLitePerformanceRepository implements PerformanceRepository {
         `.trim(),
         `DELETE FROM performance_tag_links WHERE performance_id = ${sqlText(item.id)}`,
         `DELETE FROM performance_facets WHERE performance_id = ${sqlText(item.id)}`,
+        `DELETE FROM media_assets WHERE performance_id = ${sqlText(item.id)}`,
         ...item.tagIds.map((tagId) =>
           `INSERT INTO performance_tag_links(performance_id, tag_id, created_at_ms) VALUES (${sqlText(item.id)}, ${sqlText(tagId)}, ${sqlInteger(timestamp)})`,
         ),
@@ -174,6 +189,19 @@ export class SQLitePerformanceRepository implements PerformanceRepository {
             `INSERT INTO performance_facets(performance_id, kind, value, sort_order) VALUES (${sqlText(item.id)}, ${sqlText(kind)}, ${sqlText(value)}, ${sqlInteger(index)})`,
           ),
         ),
+        ...item.mediaAssets.map((asset) => `
+          INSERT INTO media_assets(
+            id, performance_id, kind, relative_path, mime_type,
+            byte_size, sha256, width, height, created_at_ms
+          ) VALUES (
+            ${sqlText(asset.id)}, ${sqlText(item.id)}, ${sqlText(asset.kind)},
+            ${sqlText(asset.relativePath)}, ${sqlText(asset.mimeType)},
+            ${sqlInteger(asset.byteSize)}, ${sqlText(asset.sha256)},
+            ${sqlOptionalNumber(asset.width, 'media width')},
+            ${sqlOptionalNumber(asset.height, 'media height')},
+            ${sqlInteger(asset.createdAtMs)}
+          )
+        `.trim()),
       ]
       await this.driver.execute(statements)
     })
@@ -191,12 +219,15 @@ export class SQLitePerformanceRepository implements PerformanceRepository {
 
   private async hydrate(row: PerformanceRow): Promise<Performance> {
     const id = String(row.id)
-    const [tagRows, facetRows] = await Promise.all([
+    const [tagRows, facetRows, mediaRows] = await Promise.all([
       this.driver.query<TagRow>(
         `SELECT tag_id FROM performance_tag_links WHERE performance_id = ${sqlText(id)} ORDER BY created_at_ms ASC, tag_id ASC`,
       ),
       this.driver.query<FacetRow>(
         `SELECT kind, value FROM performance_facets WHERE performance_id = ${sqlText(id)} ORDER BY kind ASC, sort_order ASC`,
+      ),
+      this.driver.query<MediaRow>(
+        `SELECT id, kind, relative_path, mime_type, byte_size, sha256, width, height, created_at_ms FROM media_assets WHERE performance_id = ${sqlText(id)} ORDER BY kind ASC`,
       ),
     ])
     const facets: Performance['facets'] = {}
@@ -225,6 +256,7 @@ export class SQLitePerformanceRepository implements PerformanceRepository {
       coordinate: latitude === null || longitude === null ? null : { latitude, longitude },
       tagIds: tagRows.map(({ tag_id }) => String(tag_id)),
       facets,
+      mediaAssets: mediaRows.map(mapMediaRow),
       createdAtMs: Number(row.created_at_ms),
       updatedAtMs: Number(row.updated_at_ms),
     }
@@ -275,6 +307,17 @@ function validateDraft(draft: PerformanceDraft): void {
   for (const currency of [draft.ticketPrice.currency, draft.paidPrice.currency, draft.otherCost.currency]) {
     if (currency.length !== 3) throw new DomainValidationError('币种必须是三位代码')
   }
+  const mediaKinds = new Set<MediaAssetKind>()
+  for (const asset of draft.mediaAssets) {
+    if (mediaKinds.has(asset.kind)) throw new DomainValidationError('同一种媒体只能保存一份')
+    mediaKinds.add(asset.kind)
+    if (!asset.id.trim() || !asset.relativePath.trim() || !asset.mimeType.trim()) {
+      throw new DomainValidationError('媒体信息不完整')
+    }
+    if (!Number.isSafeInteger(asset.byteSize) || asset.byteSize < 0) {
+      throw new DomainValidationError('媒体文件大小无效')
+    }
+  }
 }
 
 function cloneDraft(draft: PerformanceDraft): PerformanceDraft {
@@ -286,6 +329,7 @@ function cloneDraft(draft: PerformanceDraft): PerformanceDraft {
     coordinate: draft.coordinate ? { ...draft.coordinate } : null,
     tagIds: [...draft.tagIds],
     facets: normalizeFacets(draft.facets),
+    mediaAssets: draft.mediaAssets.map((asset) => ({ ...asset })),
   }
 }
 
@@ -315,6 +359,20 @@ function normalizePageValue(value: number | undefined, fallback: number, label: 
 
 function nullableNumber(value: unknown): number | null {
   return value === null || value === undefined ? null : Number(value)
+}
+
+function mapMediaRow(row: MediaRow): MediaAsset {
+  return {
+    id: String(row.id),
+    kind: String(row.kind) as MediaAssetKind,
+    relativePath: String(row.relative_path),
+    mimeType: String(row.mime_type),
+    byteSize: Number(row.byte_size),
+    sha256: String(row.sha256),
+    width: nullableNumber(row.width),
+    height: nullableNumber(row.height),
+    createdAtMs: Number(row.created_at_ms),
+  }
 }
 
 function escapeLike(value: string): string {

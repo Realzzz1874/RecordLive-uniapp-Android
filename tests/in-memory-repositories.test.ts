@@ -2,9 +2,29 @@ import { describe, expect, it } from 'vitest'
 
 import { DomainConflictError, DomainNotFoundError } from '@/domain/errors'
 import { PerformanceStatus, type Performance } from '@/domain/performance'
-import type { PerformanceDraft } from '@/features/performances/repository'
+import type { PerformanceDraft, PerformanceRepository } from '@/features/performances/repository'
 import { InMemoryPerformanceRepository } from '@/platform/repositories/in-memory-performance-repository'
 import { InMemoryReferenceDataRepository } from '@/platform/repositories/in-memory-reference-data-repository'
+import {
+  formatPerformanceDate,
+  formatPerformanceLocation,
+  PerformanceBrowserService,
+  performanceLifecycleLabel,
+  performanceMediaPath,
+} from '@/features/performances/browser'
+import {
+  createEmptyPerformanceDraft,
+  normalizePerformanceDraft,
+  parseDelimitedValues,
+  PerformanceEditorService,
+} from '@/features/performances/editor'
+import type {
+  PerformanceImageRole,
+  PerformanceMediaStorage,
+  PreparedImage,
+  SelectedImage,
+} from '@/platform/media/types'
+import type { MediaAsset } from '@/domain/performance'
 
 function performanceDraft(overrides: Partial<PerformanceDraft> = {}): PerformanceDraft {
   return {
@@ -23,6 +43,7 @@ function performanceDraft(overrides: Partial<PerformanceDraft> = {}): Performanc
     coordinate: null,
     tagIds: ['live'],
     facets: { artist: ['示例艺人'] },
+    mediaAssets: [],
     ...overrides,
   }
 }
@@ -66,6 +87,179 @@ describe('in-memory performance repository', () => {
     const stored = await repository.get(created.id) as Performance
     expect(stored.tagIds).toEqual(['live'])
     expect(stored.facets.artist).toEqual(['示例艺人'])
+  })
+})
+
+class FakeMediaStorage implements PerformanceMediaStorage {
+  preparedRoles: PerformanceImageRole[] = []
+  removedPaths: string[] = []
+  rollbackCount = 0
+  removeError = false
+
+  async prepare(role: PerformanceImageRole, selected: SelectedImage): Promise<PreparedImage> {
+    this.preparedRoles.push(role)
+    const asset: MediaAsset = {
+      id: `${role}-asset`,
+      kind: role === 'poster' ? 'poster' : 'ticket_original',
+      relativePath: `media/${role}.jpg`,
+      mimeType: selected.mimeType,
+      byteSize: selected.byteSize,
+      sha256: 'a'.repeat(64),
+      width: null,
+      height: null,
+      createdAtMs: 100,
+    }
+    return {
+      assets: [asset],
+      rollback: async () => { this.rollbackCount += 1 },
+    }
+  }
+
+  async remove(paths: readonly string[]): Promise<void> {
+    this.removedPaths.push(...paths)
+    if (this.removeError) throw new Error('media cleanup failure')
+  }
+}
+
+describe('performance browser service', () => {
+  it('removes the record and each unique media path', async () => {
+    const repository = new InMemoryPerformanceRepository({ generateId: () => 'performance-1' })
+    const created = await repository.save(performanceDraft({
+      mediaAssets: [
+        {
+          id: 'poster-original',
+          kind: 'poster',
+          relativePath: 'media/poster.jpg',
+          mimeType: 'image/jpeg',
+          byteSize: 100,
+          sha256: 'a'.repeat(64),
+          width: null,
+          height: null,
+          createdAtMs: 1,
+        },
+        {
+          id: 'poster-thumb',
+          kind: 'poster_thumb',
+          relativePath: 'media/poster.jpg',
+          mimeType: 'image/jpeg',
+          byteSize: 50,
+          sha256: 'b'.repeat(64),
+          width: null,
+          height: null,
+          createdAtMs: 1,
+        },
+      ],
+    }))
+    const media = new FakeMediaStorage()
+    const browser = new PerformanceBrowserService(repository, media)
+
+    await expect(browser.remove(created.id)).resolves.toEqual({ mediaCleanupFailed: false })
+    await expect(repository.get(created.id)).resolves.toBeNull()
+    expect(media.removedPaths).toEqual(['media/poster.jpg'])
+  })
+
+  it('keeps deletion successful when media cleanup needs a later retry', async () => {
+    const repository = new InMemoryPerformanceRepository({ generateId: () => 'performance-1' })
+    const created = await repository.save(performanceDraft())
+    const media = new FakeMediaStorage()
+    media.removeError = true
+    const browser = new PerformanceBrowserService(repository, media)
+
+    await expect(browser.remove(created.id)).resolves.toEqual({ mediaCleanupFailed: true })
+    await expect(repository.get(created.id)).resolves.toBeNull()
+  })
+
+  it('formats list and detail presentation without changing domain records', () => {
+    const item: Performance = {
+      ...performanceDraft({ startedAtMs: new Date(2027, 4, 6, 19, 30).getTime() }),
+      id: 'performance-1',
+      createdAtMs: 1,
+      updatedAtMs: 1,
+    }
+    expect(formatPerformanceDate(item.startedAtMs, true)).toMatch(/2027年05月06日 19:30/)
+    expect(formatPerformanceLocation(item)).toBe('上海 · 音乐厅')
+    expect(performanceLifecycleLabel(item, item.startedAtMs + 1)).toBe('已看')
+    expect(performanceMediaPath(item, 'poster')).toBe('')
+  })
+})
+
+describe('performance editor service', () => {
+  const selectedImage: SelectedImage = {
+    sourcePath: 'temp/poster.jpg',
+    previewPath: 'blob:poster',
+    byteSize: 1024,
+    mimeType: 'image/jpeg',
+  }
+
+  it('normalizes delimited fields and validates required location information', () => {
+    expect(parseDelimitedValues('A、 B，A;C')).toEqual(['A', 'B', 'C'])
+    expect(() => normalizePerformanceDraft(createEmptyPerformanceDraft())).toThrow('请输入演出名称')
+    expect(() => normalizePerformanceDraft({
+      ...createEmptyPerformanceDraft(),
+      name: '演唱会',
+    })).toThrow('请输入城市或场馆')
+
+    expect(normalizePerformanceDraft({
+      ...createEmptyPerformanceDraft(),
+      name: '  演唱会 ',
+      city: ' 上海 ',
+      ticketPrice: { amount: '0680.5', currency: 'cny' },
+    })).toMatchObject({
+      name: '演唱会',
+      city: '上海',
+      ticketPrice: { amount: '680.5', currency: 'CNY' },
+    })
+  })
+
+  it('warns about a performance within two hours before preparing media', async () => {
+    const repository = new InMemoryPerformanceRepository({
+      initialItems: [{
+        ...performanceDraft({ startedAtMs: 10_000 }),
+        id: 'existing',
+        createdAtMs: 1,
+        updatedAtMs: 1,
+      }],
+    })
+    const media = new FakeMediaStorage()
+    const editor = new PerformanceEditorService(repository, media)
+
+    const result = await editor.save(
+      performanceDraft({ startedAtMs: 10_000 + 60 * 60 * 1000 }),
+      { poster: selectedImage },
+    )
+
+    expect(result.kind).toBe('duplicate')
+    expect(media.preparedRoles).toEqual([])
+  })
+
+  it('saves prepared media after duplicate confirmation', async () => {
+    const repository = new InMemoryPerformanceRepository({ generateId: () => 'performance-1' })
+    const media = new FakeMediaStorage()
+    const editor = new PerformanceEditorService(repository, media)
+
+    const result = await editor.save(performanceDraft(), { poster: selectedImage }, true)
+
+    expect(result.kind).toBe('saved')
+    expect(media.preparedRoles).toEqual(['poster'])
+    await expect(repository.get('performance-1')).resolves.toMatchObject({
+      mediaAssets: [{ kind: 'poster', relativePath: 'media/poster.jpg' }],
+    })
+  })
+
+  it('rolls back newly prepared media when the repository save fails', async () => {
+    const failingRepository: PerformanceRepository = {
+      get: async () => null,
+      list: async () => ({ items: [], total: 0, hasMore: false }),
+      save: async () => { throw new Error('database failure') },
+      remove: async () => undefined,
+    }
+    const media = new FakeMediaStorage()
+    const editor = new PerformanceEditorService(failingRepository, media)
+
+    await expect(
+      editor.save(performanceDraft(), { poster: selectedImage }, true),
+    ).rejects.toThrow('database failure')
+    expect(media.rollbackCount).toBe(1)
   })
 })
 

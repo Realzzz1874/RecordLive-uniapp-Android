@@ -20,6 +20,9 @@ defineProps<{
     | 'trash'
     | 'check'
     | 'close'
+    | 'image'
+    | 'location'
+    | 'seat'
 }>()
 </script>
 
@@ -119,6 +122,22 @@ defineProps<{
 
     <template v-else-if="name === 'close'">
       <path d="m6 6 12 12M18 6 6 18" />
+    </template>
+
+    <template v-else-if="name === 'image'">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="8.5" cy="9" r="1.5" />
+      <path d="m4.5 17 4.2-4.2 3.1 3.1 2.4-2.4 5.3 5.3" />
+    </template>
+
+    <template v-else-if="name === 'location'">
+      <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </template>
+
+    <template v-else-if="name === 'seat'">
+      <path d="M6 11V7a2 2 0 0 1 4 0v4M14 11V7a2 2 0 0 1 4 0v4" />
+      <path d="M4 11h16v6H4zM6 17v3M18 17v3" />
     </template>
   </svg>
 </template>

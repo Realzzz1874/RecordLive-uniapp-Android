@@ -113,6 +113,7 @@ function clonePerformanceDraft(draft: PerformanceDraft): PerformanceDraft {
     coordinate: draft.coordinate ? { ...draft.coordinate } : null,
     tagIds: [...draft.tagIds],
     facets: cloneFacets(draft.facets),
+    mediaAssets: draft.mediaAssets.map((asset) => ({ ...asset })),
   }
 }
 
@@ -125,6 +126,7 @@ function clonePerformance(item: Performance): Performance {
     coordinate: item.coordinate ? { ...item.coordinate } : null,
     tagIds: [...item.tagIds],
     facets: cloneFacets(item.facets),
+    mediaAssets: item.mediaAssets.map((asset) => ({ ...asset })),
   }
 }
 

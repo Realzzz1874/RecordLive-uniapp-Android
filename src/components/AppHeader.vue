@@ -9,6 +9,11 @@ withDefaults(
     showAdd?: boolean
     showCalendar?: boolean
     showBack?: boolean
+    showSave?: boolean
+    showEdit?: boolean
+    showDelete?: boolean
+    saveDisabled?: boolean
+    saving?: boolean
   }>(),
   {
     count: '',
@@ -16,6 +21,11 @@ withDefaults(
     showAdd: false,
     showCalendar: false,
     showBack: false,
+    showSave: false,
+    showEdit: false,
+    showDelete: false,
+    saveDisabled: false,
+    saving: false,
   },
 )
 
@@ -24,6 +34,9 @@ defineEmits<{
   add: []
   calendar: []
   back: []
+  save: []
+  edit: []
+  delete: []
 }>()
 </script>
 
@@ -46,6 +59,24 @@ defineEmits<{
 
     <view class="app-header__actions">
       <button
+        v-if="showEdit"
+        class="icon-button icon-button--plain"
+        aria-label="编辑演出"
+        hover-class="icon-button--pressed"
+        @tap="$emit('edit')"
+      >
+        <AppIcon name="edit" />
+      </button>
+      <button
+        v-if="showDelete"
+        class="icon-button icon-button--plain icon-button--danger"
+        aria-label="删除演出"
+        hover-class="icon-button--pressed"
+        @tap="$emit('delete')"
+      >
+        <AppIcon name="trash" />
+      </button>
+      <button
         v-if="showSearch"
         class="icon-button icon-button--plain"
         aria-label="搜索演出"
@@ -53,6 +84,17 @@ defineEmits<{
         @tap="$emit('search')"
       >
         <AppIcon name="search" />
+      </button>
+      <button
+        v-if="showSave"
+        class="save-button"
+        :class="{ 'save-button--disabled': saveDisabled }"
+        :disabled="saveDisabled"
+        aria-label="保存"
+        hover-class="save-button--pressed"
+        @tap="$emit('save')"
+      >
+        {{ saving ? '保存中' : '保存' }}
       </button>
       <button
         v-if="showCalendar"
@@ -178,7 +220,38 @@ defineEmits<{
   color: var(--color-accent);
 }
 
+.icon-button--danger {
+  color: #b5473e;
+}
+
 .icon-button--accent-pressed {
   background: var(--color-accent-pressed);
+}
+
+.save-button {
+  min-width: 104rpx;
+  height: 72rpx;
+  margin: 0;
+  padding: 0 18rpx;
+  border: 0;
+  border-radius: 16rpx;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 28rpx;
+  font-weight: 650;
+  line-height: 72rpx;
+}
+
+.save-button::after {
+  border: 0;
+}
+
+.save-button--pressed {
+  background: var(--color-row-pressed);
+}
+
+.save-button--disabled {
+  color: var(--color-muted);
+  opacity: 0.5;
 }
 </style>

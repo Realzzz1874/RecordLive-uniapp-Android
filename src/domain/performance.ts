@@ -30,6 +30,24 @@ export interface CurrencyAmount {
   currency: string
 }
 
+export type MediaAssetKind =
+  | 'poster'
+  | 'poster_thumb'
+  | 'ticket_original'
+  | 'ticket_thumb'
+
+export interface MediaAsset {
+  id: string
+  kind: MediaAssetKind
+  relativePath: string
+  mimeType: string
+  byteSize: number
+  sha256: string
+  width: number | null
+  height: number | null
+  createdAtMs: number
+}
+
 export interface Performance {
   id: string
   name: string
@@ -47,6 +65,7 @@ export interface Performance {
   coordinate: Coordinate | null
   tagIds: string[]
   facets: Partial<Record<PerformanceFacetKind, string[]>>
+  mediaAssets: MediaAsset[]
   createdAtMs: number
   updatedAtMs: number
 }
@@ -66,4 +85,3 @@ export function derivePerformanceLifecycle(
       return performance.startedAtMs < referenceTimeMs ? 'attended' : 'upcoming'
   }
 }
-

@@ -6,7 +6,10 @@ import { ref, watch } from 'vue'
 import BottomTabBar from '@/components/BottomTabBar.vue'
 import { getBackDestination, type ThemePreference } from '@/features/app-shell/model'
 import ImprintsScreen from '@/features/imprints/ImprintsScreen.vue'
+import PerformanceDetailScreen from '@/features/performances/PerformanceDetailScreen.vue'
 import RecordsScreen from '@/features/performances/RecordsScreen.vue'
+import PerformanceEditorScreen from '@/features/performances/PerformanceEditorScreen.vue'
+import type { Performance } from '@/domain/performance'
 import ReferenceDataScreen from '@/features/reference-data/ReferenceDataScreen.vue'
 import SettingsScreen from '@/features/settings/SettingsScreen.vue'
 import WantSeeScreen from '@/features/want-see/WantSeeScreen.vue'
@@ -15,6 +18,11 @@ import { useAppShellStore } from '@/stores/app-shell'
 const appShellStore = useAppShellStore()
 const { activeTab, resolvedTheme, themePreference } = storeToRefs(appShellStore)
 const settingsDestination = ref<'root' | 'category' | 'tag'>('root')
+const recordsDestination = ref<'root' | 'detail' | 'editor'>('root')
+const recordsRefreshKey = ref(0)
+const selectedPerformanceId = ref('')
+const editorPerformanceId = ref<string | undefined>()
+const editorReturnDestination = ref<'root' | 'detail'>('root')
 
 function synchronizeSystemTheme(): void {
   appShellStore.initialize()
@@ -54,7 +62,46 @@ function showAbout(): void {
 
 function selectTab(tab: Parameters<typeof appShellStore.setActiveTab>[0]): void {
   settingsDestination.value = 'root'
+  recordsDestination.value = 'root'
   appShellStore.setActiveTab(tab)
+}
+
+function openPerformanceEditor(): void {
+  editorPerformanceId.value = undefined
+  editorReturnDestination.value = 'root'
+  recordsDestination.value = 'editor'
+}
+
+function closePerformanceEditor(): void {
+  recordsDestination.value = editorReturnDestination.value
+}
+
+function openPerformanceDetail(id: string): void {
+  selectedPerformanceId.value = id
+  recordsDestination.value = 'detail'
+}
+
+function closePerformanceDetail(): void {
+  recordsDestination.value = 'root'
+}
+
+function editPerformance(id: string): void {
+  selectedPerformanceId.value = id
+  editorPerformanceId.value = id
+  editorReturnDestination.value = 'detail'
+  recordsDestination.value = 'editor'
+}
+
+function handlePerformanceSaved(performance: Performance): void {
+  selectedPerformanceId.value = performance.id
+  recordsRefreshKey.value += 1
+  closePerformanceEditor()
+}
+
+function handlePerformanceDeleted(): void {
+  selectedPerformanceId.value = ''
+  recordsDestination.value = 'root'
+  recordsRefreshKey.value += 1
 }
 
 function openReferenceData(kind: 'category' | 'tag'): void {
@@ -68,6 +115,16 @@ function closeReferenceData(): void {
 onShow(synchronizeSystemTheme)
 
 onBackPress(() => {
+  if (activeTab.value === 'records' && recordsDestination.value === 'editor') {
+    closePerformanceEditor()
+    return true
+  }
+
+  if (activeTab.value === 'records' && recordsDestination.value === 'detail') {
+    closePerformanceDetail()
+    return true
+  }
+
   if (activeTab.value === 'settings' && settingsDestination.value !== 'root') {
     closeReferenceData()
     return true
@@ -102,9 +159,24 @@ watch(
   <view class="app-shell" :class="`theme-${resolvedTheme}`">
     <main class="app-shell__content">
       <RecordsScreen
-        v-if="activeTab === 'records'"
+        v-if="activeTab === 'records' && recordsDestination === 'root'"
         :theme="resolvedTheme"
-        @planned-action="showPlannedAction"
+        :refresh-key="recordsRefreshKey"
+        @add="openPerformanceEditor"
+        @open="openPerformanceDetail"
+      />
+      <PerformanceDetailScreen
+        v-else-if="activeTab === 'records' && recordsDestination === 'detail'"
+        :performance-id="selectedPerformanceId"
+        @back="closePerformanceDetail"
+        @edit="editPerformance"
+        @deleted="handlePerformanceDeleted"
+      />
+      <PerformanceEditorScreen
+        v-else-if="activeTab === 'records'"
+        :performance-id="editorPerformanceId"
+        @back="closePerformanceEditor"
+        @saved="handlePerformanceSaved"
       />
       <WantSeeScreen
         v-else-if="activeTab === 'want-see'"
@@ -133,7 +205,7 @@ watch(
     </main>
 
     <BottomTabBar
-      v-if="activeTab !== 'settings' || settingsDestination === 'root'"
+      v-if="recordsDestination === 'root' && (activeTab !== 'settings' || settingsDestination === 'root')"
       :active-tab="activeTab"
       @select="selectTab"
     />

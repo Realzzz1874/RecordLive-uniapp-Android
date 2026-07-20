@@ -29,7 +29,7 @@ const emit = defineEmits<{
 }>()
 
 const browseStore = useBrowsePreferencesStore()
-const { displayMode, filter } = storeToRefs(browseStore)
+const { displayMode, posterColumnCount, filter } = storeToRefs(browseStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const hasMore = ref(false)
@@ -163,9 +163,10 @@ function clearSearch(): void {
   searchInputFocused.value = true
 }
 
-function applyFilter(value: PerformanceFilter, mode: PerformanceDisplayMode): void {
+function applyFilter(value: PerformanceFilter, mode: PerformanceDisplayMode, columns: number): void {
   browseStore.setFilter(value)
   browseStore.setDisplayMode(mode)
+  browseStore.setPosterColumnCount(columns)
   void load(true)
 }
 
@@ -222,7 +223,11 @@ function clearFilters(): void {
       <button v-if="activeFilterCount" class="empty-reset" @tap="clearFilters">清除筛选</button>
     </view>
     <scroll-view v-else class="records-list" scroll-y lower-threshold="120" @scrolltolower="load(false)">
-      <view class="performance-collection" :class="{ 'performance-collection--poster': displayMode === 'poster' }">
+      <view
+        class="performance-collection"
+        :class="{ 'performance-collection--poster': displayMode === 'poster' }"
+        :style="displayMode === 'poster' ? { gridTemplateColumns: `repeat(${posterColumnCount}, minmax(0, 1fr))` } : undefined"
+      >
         <PerformanceCard
           v-for="performance in items"
           :key="performance.id"
@@ -239,6 +244,7 @@ function clearFilters(): void {
       :visible="filterVisible"
       :filter="filter"
       :display-mode="displayMode"
+      :poster-column-count="posterColumnCount"
       :categories="categories"
       :tags="tags"
       :years="years"
@@ -267,6 +273,6 @@ function clearFilters(): void {
 .records-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
 .search-bar ~ .records-list { height: calc(100vh - var(--app-header-height) - 116rpx - 132rpx - env(safe-area-inset-bottom)); }
 .performance-collection { display: flex; flex-direction: column; gap: 18rpx; }
-.performance-collection--poster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; }
+.performance-collection--poster { display: grid; gap: 8rpx; transition: grid-template-columns 180ms ease; }
 .list-footer { display: block; padding: 22rpx 0 40rpx; color: var(--color-muted); font-size: 23rpx; text-align: center; }
 </style>

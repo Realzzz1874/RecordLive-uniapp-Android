@@ -6,11 +6,13 @@ import type { PerformanceDraft, PerformanceRepository } from '@/features/perform
 import { InMemoryPerformanceRepository } from '@/platform/repositories/in-memory-performance-repository'
 import { InMemoryReferenceDataRepository } from '@/platform/repositories/in-memory-reference-data-repository'
 import {
+  formatPerformanceCardDate,
   formatPerformanceDate,
   formatPerformanceLocation,
   PerformanceBrowserService,
   performanceLifecycleLabel,
   performanceMediaPath,
+  relativePerformanceDateText,
 } from '@/features/performances/browser'
 import {
   createEmptyPerformanceDraft,
@@ -151,6 +153,7 @@ describe('performance browse preferences', () => {
       },
     })).toEqual({
       displayMode: 'poster',
+      posterColumnCount: 4,
       filter: {
         categoryIds: ['concert'],
         tagIds: ['live'],
@@ -158,6 +161,15 @@ describe('performance browse preferences', () => {
         lifecycles: [],
       },
     })
+
+    expect(normalizeBrowsePreferences({
+      displayMode: 'poster',
+      posterColumnCount: 8,
+    }).posterColumnCount).toBe(8)
+    expect(normalizeBrowsePreferences({
+      displayMode: 'poster',
+      posterColumnCount: 9,
+    }).posterColumnCount).toBe(4)
   })
 
   it('creates an inclusive local-time year range', () => {
@@ -256,9 +268,18 @@ describe('performance browser service', () => {
       updatedAtMs: 1,
     }
     expect(formatPerformanceDate(item.startedAtMs, true)).toMatch(/2027年05月06日 19:30/)
+    expect(formatPerformanceCardDate(item.startedAtMs)).toBe('2027-05-06 19:30 周四')
     expect(formatPerformanceLocation(item)).toBe('上海 · 音乐厅')
     expect(performanceLifecycleLabel(item, item.startedAtMs + 1)).toBe('已看')
     expect(performanceMediaPath(item, 'poster')).toBe('')
+  })
+
+  it('formats the card countdown with the same hour and calendar-day split as iOS', () => {
+    const reference = new Date(2026, 6, 20, 12).getTime()
+    expect(relativePerformanceDateText(new Date(2026, 6, 20, 9).getTime(), reference)).toBe('3 h前')
+    expect(relativePerformanceDateText(new Date(2026, 6, 20, 17).getTime(), reference)).toBe('5 h后')
+    expect(relativePerformanceDateText(new Date(2026, 6, 18, 23).getTime(), reference)).toBe('2 天前')
+    expect(relativePerformanceDateText(new Date(2026, 6, 23, 8).getTime(), reference)).toBe('3 天后')
   })
 })
 

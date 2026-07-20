@@ -11,6 +11,7 @@ export interface PerformanceFilter {
 
 export interface PerformanceBrowsePreferences {
   displayMode: PerformanceDisplayMode
+  posterColumnCount: number
   filter: PerformanceFilter
 }
 
@@ -24,6 +25,7 @@ export const ALL_PERFORMANCE_LIFECYCLES: readonly PerformanceLifecycle[] = [
 
 export const DEFAULT_BROWSE_PREFERENCES: PerformanceBrowsePreferences = {
   displayMode: 'card',
+  posterColumnCount: 4,
   filter: {
     categoryIds: [],
     tagIds: [],
@@ -36,6 +38,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
   if (!isRecord(value)) return cloneBrowsePreferences(DEFAULT_BROWSE_PREFERENCES)
   const rawFilter = isRecord(value.filter) ? value.filter : {}
   const displayMode = value.displayMode === 'poster' ? 'poster' : 'card'
+  const posterColumnCount = normalizePosterColumnCount(value.posterColumnCount)
   const year = Number.isSafeInteger(rawFilter.year) && Number(rawFilter.year) >= 1970
     ? Number(rawFilter.year)
     : null
@@ -43,6 +46,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
 
   return {
     displayMode,
+    posterColumnCount,
     filter: {
       categoryIds: uniqueStrings(rawFilter.categoryIds),
       tagIds: uniqueStrings(rawFilter.tagIds),
@@ -59,6 +63,7 @@ export function cloneBrowsePreferences(
 ): PerformanceBrowsePreferences {
   return {
     displayMode: value.displayMode,
+    posterColumnCount: value.posterColumnCount,
     filter: {
       categoryIds: [...value.filter.categoryIds],
       tagIds: [...value.filter.tagIds],
@@ -66,6 +71,14 @@ export function cloneBrowsePreferences(
       lifecycles: [...value.filter.lifecycles],
     },
   }
+}
+
+export const POSTER_COLUMN_COUNTS = [2, 3, 4, 5, 6, 7, 8] as const
+
+export function normalizePosterColumnCount(value: unknown): number {
+  return POSTER_COLUMN_COUNTS.includes(value as typeof POSTER_COLUMN_COUNTS[number])
+    ? Number(value)
+    : DEFAULT_BROWSE_PREFERENCES.posterColumnCount
 }
 
 export function yearRange(year: number | null): {

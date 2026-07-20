@@ -66,6 +66,35 @@ export function formatPerformanceDate(timestamp: number, includeTime = false): s
   return includeTime ? `${dateText} ${pad(date.getHours())}:${pad(date.getMinutes())}` : dateText
 }
 
+export function formatPerformanceCardDate(timestamp: number): string {
+  const date = new Date(timestamp)
+  const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()]
+  return [
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+    weekday,
+  ].filter(Boolean).join(' ')
+}
+
+export function relativePerformanceDateText(
+  timestamp: number,
+  referenceTimeMs = Date.now(),
+): string {
+  const isPast = timestamp <= referenceTimeMs
+  const elapsedMs = Math.abs(timestamp - referenceTimeMs)
+  const elapsedDays = Math.floor(elapsedMs / 86_400_000)
+  if (elapsedDays === 0) {
+    return `${Math.floor(elapsedMs / 3_600_000)} h${isPast ? '前' : '后'}`
+  }
+
+  const date = new Date(timestamp)
+  const reference = new Date(referenceTimeMs)
+  const dateDay = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  const referenceDay = Date.UTC(reference.getFullYear(), reference.getMonth(), reference.getDate())
+  const calendarDays = Math.abs(Math.round((dateDay - referenceDay) / 86_400_000))
+  return `${calendarDays} 天${isPast ? '前' : '后'}`
+}
+
 export function formatPerformanceLocation(
   performance: Pick<Performance, 'city' | 'venue'>,
 ): string {

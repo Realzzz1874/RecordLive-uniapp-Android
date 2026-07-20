@@ -7,6 +7,7 @@ import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-dat
 import {
   ALL_PERFORMANCE_LIFECYCLES,
   DEFAULT_BROWSE_PREFERENCES,
+  POSTER_COLUMN_COUNTS,
   type PerformanceDisplayMode,
   type PerformanceFilter,
 } from '@/features/preferences/model'
@@ -15,6 +16,7 @@ const props = withDefaults(defineProps<{
   visible: boolean
   filter: PerformanceFilter
   displayMode: PerformanceDisplayMode
+  posterColumnCount: number
   categories: PerformanceCategory[]
   tags: PerformanceTag[]
   years: number[]
@@ -25,11 +27,12 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   close: []
-  apply: [filter: PerformanceFilter, displayMode: PerformanceDisplayMode]
+  apply: [filter: PerformanceFilter, displayMode: PerformanceDisplayMode, posterColumnCount: number]
 }>()
 
 const draft = reactive<PerformanceFilter>(cloneFilter(props.filter))
 const displayModeDraft = ref<PerformanceDisplayMode>(props.displayMode)
+const posterColumnCountDraft = ref(props.posterColumnCount)
 const lifecycleOptions: readonly { value: PerformanceLifecycle; label: string }[] = [
   { value: 'attended', label: '已看' },
   { value: 'upcoming', label: '待看' },
@@ -39,11 +42,12 @@ const lifecycleOptions: readonly { value: PerformanceLifecycle; label: string }[
 ] as const
 
 watch(
-  () => [props.visible, props.filter, props.displayMode] as const,
+  () => [props.visible, props.filter, props.displayMode, props.posterColumnCount] as const,
   ([visible]) => {
     if (visible) {
       Object.assign(draft, cloneFilter(props.filter))
       displayModeDraft.value = props.displayMode
+      posterColumnCountDraft.value = props.posterColumnCount
     }
   },
   { deep: true },
@@ -67,10 +71,11 @@ function reset(): void {
   if (!props.showLifecycle) resetFilter.lifecycles = [...props.filter.lifecycles]
   Object.assign(draft, resetFilter)
   displayModeDraft.value = DEFAULT_BROWSE_PREFERENCES.displayMode
+  posterColumnCountDraft.value = DEFAULT_BROWSE_PREFERENCES.posterColumnCount
 }
 
 function apply(): void {
-  emit('apply', cloneFilter(draft), displayModeDraft.value)
+  emit('apply', cloneFilter(draft), displayModeDraft.value, posterColumnCountDraft.value)
   emit('close')
 }
 
@@ -118,6 +123,19 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
               <AppIcon name="grid" />
               <text>海报</text>
             </button>
+          </view>
+          <view v-if="displayModeDraft === 'poster'" class="poster-column-setting">
+            <text class="poster-column-setting__label">每行海报</text>
+            <view class="column-options" aria-label="每行海报数量">
+              <button
+                v-for="count in POSTER_COLUMN_COUNTS"
+                :key="count"
+                class="column-option"
+                :class="{ 'column-option--selected': posterColumnCountDraft === count }"
+                :aria-label="`每行${count}张海报`"
+                @tap="posterColumnCountDraft = count"
+              >{{ count }}</button>
+            </view>
           </view>
         </view>
 
@@ -187,7 +205,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 <style scoped>
 .filter-layer { position: fixed; z-index: 30; inset: 0; display: flex; align-items: flex-end; }
 .filter-scrim { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: rgba(15,10,8,.5); }
-.filter-scrim::after, .close-button::after, .filter-chip::after, .display-option::after, .reset-button::after, .apply-button::after { border: 0; }
+.filter-scrim::after, .close-button::after, .filter-chip::after, .display-option::after, .column-option::after, .reset-button::after, .apply-button::after { border: 0; }
 .filter-sheet { position: relative; z-index: 1; box-sizing: border-box; width: 100%; max-height: 82vh; overflow: hidden; border-radius: 30rpx 30rpx 0 0; background: var(--color-background); box-shadow: 0 -18rpx 60rpx rgba(0,0,0,.2); }
 .filter-header { display: flex; min-height: 122rpx; padding: 28rpx 30rpx 22rpx 36rpx; align-items: center; justify-content: space-between; border-bottom: 1rpx solid var(--color-border); }
 .filter-header__title { display: block; color: var(--color-text); font-size: 34rpx; font-weight: 720; }
@@ -200,6 +218,11 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 .display-option { display: flex; height: 78rpx; margin: 0; padding: 0 24rpx; align-items: center; justify-content: center; gap: 13rpx; border: 1rpx solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); color: var(--color-muted); font-size: 25rpx; font-weight: 620; }
 .display-option > :first-child { width: 31rpx; height: 31rpx; }
 .display-option--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
+.poster-column-setting { margin-top: 24rpx; }
+.poster-column-setting__label { display: block; margin-bottom: 13rpx; color: var(--color-muted); font-size: 22rpx; }
+.column-options { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 9rpx; }
+.column-option { height: 58rpx; margin: 0; padding: 0; border: 1rpx solid var(--color-border); border-radius: 12rpx; background: var(--color-surface); color: var(--color-muted); font-size: 23rpx; line-height: 56rpx; }
+.column-option--selected { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-on-accent); font-weight: 700; }
 .chip-list { display: flex; flex-wrap: wrap; gap: 13rpx; }
 .filter-chip { min-height: 62rpx; margin: 0; padding: 0 22rpx; border: 1rpx solid var(--color-border); border-radius: 31rpx; background: var(--color-surface); color: var(--color-muted); font-size: 24rpx; line-height: 60rpx; }
 .filter-chip--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); font-weight: 620; }

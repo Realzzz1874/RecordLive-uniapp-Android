@@ -281,13 +281,47 @@ function buildWhere(query: PerformanceQuery): string {
     )`)
   }
   if (query.categoryId) conditions.push(`p.category_id = ${sqlText(query.categoryId)}`)
+  if (query.categoryIds !== undefined) {
+    const categoryIds = uniqueStrings(query.categoryIds)
+    conditions.push(categoryIds.length
+      ? `p.category_id IN (${categoryIds.map(sqlText).join(', ')})`
+      : '0 = 1')
+  }
   if (query.statuses?.length) conditions.push(`p.status IN (${query.statuses.map((status) => sqlInteger(status)).join(', ')})`)
+  if (query.lifecycles !== undefined) {
+    conditions.push(buildLifecycleCondition(query.lifecycles, query.referenceTimeMs ?? Date.now()))
+  }
   if (query.startedFromMs !== undefined) conditions.push(`p.started_at_ms >= ${sqlInteger(query.startedFromMs)}`)
   if (query.startedToMs !== undefined) conditions.push(`p.started_at_ms <= ${sqlInteger(query.startedToMs)}`)
   for (const tagId of new Set(query.tagIds ?? [])) {
     conditions.push(`EXISTS (SELECT 1 FROM performance_tag_links tl WHERE tl.performance_id = p.id AND tl.tag_id = ${sqlText(tagId)})`)
   }
+  if (query.tagIdsAny !== undefined) {
+    const tagIds = uniqueStrings(query.tagIdsAny)
+    conditions.push(tagIds.length
+      ? `EXISTS (
+          SELECT 1 FROM performance_tag_links tl
+          WHERE tl.performance_id = p.id AND tl.tag_id IN (${tagIds.map(sqlText).join(', ')})
+        )`
+      : '0 = 1')
+  }
   return conditions.join(' AND ')
+}
+
+function buildLifecycleCondition(
+  lifecycles: PerformanceQuery['lifecycles'],
+  referenceTimeMs: number,
+): string {
+  const selected = new Set(lifecycles ?? [])
+  if (selected.size === 0) return '0 = 1'
+  const time = sqlInteger(referenceTimeMs)
+  const clauses: string[] = []
+  if (selected.has('attended')) clauses.push(`(p.status = 0 AND p.started_at_ms < ${time})`)
+  if (selected.has('upcoming')) clauses.push(`(p.status = 0 AND p.started_at_ms >= ${time})`)
+  if (selected.has('cancelled')) clauses.push('p.status = 1')
+  if (selected.has('pending-sale')) clauses.push('p.status = 2')
+  if (selected.has('missed')) clauses.push('p.status = 3')
+  return `(${clauses.join(' OR ')})`
 }
 
 function validateDraft(draft: PerformanceDraft): void {

@@ -7,9 +7,11 @@ import {
   THEME_LABELS,
   type ThemePreference,
 } from '@/features/app-shell/model'
+import type { PerformanceDisplayMode } from '@/features/preferences/model'
 
 const props = defineProps<{
   themePreference: ThemePreference
+  displayMode: PerformanceDisplayMode
 }>()
 
 const emit = defineEmits<{
@@ -18,9 +20,11 @@ const emit = defineEmits<{
   showAbout: []
   openCategories: []
   openTags: []
+  selectDisplayMode: []
 }>()
 
 const themeLabel = computed(() => THEME_LABELS[props.themePreference])
+const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报' : '卡片')
 </script>
 
 <template>
@@ -42,6 +46,20 @@ const themeLabel = computed(() => THEME_LABELS[props.themePreference])
             <text class="settings-row__label">主题与显示</text>
           </view>
           <text class="settings-row__value">{{ themeLabel }}</text>
+          <view class="settings-row__chevron"><AppIcon name="chevron" /></view>
+        </button>
+
+        <button
+          class="settings-row"
+          aria-label="默认展示方式"
+          hover-class="settings-row--pressed"
+          @tap="$emit('selectDisplayMode')"
+        >
+          <view class="settings-row__icon"><AppIcon name="grid" /></view>
+          <view class="settings-row__body">
+            <text class="settings-row__label">默认展示方式</text>
+          </view>
+          <text class="settings-row__value">{{ displayModeLabel }}</text>
           <view class="settings-row__chevron"><AppIcon name="chevron" /></view>
         </button>
 

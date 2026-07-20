@@ -1,12 +1,20 @@
-import type { Performance, PerformanceStatus } from '@/domain/performance'
+import type {
+  Performance,
+  PerformanceLifecycle,
+  PerformanceStatus,
+} from '@/domain/performance'
 
 export type PerformanceSortDirection = 'ascending' | 'descending'
 
 export interface PerformanceQuery {
   search?: string
   categoryId?: string
+  categoryIds?: readonly string[]
   tagIds?: readonly string[]
+  tagIdsAny?: readonly string[]
   statuses?: readonly PerformanceStatus[]
+  lifecycles?: readonly PerformanceLifecycle[]
+  referenceTimeMs?: number
   startedFromMs?: number
   startedToMs?: number
   sortDirection?: PerformanceSortDirection

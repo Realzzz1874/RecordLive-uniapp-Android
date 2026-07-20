@@ -23,6 +23,9 @@ defineProps<{
     | 'image'
     | 'location'
     | 'seat'
+    | 'filter'
+    | 'grid'
+    | 'list'
 }>()
 </script>
 
@@ -138,6 +141,24 @@ defineProps<{
     <template v-else-if="name === 'seat'">
       <path d="M6 11V7a2 2 0 0 1 4 0v4M14 11V7a2 2 0 0 1 4 0v4" />
       <path d="M4 11h16v6H4zM6 17v3M18 17v3" />
+    </template>
+
+    <template v-else-if="name === 'filter'">
+      <path d="M4 6h16M7 12h10M10 18h4" />
+    </template>
+
+    <template v-else-if="name === 'grid'">
+      <rect x="4" y="4" width="6" height="6" rx="1" />
+      <rect x="14" y="4" width="6" height="6" rx="1" />
+      <rect x="4" y="14" width="6" height="6" rx="1" />
+      <rect x="14" y="14" width="6" height="6" rx="1" />
+    </template>
+
+    <template v-else-if="name === 'list'">
+      <path d="M8 6h12M8 12h12M8 18h12" />
+      <circle cx="4" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="18" r="1" fill="currentColor" stroke="none" />
     </template>
   </svg>
 </template>

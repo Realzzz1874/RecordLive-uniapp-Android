@@ -1,0 +1,95 @@
+import type { PerformanceLifecycle } from '@/domain/performance'
+
+export type PerformanceDisplayMode = 'card' | 'poster'
+
+export interface PerformanceFilter {
+  categoryIds: string[]
+  tagIds: string[]
+  year: number | null
+  lifecycles: PerformanceLifecycle[]
+}
+
+export interface PerformanceBrowsePreferences {
+  displayMode: PerformanceDisplayMode
+  filter: PerformanceFilter
+}
+
+export const ALL_PERFORMANCE_LIFECYCLES: readonly PerformanceLifecycle[] = [
+  'attended',
+  'upcoming',
+  'pending-sale',
+  'cancelled',
+  'missed',
+] as const
+
+export const DEFAULT_BROWSE_PREFERENCES: PerformanceBrowsePreferences = {
+  displayMode: 'card',
+  filter: {
+    categoryIds: [],
+    tagIds: [],
+    year: null,
+    lifecycles: [...ALL_PERFORMANCE_LIFECYCLES],
+  },
+}
+
+export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePreferences {
+  if (!isRecord(value)) return cloneBrowsePreferences(DEFAULT_BROWSE_PREFERENCES)
+  const rawFilter = isRecord(value.filter) ? value.filter : {}
+  const displayMode = value.displayMode === 'poster' ? 'poster' : 'card'
+  const year = Number.isSafeInteger(rawFilter.year) && Number(rawFilter.year) >= 1970
+    ? Number(rawFilter.year)
+    : null
+  const lifecycles = uniqueStrings(rawFilter.lifecycles).filter(isPerformanceLifecycle)
+
+  return {
+    displayMode,
+    filter: {
+      categoryIds: uniqueStrings(rawFilter.categoryIds),
+      tagIds: uniqueStrings(rawFilter.tagIds),
+      year,
+      lifecycles: Array.isArray(rawFilter.lifecycles)
+        ? lifecycles
+        : [...ALL_PERFORMANCE_LIFECYCLES],
+    },
+  }
+}
+
+export function cloneBrowsePreferences(
+  value: PerformanceBrowsePreferences,
+): PerformanceBrowsePreferences {
+  return {
+    displayMode: value.displayMode,
+    filter: {
+      categoryIds: [...value.filter.categoryIds],
+      tagIds: [...value.filter.tagIds],
+      year: value.filter.year,
+      lifecycles: [...value.filter.lifecycles],
+    },
+  }
+}
+
+export function yearRange(year: number | null): {
+  startedFromMs?: number
+  startedToMs?: number
+} {
+  if (year === null) return {}
+  return {
+    startedFromMs: new Date(year, 0, 1).getTime(),
+    startedToMs: new Date(year + 1, 0, 1).getTime() - 1,
+  }
+}
+
+function uniqueStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter((item): item is string => typeof item === 'string').map(
+    (item) => item.trim(),
+  ).filter(Boolean))]
+}
+
+function isPerformanceLifecycle(value: string): value is PerformanceLifecycle {
+  return ALL_PERFORMANCE_LIFECYCLES.includes(value as PerformanceLifecycle)
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}

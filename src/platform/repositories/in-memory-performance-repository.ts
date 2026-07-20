@@ -2,7 +2,7 @@ import {
   DomainNotFoundError,
   DomainValidationError,
 } from '@/domain/errors'
-import type { Performance } from '@/domain/performance'
+import { derivePerformanceLifecycle, type Performance } from '@/domain/performance'
 import type {
   PerformanceDraft,
   PerformancePage,
@@ -35,16 +35,23 @@ export class InMemoryPerformanceRepository implements PerformanceRepository {
   async list(query: PerformanceQuery = {}): Promise<PerformancePage> {
     const search = query.search?.trim().toLocaleLowerCase()
     const requiredTags = new Set(query.tagIds ?? [])
+    const anyTags = query.tagIdsAny === undefined ? null : new Set(query.tagIdsAny)
     const statuses = query.statuses ? new Set(query.statuses) : null
+    const categories = query.categoryIds === undefined ? null : new Set(query.categoryIds)
+    const lifecycles = query.lifecycles === undefined ? null : new Set(query.lifecycles)
+    const referenceTimeMs = query.referenceTimeMs ?? Date.now()
 
     const matched = [...this.items.values()]
       .filter((item) => {
         if (search && !matchesSearch(item, search)) return false
         if (query.categoryId && item.categoryId !== query.categoryId) return false
+        if (categories && (!item.categoryId || !categories.has(item.categoryId))) return false
         if (statuses && !statuses.has(item.status)) return false
+        if (lifecycles && !lifecycles.has(derivePerformanceLifecycle(item, referenceTimeMs))) return false
         if (query.startedFromMs !== undefined && item.startedAtMs < query.startedFromMs) return false
         if (query.startedToMs !== undefined && item.startedAtMs > query.startedToMs) return false
         if ([...requiredTags].some((tagId) => !item.tagIds.includes(tagId))) return false
+        if (anyTags && !item.tagIds.some((tagId) => anyTags.has(tagId))) return false
         return true
       })
       .sort((left, right) => {

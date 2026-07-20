@@ -107,7 +107,8 @@ export function normalizePerformanceDraft(draft: PerformanceDraft): PerformanceD
   const city = draft.city.trim()
   const venue = draft.venue.trim()
   if (!name) throw new DomainValidationError('请输入演出名称')
-  if (!city && !venue) throw new DomainValidationError('请输入城市或场馆')
+  if (!city) throw new DomainValidationError('请选择城市')
+  if (!venue) throw new DomainValidationError('请选择场地')
 
   return {
     ...draft,

@@ -25,6 +25,11 @@ import type {
   SelectedImage,
 } from '@/platform/media/types'
 import type { MediaAsset } from '@/domain/performance'
+import {
+  DEFAULT_BROWSE_PREFERENCES,
+  normalizeBrowsePreferences,
+  yearRange,
+} from '@/features/preferences/model'
 
 function performanceDraft(overrides: Partial<PerformanceDraft> = {}): PerformanceDraft {
   return {
@@ -87,6 +92,80 @@ describe('in-memory performance repository', () => {
     const stored = await repository.get(created.id) as Performance
     expect(stored.tagIds).toEqual(['live'])
     expect(stored.facets.artist).toEqual(['示例艺人'])
+  })
+
+  it('filters derived lifecycle, multiple categories and any selected tag', async () => {
+    const referenceTimeMs = 1_800_000_000_000
+    const items: Performance[] = [
+      performanceItem('past', {
+        startedAtMs: referenceTimeMs - 1,
+        categoryId: 'concert',
+        tagIds: ['live'],
+      }),
+      performanceItem('future', {
+        startedAtMs: referenceTimeMs + 1,
+        categoryId: 'festival',
+        tagIds: ['tour'],
+      }),
+      performanceItem('pending', {
+        startedAtMs: referenceTimeMs - 100,
+        status: PerformanceStatus.PendingSale,
+        categoryId: 'concert',
+        tagIds: ['sale'],
+      }),
+      performanceItem('cancelled', {
+        startedAtMs: referenceTimeMs + 100,
+        status: PerformanceStatus.Cancelled,
+        categoryId: 'theatre',
+        tagIds: ['tour'],
+      }),
+    ]
+    const repository = new InMemoryPerformanceRepository({ initialItems: items })
+
+    await expect(repository.list({
+      lifecycles: ['upcoming', 'pending-sale'],
+      referenceTimeMs,
+      sortDirection: 'ascending',
+    })).resolves.toMatchObject({
+      total: 2,
+      items: [{ id: 'pending' }, { id: 'future' }],
+    })
+    await expect(repository.list({
+      categoryIds: ['concert', 'festival'],
+      tagIdsAny: ['tour', 'sale'],
+    })).resolves.toMatchObject({ total: 2 })
+    await expect(repository.list({ lifecycles: [], referenceTimeMs })).resolves.toMatchObject({ total: 0 })
+  })
+})
+
+describe('performance browse preferences', () => {
+  it('normalizes persisted values and preserves an explicit empty status filter', () => {
+    expect(normalizeBrowsePreferences(null)).toEqual(DEFAULT_BROWSE_PREFERENCES)
+    expect(normalizeBrowsePreferences({
+      displayMode: 'poster',
+      filter: {
+        categoryIds: [' concert ', 'concert'],
+        tagIds: ['live'],
+        year: 2027,
+        lifecycles: [],
+      },
+    })).toEqual({
+      displayMode: 'poster',
+      filter: {
+        categoryIds: ['concert'],
+        tagIds: ['live'],
+        year: 2027,
+        lifecycles: [],
+      },
+    })
+  })
+
+  it('creates an inclusive local-time year range', () => {
+    const range = yearRange(2027)
+    expect(new Date(range.startedFromMs as number).getFullYear()).toBe(2027)
+    expect(new Date(range.startedToMs as number).getFullYear()).toBe(2027)
+    expect((range.startedToMs as number) + 1).toBe(new Date(2028, 0, 1).getTime())
+    expect(yearRange(null)).toEqual({})
   })
 })
 
@@ -197,16 +276,24 @@ describe('performance editor service', () => {
     expect(() => normalizePerformanceDraft({
       ...createEmptyPerformanceDraft(),
       name: '演唱会',
-    })).toThrow('请输入城市或场馆')
+    })).toThrow('请选择城市')
+
+    expect(() => normalizePerformanceDraft({
+      ...createEmptyPerformanceDraft(),
+      name: '演唱会',
+      city: '上海',
+    })).toThrow('请选择场地')
 
     expect(normalizePerformanceDraft({
       ...createEmptyPerformanceDraft(),
       name: '  演唱会 ',
       city: ' 上海 ',
+      venue: ' 上海文化广场 ',
       ticketPrice: { amount: '0680.5', currency: 'cny' },
     })).toMatchObject({
       name: '演唱会',
       city: '上海',
+      venue: '上海文化广场',
       ticketPrice: { amount: '680.5', currency: 'CNY' },
     })
   })
@@ -326,3 +413,15 @@ describe('in-memory reference data repository', () => {
     await expect(repository.removeTag('missing')).rejects.toBeInstanceOf(DomainNotFoundError)
   })
 })
+
+function performanceItem(
+  id: string,
+  overrides: Partial<PerformanceDraft> = {},
+): Performance {
+  return {
+    ...performanceDraft(overrides),
+    id,
+    createdAtMs: 1,
+    updatedAtMs: 1,
+  }
+}

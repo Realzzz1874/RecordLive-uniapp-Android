@@ -1,0 +1,2198 @@
+[
+  {
+    "name": "北京",
+    "nameEn": "BEIJING",
+    "city_origin": 1
+  },
+  {
+    "name": "上海",
+    "nameEn": "SHANGHAI",
+    "city_origin": 1
+  },
+  {
+    "name": "成都",
+    "nameEn": "CHENGDU",
+    "city_origin": 1
+  },
+  {
+    "name": "广州",
+    "nameEn": "GUANGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "杭州",
+    "nameEn": "HANGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "深圳",
+    "nameEn": "SHENZHEN",
+    "city_origin": 1
+  },
+  {
+    "name": "西安",
+    "nameEn": "XIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "南京",
+    "nameEn": "NANJING",
+    "city_origin": 1
+  },
+  {
+    "name": "重庆",
+    "nameEn": "CHONGQING",
+    "city_origin": 1
+  },
+  {
+    "name": "天津",
+    "nameEn": "TIANJIN",
+    "city_origin": 1
+  },
+  {
+    "name": "武汉",
+    "nameEn": "WUHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "长沙",
+    "nameEn": "CHANGSHA",
+    "city_origin": 1
+  },
+  {
+    "name": "郑州",
+    "nameEn": "ZHENGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "苏州",
+    "nameEn": "SUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "昆山",
+    "nameEn": "KUNSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "厦门",
+    "nameEn": "XIAMEN",
+    "city_origin": 1
+  },
+  {
+    "name": "济南",
+    "nameEn": "JINAN",
+    "city_origin": 1
+  },
+  {
+    "name": "沈阳",
+    "nameEn": "SHENYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "宁波",
+    "nameEn": "NINGBO",
+    "city_origin": 1
+  },
+  {
+    "name": "合肥",
+    "nameEn": "HEFEI",
+    "city_origin": 1
+  },
+  {
+    "name": "昆明",
+    "nameEn": "KUNMING",
+    "city_origin": 1
+  },
+  {
+    "name": "青岛",
+    "nameEn": "QINGDAO",
+    "city_origin": 1
+  },
+  {
+    "name": "福州",
+    "nameEn": "FUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "大连",
+    "nameEn": "DALIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "南昌",
+    "nameEn": "NANCHANG",
+    "city_origin": 1
+  },
+  {
+    "name": "石家庄",
+    "nameEn": "SHIJIAZHUANG",
+    "city_origin": 1
+  },
+  {
+    "name": "温州",
+    "nameEn": "WENZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "珠海",
+    "nameEn": "ZHUHAI",
+    "city_origin": 1
+  },
+  {
+    "name": "汕尾",
+    "nameEn": "SHANWEI",
+    "city_origin": 1
+  },
+  {
+    "name": "阳江",
+    "nameEn": "YANGJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "揭阳",
+    "nameEn": "JIEYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "茂名",
+    "nameEn": "MAOMING",
+    "city_origin": 1
+  },
+  {
+    "name": "江门",
+    "nameEn": "JIANGMEN",
+    "city_origin": 1
+  },
+  {
+    "name": "韶关",
+    "nameEn": "SHAOGUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "惠州",
+    "nameEn": "HUIZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "梅州",
+    "nameEn": "MEIZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "汕头",
+    "nameEn": "SHANTOU",
+    "city_origin": 1
+  },
+  {
+    "name": "佛山",
+    "nameEn": "FOSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "肇庆",
+    "nameEn": "ZHAOQING",
+    "city_origin": 1
+  },
+  {
+    "name": "湛江",
+    "nameEn": "ZHANJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "中山",
+    "nameEn": "ZHONGSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "河源",
+    "nameEn": "HEYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "清远",
+    "nameEn": "QINGYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "云浮",
+    "nameEn": "YUNFU",
+    "city_origin": 1
+  },
+  {
+    "name": "潮州",
+    "nameEn": "CHAOZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "东莞",
+    "nameEn": "DONGGUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "铁岭",
+    "nameEn": "TIELING",
+    "city_origin": 1
+  },
+  {
+    "name": "鞍山",
+    "nameEn": "ANSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "抚顺",
+    "nameEn": "FUSHUN",
+    "city_origin": 1
+  },
+  {
+    "name": "本溪",
+    "nameEn": "BENXI",
+    "city_origin": 1
+  },
+  {
+    "name": "丹东",
+    "nameEn": "DANDONG",
+    "city_origin": 1
+  },
+  {
+    "name": "锦州",
+    "nameEn": "JINZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "营口",
+    "nameEn": "YINGKOU",
+    "city_origin": 1
+  },
+  {
+    "name": "阜新",
+    "nameEn": "FUXIN",
+    "city_origin": 1
+  },
+  {
+    "name": "辽阳",
+    "nameEn": "LIAOYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "朝阳",
+    "nameEn": "CHAOYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "盘锦",
+    "nameEn": "PANJIN",
+    "city_origin": 1
+  },
+  {
+    "name": "葫芦岛",
+    "nameEn": "HULUDAO",
+    "city_origin": 1
+  },
+  {
+    "name": "无锡",
+    "nameEn": "WUXI",
+    "city_origin": 1
+  },
+  {
+    "name": "镇江",
+    "nameEn": "ZHENJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "南通",
+    "nameEn": "NANTONG",
+    "city_origin": 1
+  },
+  {
+    "name": "扬州",
+    "nameEn": "YANGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "盐城",
+    "nameEn": "YANCHENG",
+    "city_origin": 1
+  },
+  {
+    "name": "徐州",
+    "nameEn": "XUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "淮安",
+    "nameEn": "HUAIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "连云港",
+    "nameEn": "LIANYUNGANG",
+    "city_origin": 1
+  },
+  {
+    "name": "常州",
+    "nameEn": "CHANGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "泰州",
+    "nameEn": "TAIZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "宿迁",
+    "nameEn": "SUQIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "宜兴",
+    "nameEn": "YIXIN",
+    "city_origin": 1
+  },
+  {
+    "name": "恩施",
+    "nameEn": "ENSHI",
+    "city_origin": 1
+  },
+  {
+    "name": "十堰",
+    "nameEn": "SHIYAN",
+    "city_origin": 1
+  },
+  {
+    "name": "随州",
+    "nameEn": "SUIZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "荆门",
+    "nameEn": "JINGMEN",
+    "city_origin": 1
+  },
+  {
+    "name": "仙桃",
+    "nameEn": "XIANTAO",
+    "city_origin": 1
+  },
+  {
+    "name": "神农架",
+    "nameEn": "SHENNONGJIA",
+    "city_origin": 1
+  },
+  {
+    "name": "天门",
+    "nameEn": "TIANMEN",
+    "city_origin": 1
+  },
+  {
+    "name": "潜江",
+    "nameEn": "QIANJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "襄阳",
+    "nameEn": "XIANGYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "鄂州",
+    "nameEn": "EZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "孝感",
+    "nameEn": "XIAOGAN",
+    "city_origin": 1
+  },
+  {
+    "name": "黄冈",
+    "nameEn": "HUANGGANG",
+    "city_origin": 1
+  },
+  {
+    "name": "黄石",
+    "nameEn": "HUANGSHI",
+    "city_origin": 1
+  },
+  {
+    "name": "咸宁",
+    "nameEn": "XIANNING",
+    "city_origin": 1
+  },
+  {
+    "name": "荆州",
+    "nameEn": "JINGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "宜昌",
+    "nameEn": "YICHANG",
+    "city_origin": 1
+  },
+  {
+    "name": "攀枝花",
+    "nameEn": "PANZHIHUA",
+    "city_origin": 1
+  },
+  {
+    "name": "自贡",
+    "nameEn": "ZIGONG",
+    "city_origin": 1
+  },
+  {
+    "name": "绵阳",
+    "nameEn": "MIANYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "南充",
+    "nameEn": "NANCHONG",
+    "city_origin": 1
+  },
+  {
+    "name": "达州",
+    "nameEn": "DAZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "遂宁",
+    "nameEn": "SUINING",
+    "city_origin": 1
+  },
+  {
+    "name": "广安",
+    "nameEn": "GUANGAN",
+    "city_origin": 1
+  },
+  {
+    "name": "巴中",
+    "nameEn": "BAZHONG",
+    "city_origin": 1
+  },
+  {
+    "name": "泸州",
+    "nameEn": "LUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "宜宾",
+    "nameEn": "YIBIN",
+    "city_origin": 1
+  },
+  {
+    "name": "资阳",
+    "nameEn": "ZIYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "乐山",
+    "nameEn": "LESHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "凉山",
+    "nameEn": "LAINGSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "雅安",
+    "nameEn": "YAAN",
+    "city_origin": 1
+  },
+  {
+    "name": "甘孜",
+    "nameEn": "GANZI",
+    "city_origin": 1
+  },
+  {
+    "name": "阿坝",
+    "nameEn": "ABA",
+    "city_origin": 1
+  },
+  {
+    "name": "德阳",
+    "nameEn": "DEYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "广元",
+    "nameEn": "GUANGYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "内江",
+    "nameEn": "NEIJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "眉山",
+    "nameEn": "MEISHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "咸阳",
+    "nameEn": "XIANYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "延安",
+    "nameEn": "YANAN",
+    "city_origin": 1
+  },
+  {
+    "name": "榆林",
+    "nameEn": "YULIN1",
+    "city_origin": 1
+  },
+  {
+    "name": "渭南",
+    "nameEn": "WEINAN",
+    "city_origin": 1
+  },
+  {
+    "name": "商洛",
+    "nameEn": "SHANGLUO",
+    "city_origin": 1
+  },
+  {
+    "name": "安康",
+    "nameEn": "ANKANG",
+    "city_origin": 1
+  },
+  {
+    "name": "汉中",
+    "nameEn": "HANZHONG",
+    "city_origin": 1
+  },
+  {
+    "name": "宝鸡",
+    "nameEn": "BAOJI",
+    "city_origin": 1
+  },
+  {
+    "name": "铜川",
+    "nameEn": "TONGCHUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "邯郸",
+    "nameEn": "HANDAN",
+    "city_origin": 1
+  },
+  {
+    "name": "保定",
+    "nameEn": "BAODING",
+    "city_origin": 1
+  },
+  {
+    "name": "承德",
+    "nameEn": "CHENGDE",
+    "city_origin": 1
+  },
+  {
+    "name": "唐山",
+    "nameEn": "TANGSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "廊坊",
+    "nameEn": "LANGFANG",
+    "city_origin": 1
+  },
+  {
+    "name": "沧州",
+    "nameEn": "CANGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "衡水",
+    "nameEn": "HENGSHUI",
+    "city_origin": 1
+  },
+  {
+    "name": "邢台",
+    "nameEn": "XINGTAI",
+    "city_origin": 1
+  },
+  {
+    "name": "张家口",
+    "nameEn": "ZHANGJIAKOU",
+    "city_origin": 1
+  },
+  {
+    "name": "秦皇岛",
+    "nameEn": "QINHUANGDAO",
+    "city_origin": 1
+  },
+  {
+    "name": "朔州",
+    "nameEn": "SHUOZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "忻州",
+    "nameEn": "XINZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "太原",
+    "nameEn": "TAIYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "大同",
+    "nameEn": "DATONG",
+    "city_origin": 1
+  },
+  {
+    "name": "阳泉",
+    "nameEn": "YANGQUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "晋中",
+    "nameEn": "JINZHONG",
+    "city_origin": 1
+  },
+  {
+    "name": "长治",
+    "nameEn": "CHANGZHI",
+    "city_origin": 1
+  },
+  {
+    "name": "晋城",
+    "nameEn": "JINCHENG",
+    "city_origin": 1
+  },
+  {
+    "name": "临汾",
+    "nameEn": "LINFEN",
+    "city_origin": 1
+  },
+  {
+    "name": "吕梁",
+    "nameEn": "LVLIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "运城",
+    "nameEn": "YUNCHENG",
+    "city_origin": 1
+  },
+  {
+    "name": "商丘",
+    "nameEn": "SHANGQIU",
+    "city_origin": 1
+  },
+  {
+    "name": "安阳",
+    "nameEn": "ANYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "新乡",
+    "nameEn": "XINXIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "许昌",
+    "nameEn": "XUCHANG",
+    "city_origin": 1
+  },
+  {
+    "name": "信阳",
+    "nameEn": "XINYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "南阳",
+    "nameEn": "NANYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "开封",
+    "nameEn": "KAIFENG",
+    "city_origin": 1
+  },
+  {
+    "name": "洛阳",
+    "nameEn": "LUOYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "焦作",
+    "nameEn": "JIAOZUO",
+    "city_origin": 1
+  },
+  {
+    "name": "鹤壁",
+    "nameEn": "HEBI",
+    "city_origin": 1
+  },
+  {
+    "name": "濮阳",
+    "nameEn": "PUYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "周口",
+    "nameEn": "ZHOUKOU",
+    "city_origin": 1
+  },
+  {
+    "name": "漯河",
+    "nameEn": "LUOHE",
+    "city_origin": 1
+  },
+  {
+    "name": "驻马店",
+    "nameEn": "ZHUMADIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "三门峡",
+    "nameEn": "SANMENXIA",
+    "city_origin": 1
+  },
+  {
+    "name": "济源",
+    "nameEn": "JIYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "平顶山",
+    "nameEn": "PINGDINGSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "长春",
+    "nameEn": "CHANGCHUN",
+    "city_origin": 1
+  },
+  {
+    "name": "吉林",
+    "nameEn": "JILIN",
+    "city_origin": 1
+  },
+  {
+    "name": "延边",
+    "nameEn": "YANBIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "四平",
+    "nameEn": "SIPING",
+    "city_origin": 1
+  },
+  {
+    "name": "通化",
+    "nameEn": "TONGHUA",
+    "city_origin": 1
+  },
+  {
+    "name": "白城",
+    "nameEn": "BAICHENG",
+    "city_origin": 1
+  },
+  {
+    "name": "辽源",
+    "nameEn": "LIAOYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "松原",
+    "nameEn": "SONGYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "白山",
+    "nameEn": "BAISHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "大兴安岭",
+    "nameEn": "DAXINGANLING",
+    "city_origin": 1
+  },
+  {
+    "name": "双鸭山",
+    "nameEn": "SHUANGYASHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "哈尔滨",
+    "nameEn": "HAERBIN",
+    "city_origin": 1
+  },
+  {
+    "name": "齐齐哈尔",
+    "nameEn": "QIQIHAER",
+    "city_origin": 1
+  },
+  {
+    "name": "牡丹江",
+    "nameEn": "MUDANJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "佳木斯",
+    "nameEn": "JIAMUSI",
+    "city_origin": 1
+  },
+  {
+    "name": "绥化",
+    "nameEn": "TUOHUA",
+    "city_origin": 1
+  },
+  {
+    "name": "黑河",
+    "nameEn": "HEIHE",
+    "city_origin": 1
+  },
+  {
+    "name": "伊春",
+    "nameEn": "YICHUN1",
+    "city_origin": 1
+  },
+  {
+    "name": "大庆",
+    "nameEn": "DAQING",
+    "city_origin": 1
+  },
+  {
+    "name": "七台河",
+    "nameEn": "QITAIHE",
+    "city_origin": 1
+  },
+  {
+    "name": "鸡西",
+    "nameEn": "JIXI",
+    "city_origin": 1
+  },
+  {
+    "name": "鹤岗",
+    "nameEn": "HUEGANG",
+    "city_origin": 1
+  },
+  {
+    "name": "呼伦贝尔",
+    "nameEn": "HULUNBEIER",
+    "city_origin": 1
+  },
+  {
+    "name": "呼和浩特",
+    "nameEn": "HUHEHAOTE",
+    "city_origin": 1
+  },
+  {
+    "name": "乌兰察布",
+    "nameEn": "WUNANCHABU",
+    "city_origin": 1
+  },
+  {
+    "name": "鄂尔多斯",
+    "nameEn": "EERDUOSI",
+    "city_origin": 1
+  },
+  {
+    "name": "巴彦淖尔",
+    "nameEn": "BAYANZHUOER",
+    "city_origin": 1
+  },
+  {
+    "name": "阿拉善盟",
+    "nameEn": "ALASHANMENG",
+    "city_origin": 1
+  },
+  {
+    "name": "包头",
+    "nameEn": "BAOTOU",
+    "city_origin": 1
+  },
+  {
+    "name": "乌海",
+    "nameEn": "WUHAI",
+    "city_origin": 1
+  },
+  {
+    "name": "通辽",
+    "nameEn": "TONGLIAO",
+    "city_origin": 1
+  },
+  {
+    "name": "赤峰",
+    "nameEn": "CHIFENG",
+    "city_origin": 1
+  },
+  {
+    "name": "锡林郭勒",
+    "nameEn": "XILINGUOLE",
+    "city_origin": 1
+  },
+  {
+    "name": "兴安盟",
+    "nameEn": "XINGANMENG",
+    "city_origin": 1
+  },
+  {
+    "name": "菏泽",
+    "nameEn": "HEZE",
+    "city_origin": 1
+  },
+  {
+    "name": "淄博",
+    "nameEn": "ZIBO",
+    "city_origin": 1
+  },
+  {
+    "name": "德州",
+    "nameEn": "DEZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "烟台",
+    "nameEn": "YANTAI",
+    "city_origin": 1
+  },
+  {
+    "name": "潍坊",
+    "nameEn": "WEIFANG",
+    "city_origin": 1
+  },
+  {
+    "name": "济宁",
+    "nameEn": "JINING",
+    "city_origin": 1
+  },
+  {
+    "name": "泰安",
+    "nameEn": "TAIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "临沂",
+    "nameEn": "LINYI",
+    "city_origin": 1
+  },
+  {
+    "name": "滨州",
+    "nameEn": "BINZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "东营",
+    "nameEn": "DONGYING",
+    "city_origin": 1
+  },
+  {
+    "name": "威海",
+    "nameEn": "WEIHAI",
+    "city_origin": 1
+  },
+  {
+    "name": "枣庄",
+    "nameEn": "ZAOZHUANG",
+    "city_origin": 1
+  },
+  {
+    "name": "日照",
+    "nameEn": "RIZHAO",
+    "city_origin": 1
+  },
+  {
+    "name": "莱芜",
+    "nameEn": "LAIWU",
+    "city_origin": 1
+  },
+  {
+    "name": "聊城",
+    "nameEn": "LIAOCHENG",
+    "city_origin": 1
+  },
+  {
+    "name": "黄山",
+    "nameEn": "HUANGSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "淮北",
+    "nameEn": "HUAIBEI",
+    "city_origin": 1
+  },
+  {
+    "name": "铜陵",
+    "nameEn": "TONGLING",
+    "city_origin": 1
+  },
+  {
+    "name": "宣城",
+    "nameEn": "XUANCHENG",
+    "city_origin": 1
+  },
+  {
+    "name": "六安",
+    "nameEn": "LIUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "巢湖",
+    "nameEn": "CHAOHU",
+    "city_origin": 1
+  },
+  {
+    "name": "池州",
+    "nameEn": "CHIZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "阜阳",
+    "nameEn": "FUYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "滁州",
+    "nameEn": "CHUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "蚌埠",
+    "nameEn": "BENGBU",
+    "city_origin": 1
+  },
+  {
+    "name": "芜湖",
+    "nameEn": "WUHU",
+    "city_origin": 1
+  },
+  {
+    "name": "淮南",
+    "nameEn": "HUAINAN",
+    "city_origin": 1
+  },
+  {
+    "name": "马鞍山",
+    "nameEn": "MAANSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "安庆",
+    "nameEn": "ANQING",
+    "city_origin": 1
+  },
+  {
+    "name": "宿州",
+    "nameEn": "SUZHOU1",
+    "city_origin": 1
+  },
+  {
+    "name": "亳州",
+    "nameEn": "BOZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "衢州",
+    "nameEn": "QUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "湖州",
+    "nameEn": "HUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "嘉兴",
+    "nameEn": "JIAXING",
+    "city_origin": 1
+  },
+  {
+    "name": "绍兴",
+    "nameEn": "SHAOXING",
+    "city_origin": 1
+  },
+  {
+    "name": "台州",
+    "nameEn": "TAIZHOU1",
+    "city_origin": 1
+  },
+  {
+    "name": "丽水",
+    "nameEn": "LISHUI",
+    "city_origin": 1
+  },
+  {
+    "name": "金华",
+    "nameEn": "JINHUA",
+    "city_origin": 1
+  },
+  {
+    "name": "舟山",
+    "nameEn": "ZHOUSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "宁德",
+    "nameEn": "NINGDE",
+    "city_origin": 1
+  },
+  {
+    "name": "莆田",
+    "nameEn": "PUTIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "泉州",
+    "nameEn": "QUANZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "漳州",
+    "nameEn": "ZHANGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "龙岩",
+    "nameEn": "LONGYAN",
+    "city_origin": 1
+  },
+  {
+    "name": "三明",
+    "nameEn": "SANMING",
+    "city_origin": 1
+  },
+  {
+    "name": "南平",
+    "nameEn": "NANPING",
+    "city_origin": 1
+  },
+  {
+    "name": "张家界",
+    "nameEn": "ZHANGJIAJIE",
+    "city_origin": 1
+  },
+  {
+    "name": "岳阳",
+    "nameEn": "YUEYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "湘潭",
+    "nameEn": "XIANGTAN",
+    "city_origin": 1
+  },
+  {
+    "name": "株洲",
+    "nameEn": "ZHUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "衡阳",
+    "nameEn": "HENGYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "郴州",
+    "nameEn": "CHENZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "常德",
+    "nameEn": "CHANGDE",
+    "city_origin": 1
+  },
+  {
+    "name": "益阳",
+    "nameEn": "YIYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "娄底",
+    "nameEn": "LOUDI",
+    "city_origin": 1
+  },
+  {
+    "name": "邵阳",
+    "nameEn": "SHAOYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "湘西",
+    "nameEn": "XIANGXI",
+    "city_origin": 1
+  },
+  {
+    "name": "怀化",
+    "nameEn": "HUAIHUA",
+    "city_origin": 1
+  },
+  {
+    "name": "永州",
+    "nameEn": "YONGZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "防城港",
+    "nameEn": "FANGCHENGGANG",
+    "city_origin": 1
+  },
+  {
+    "name": "南宁",
+    "nameEn": "NANNING",
+    "city_origin": 1
+  },
+  {
+    "name": "柳州",
+    "nameEn": "LIUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "桂林",
+    "nameEn": "GUILIN",
+    "city_origin": 1
+  },
+  {
+    "name": "梧州",
+    "nameEn": "WUZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "玉林",
+    "nameEn": "YULIN",
+    "city_origin": 1
+  },
+  {
+    "name": "百色",
+    "nameEn": "BAISE",
+    "city_origin": 1
+  },
+  {
+    "name": "钦州",
+    "nameEn": "QINZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "河池",
+    "nameEn": "HECHI",
+    "city_origin": 1
+  },
+  {
+    "name": "北海",
+    "nameEn": "BEIHAI",
+    "city_origin": 1
+  },
+  {
+    "name": "贵港",
+    "nameEn": "GUIGANG",
+    "city_origin": 1
+  },
+  {
+    "name": "崇左",
+    "nameEn": "CHONGZUO",
+    "city_origin": 1
+  },
+  {
+    "name": "来宾",
+    "nameEn": "LAIBIN",
+    "city_origin": 1
+  },
+  {
+    "name": "贺州",
+    "nameEn": "HUEZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "鹰潭",
+    "nameEn": "YINGTAN",
+    "city_origin": 1
+  },
+  {
+    "name": "新余",
+    "nameEn": "XINYU",
+    "city_origin": 1
+  },
+  {
+    "name": "九江",
+    "nameEn": "JIUJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "上饶",
+    "nameEn": "SHANGRAO",
+    "city_origin": 1
+  },
+  {
+    "name": "抚州",
+    "nameEn": "FUZHOU1",
+    "city_origin": 1
+  },
+  {
+    "name": "宜春",
+    "nameEn": "YICHUN",
+    "city_origin": 1
+  },
+  {
+    "name": "吉安",
+    "nameEn": "JIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "赣州",
+    "nameEn": "GANZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "景德镇",
+    "nameEn": "JINGDEZHEN",
+    "city_origin": 1
+  },
+  {
+    "name": "萍乡",
+    "nameEn": "PINGXIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "黔东南",
+    "nameEn": "QIANDONGNAN",
+    "city_origin": 1
+  },
+  {
+    "name": "贵阳",
+    "nameEn": "GUIYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "遵义",
+    "nameEn": "ZUNYI",
+    "city_origin": 1
+  },
+  {
+    "name": "安顺",
+    "nameEn": "ANSHUN",
+    "city_origin": 1
+  },
+  {
+    "name": "黔南",
+    "nameEn": "QIANNAN",
+    "city_origin": 1
+  },
+  {
+    "name": "铜仁",
+    "nameEn": "TONGREN",
+    "city_origin": 1
+  },
+  {
+    "name": "毕节",
+    "nameEn": "BIJIE",
+    "city_origin": 1
+  },
+  {
+    "name": "六盘水",
+    "nameEn": "LIUPANSHUI",
+    "city_origin": 1
+  },
+  {
+    "name": "黔西南",
+    "nameEn": "QIANXINAN",
+    "city_origin": 1
+  },
+  {
+    "name": "西双版纳",
+    "nameEn": "XISHUANGBANNA",
+    "city_origin": 1
+  },
+  {
+    "name": "德宏",
+    "nameEn": "DEHONG",
+    "city_origin": 1
+  },
+  {
+    "name": "昭通",
+    "nameEn": "ZHAOTONG",
+    "city_origin": 1
+  },
+  {
+    "name": "大理",
+    "nameEn": "DALI",
+    "city_origin": 1
+  },
+  {
+    "name": "红河",
+    "nameEn": "HONGHE",
+    "city_origin": 1
+  },
+  {
+    "name": "曲靖",
+    "nameEn": "QUJING",
+    "city_origin": 1
+  },
+  {
+    "name": "保山",
+    "nameEn": "BAOSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "文山",
+    "nameEn": "WENSHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "玉溪",
+    "nameEn": "YUXI",
+    "city_origin": 1
+  },
+  {
+    "name": "楚雄",
+    "nameEn": "CHUXIONG",
+    "city_origin": 1
+  },
+  {
+    "name": "普洱",
+    "nameEn": "PUER",
+    "city_origin": 1
+  },
+  {
+    "name": "临沧",
+    "nameEn": "LINCANG",
+    "city_origin": 1
+  },
+  {
+    "name": "怒江",
+    "nameEn": "NUJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "迪庆",
+    "nameEn": "BIQING",
+    "city_origin": 1
+  },
+  {
+    "name": "丽江",
+    "nameEn": "LIJIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "日喀则",
+    "nameEn": "RIKAZE",
+    "city_origin": 1
+  },
+  {
+    "name": "山南",
+    "nameEn": "SHANNAN",
+    "city_origin": 1
+  },
+  {
+    "name": "林芝",
+    "nameEn": "LINGZHI",
+    "city_origin": 1
+  },
+  {
+    "name": "昌都",
+    "nameEn": "CHANGDU",
+    "city_origin": 1
+  },
+  {
+    "name": "那曲",
+    "nameEn": "NAQU",
+    "city_origin": 1
+  },
+  {
+    "name": "阿里",
+    "nameEn": "ALI",
+    "city_origin": 1
+  },
+  {
+    "name": "琼中县",
+    "nameEn": "QIONGZHONGXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "乐东县",
+    "nameEn": "LEDONGXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "保亭县",
+    "nameEn": "BAOTINGXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "白沙县",
+    "nameEn": "BAISHAXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "昌江县",
+    "nameEn": "CHANGJIANGXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "澄迈县",
+    "nameEn": "CHENGMAIXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "儋州",
+    "nameEn": "ZHANZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "定安县",
+    "nameEn": "DINGANXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "东方",
+    "nameEn": "DONGFANG",
+    "city_origin": 1
+  },
+  {
+    "name": "陵水县",
+    "nameEn": "LINSHUIXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "海口",
+    "nameEn": "HAIKOU",
+    "city_origin": 1
+  },
+  {
+    "name": "三亚",
+    "nameEn": "SANYA",
+    "city_origin": 1
+  },
+  {
+    "name": "屯昌县",
+    "nameEn": "TUNCHANGXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "文昌",
+    "nameEn": "WENCHANG",
+    "city_origin": 1
+  },
+  {
+    "name": "琼海",
+    "nameEn": "QIONGHAI",
+    "city_origin": 1
+  },
+  {
+    "name": "临高县",
+    "nameEn": "LINGAOXIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "五指山",
+    "nameEn": "WUZHISHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "万宁",
+    "nameEn": "WANNING",
+    "city_origin": 1
+  },
+  {
+    "name": "临夏",
+    "nameEn": "LINXIA",
+    "city_origin": 1
+  },
+  {
+    "name": "兰州",
+    "nameEn": "LANZHOU",
+    "city_origin": 1
+  },
+  {
+    "name": "定西",
+    "nameEn": "DINGXI",
+    "city_origin": 1
+  },
+  {
+    "name": "平凉",
+    "nameEn": "PINGLIANG",
+    "city_origin": 1
+  },
+  {
+    "name": "庆阳",
+    "nameEn": "QINGYANG",
+    "city_origin": 1
+  },
+  {
+    "name": "金昌",
+    "nameEn": "JINCHANG",
+    "city_origin": 1
+  },
+  {
+    "name": "张掖",
+    "nameEn": "ZHANGYE",
+    "city_origin": 1
+  },
+  {
+    "name": "酒泉",
+    "nameEn": "JIUQUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "天水",
+    "nameEn": "TIANSHUI",
+    "city_origin": 1
+  },
+  {
+    "name": "甘南",
+    "nameEn": "GANNAN",
+    "city_origin": 1
+  },
+  {
+    "name": "白银",
+    "nameEn": "BAIYIN",
+    "city_origin": 1
+  },
+  {
+    "name": "武威",
+    "nameEn": "WUWEI",
+    "city_origin": 1
+  },
+  {
+    "name": "嘉峪关",
+    "nameEn": "JIAYUGUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "陇南",
+    "nameEn": "RUANNAN",
+    "city_origin": 1
+  },
+  {
+    "name": "银川",
+    "nameEn": "YINCHUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "石嘴山",
+    "nameEn": "SHIZUISHAN",
+    "city_origin": 1
+  },
+  {
+    "name": "吴忠",
+    "nameEn": "WUZHONG",
+    "city_origin": 1
+  },
+  {
+    "name": "固原",
+    "nameEn": "GUYUAN",
+    "city_origin": 1
+  },
+  {
+    "name": "中卫",
+    "nameEn": "ZHONGWEI",
+    "city_origin": 1
+  },
+  {
+    "name": "海北",
+    "nameEn": "HAIBEI",
+    "city_origin": 1
+  },
+  {
+    "name": "西宁",
+    "nameEn": "XINING",
+    "city_origin": 1
+  },
+  {
+    "name": "海东",
+    "nameEn": "HAIDONG",
+    "city_origin": 1
+  },
+  {
+    "name": "黄南",
+    "nameEn": "HUANGNAN",
+    "city_origin": 1
+  },
+  {
+    "name": "海南",
+    "nameEn": "HAINAN",
+    "city_origin": 1
+  },
+  {
+    "name": "果洛",
+    "nameEn": "GUOLUO",
+    "city_origin": 1
+  },
+  {
+    "name": "玉树",
+    "nameEn": "YUSHU",
+    "city_origin": 1
+  },
+  {
+    "name": "海西",
+    "nameEn": "HAIXI",
+    "city_origin": 1
+  },
+  {
+    "name": "塔城",
+    "nameEn": "TACHENG",
+    "city_origin": 1
+  },
+  {
+    "name": "哈密",
+    "nameEn": "HAMI",
+    "city_origin": 1
+  },
+  {
+    "name": "博乐",
+    "nameEn": "BOLE",
+    "city_origin": 1
+  },
+  {
+    "name": "和田",
+    "nameEn": "HETIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "阿勒泰",
+    "nameEn": "ALETAI",
+    "city_origin": 1
+  },
+  {
+    "name": "克孜勒",
+    "nameEn": "KEZILE",
+    "city_origin": 1
+  },
+  {
+    "name": "博尔塔拉",
+    "nameEn": "BOERTALA",
+    "city_origin": 1
+  },
+  {
+    "name": "克拉玛依",
+    "nameEn": "KELAMAYI",
+    "city_origin": 1
+  },
+  {
+    "name": "石河子",
+    "nameEn": "SHIHEZI",
+    "city_origin": 1
+  },
+  {
+    "name": "昌吉",
+    "nameEn": "CHANGJI",
+    "city_origin": 1
+  },
+  {
+    "name": "吐鲁番",
+    "nameEn": "TULUFAN",
+    "city_origin": 1
+  },
+  {
+    "name": "巴音",
+    "nameEn": "BAYIN",
+    "city_origin": 1
+  },
+  {
+    "name": "阿克苏",
+    "nameEn": "AKESU",
+    "city_origin": 1
+  },
+  {
+    "name": "喀什",
+    "nameEn": "KASHI",
+    "city_origin": 1
+  },
+  {
+    "name": "伊犁",
+    "nameEn": "YILI",
+    "city_origin": 1
+  },
+  {
+    "name": "香港",
+    "nameEn": "XIANGGANG",
+    "city_origin": 1
+  },
+  {
+    "name": "澳门",
+    "nameEn": "AOMEN",
+    "city_origin": 1
+  },
+  {
+    "name": "乌鲁木齐",
+    "nameEn": "WULUMUQI",
+    "city_origin": 1
+  },
+  {
+    "name": "香格里拉",
+    "nameEn": "XIANGGELILA",
+    "city_origin": 1
+  },
+  {
+    "name": "台北",
+    "nameEn": "TAIBEI",
+    "city_origin": 1
+  },
+  {
+    "name": "高雄",
+    "nameEn": "GAOXIONG",
+    "city_origin": 1
+  },
+  {
+    "name": "横店",
+    "nameEn": "HENGDIAN",
+    "city_origin": 1
+  },
+  {
+    "name": "台南",
+    "nameEn": "TAINAN",
+    "city_origin": 1
+  },
+  {
+    "name": "台中",
+    "nameEn": "TAIZHONG",
+    "city_origin": 1
+  },
+  {
+    "name": "首尔",
+    "nameEn": "SHOUER",
+    "city_origin": 2
+  },
+  {
+    "name": "东京",
+    "nameEn": "DONGJING",
+    "city_origin": 2
+  },
+  {
+    "name": "大阪",
+    "nameEn": "DABAN",
+    "city_origin": 2
+  },
+  {
+    "name": "曼谷",
+    "nameEn": "MANGU",
+    "city_origin": 2
+  },
+  {
+    "name": "新加坡",
+    "nameEn": "XINJIAPO",
+    "city_origin": 2
+  },
+  {
+    "name": "吉隆坡",
+    "nameEn": "JILONGPO",
+    "city_origin": 2
+  },
+  {
+    "name": "马尼拉",
+    "nameEn": "MANILA",
+    "city_origin": 2
+  },
+  {
+    "name": "雅加达",
+    "nameEn": "YAJIADA",
+    "city_origin": 2
+  },
+  {
+    "name": "名古屋",
+    "nameEn": "MINGGUWU",
+    "city_origin": 2
+  },
+  {
+    "name": "博多",
+    "nameEn": "BODUO",
+    "city_origin": 2
+  },
+  {
+    "name": "埼玉",
+    "nameEn": "QIYU",
+    "city_origin": 2
+  },
+  {
+    "name": "横滨",
+    "nameEn": "HENGBIN",
+    "city_origin": 2
+  },
+  {
+    "name": "那霸",
+    "nameEn": "NABA",
+    "city_origin": 2
+  },
+  {
+    "name": "伦敦",
+    "nameEn": "LUNDUN",
+    "city_origin": 2
+  },
+  {
+    "name": "巴黎",
+    "nameEn": "BALI",
+    "city_origin": 2
+  },
+  {
+    "name": "泰克伦堡",
+    "nameEn": "TAIKELUNBAO",
+    "city_origin": 2
+  },
+  {
+    "name": "圣彼得堡",
+    "nameEn": "SHENGBIDEBAO",
+    "city_origin": 2
+  },
+  {
+    "name": "釜山",
+    "nameEn": "FUSHAN",
+    "city_origin": 2
+  },
+  {
+    "name": "大邱",
+    "nameEn": "DAQIU",
+    "city_origin": 2
+  },
+  {
+    "name": "海参崴",
+    "nameEn": "HAISHENWEI",
+    "city_origin": 2
+  },
+  {
+    "name": "旧金山",
+    "nameEn": "JIUJINSHAN",
+    "city_origin": 2
+  },
+  {
+    "name": "洛杉矶",
+    "nameEn": "LUOSHANJI",
+    "city_origin": 2
+  },
+  {
+    "name": "伯克利",
+    "nameEn": "BOKELI",
+    "city_origin": 2
+  },
+  {
+    "name": "济州岛",
+    "nameEn": "JIZHOUDAO",
+    "city_origin": 2
+  },
+  {
+    "name": "纽约",
+    "nameEn": "NIUYUE",
+    "city_origin": 2
+  },
+  {
+    "name": "利物浦",
+    "nameEn": "LIWUPU",
+    "city_origin": 2
+  },
+  {
+    "name": "曼彻斯特",
+    "nameEn": "MANCHESITE",
+    "city_origin": 2
+  },
+  {
+    "name": "波尔多",
+    "nameEn": "BOERDUO",
+    "city_origin": 2
+  },
+  {
+    "name": "蒙彼利埃",
+    "nameEn": "MENGBILIAI",
+    "city_origin": 2
+  },
+  {
+    "name": "胡志明市",
+    "nameEn": "HUZHIMINGSHI",
+    "city_origin": 2
+  },
+  {
+    "name": "静冈",
+    "nameEn": "JINGANG",
+    "city_origin": 2
+  },
+  {
+    "name": "格拉斯哥",
+    "nameEn": "GELASIGE",
+    "city_origin": 2
+  },
+  {
+    "name": "仁川",
+    "nameEn": "RENCHUAN",
+    "city_origin": 2
+  },
+  {
+    "name": "高阳",
+    "nameEn": "GAOYANG",
+    "city_origin": 2
+  },
+  {
+    "name": "宝冢",
+    "nameEn": "BAOZHONG",
+    "city_origin": 2
+  },
+  {
+    "name": "福冈",
+    "nameEn": "FUGANG",
+    "city_origin": 2
+  },
+  {
+    "name": "墨尔本",
+    "nameEn": "MOERBEN",
+    "city_origin": 2
+  },
+  {
+    "name": "悉尼",
+    "nameEn": "XINI",
+    "city_origin": 2
+  },
+  {
+    "name": "慕尼黑",
+    "nameEn": "MUNIHEI",
+    "city_origin": 2
+  },
+  {
+    "name": "柏林",
+    "nameEn": "BOLIN",
+    "city_origin": 2
+  },
+  {
+    "name": "汉堡",
+    "nameEn": "HANBAO",
+    "city_origin": 2
+  },
+  {
+    "name": "法兰克福",
+    "nameEn": "FALANKEFU",
+    "city_origin": 2
+  },
+  {
+    "name": "科隆",
+    "nameEn": "KELONG",
+    "city_origin": 2
+  },
+  {
+    "name": "阿姆斯特丹",
+    "nameEn": "AMUSITEDAN",
+    "city_origin": 2
+  },
+  {
+    "name": "维也纳",
+    "nameEn": "WEIYENA",
+    "city_origin": 2
+  },
+  {
+    "name": "芝加哥",
+    "nameEn": "ZHIJIAGE",
+    "city_origin": 2
+  },
+  {
+    "name": "西雅图",
+    "nameEn": "XIYATU",
+    "city_origin": 2
+  },
+  {
+    "name": "拉斯维加斯",
+    "nameEn": "LASIWEIJIASI",
+    "city_origin": 2
+  },
+  {
+    "name": "迈阿密",
+    "nameEn": "MAIAMI",
+    "city_origin": 2
+  },
+  {
+    "name": "布鲁克林",
+    "nameEn": "BULUKELIN",
+    "city_origin": 2
+  },
+  {
+    "name": "奥兰多",
+    "nameEn": "AOLANDUO",
+    "city_origin": 2
+  },
+  {
+    "name": "亚特兰大",
+    "nameEn": "YATELANDA",
+    "city_origin": 2
+  },
+  {
+    "name": "匹兹堡",
+    "nameEn": "PIZIBAO",
+    "city_origin": 2
+  },
+  {
+    "name": "布达佩斯",
+    "nameEn": "BUDAPEISI",
+    "city_origin": 2
+  },
+  {
+    "name": "卢森堡",
+    "nameEn": "LUSENBAO",
+    "city_origin": 2
+  },
+  {
+    "name": "布拉格",
+    "nameEn": "BULAGE",
+    "city_origin": 2
+  },
+  {
+    "name": "河内",
+    "nameEn": "HENEI",
+    "city_origin": 2
+  },
+  {
+    "name": "神户",
+    "nameEn": "SHENHU",
+    "city_origin": 2
+  },
+  {
+    "name": "伯明翰",
+    "nameEn": "BOMINGHAN",
+    "city_origin": 2
+  },
+  {
+    "name": "利兹",
+    "nameEn": "LIZI",
+    "city_origin": 2
+  },
+  {
+    "name": "米兰",
+    "nameEn": "MILAN",
+    "city_origin": 2
+  },
+  {
+    "name": "布鲁塞尔",
+    "nameEn": "BULUSAIER",
+    "city_origin": 2
+  },
+  {
+    "name": "莫斯科",
+    "nameEn": "MOSIKE",
+    "city_origin": 2
+  },
+  {
+    "name": "哥本哈根",
+    "nameEn": "GEBENHAGEN",
+    "city_origin": 2
+  },
+  {
+    "name": "纽卡斯尔",
+    "nameEn": "NIUKASIER",
+    "city_origin": 2
+  },
+  {
+    "name": "多伦多",
+    "nameEn": "DUOLUNDUO",
+    "city_origin": 2
+  },
+  {
+    "name": "温哥华",
+    "nameEn": "WENGEHUA",
+    "city_origin": 2
+  },
+  {
+    "name": "蒙特利尔",
+    "nameEn": "MENGTELIER",
+    "city_origin": 2
+  },
+  {
+    "name": "波士顿",
+    "nameEn": "BOSIDUN",
+    "city_origin": 2
+  },
+  {
+    "name": "义乌",
+    "nameEn": "YIWU",
+    "city_origin": 1
+  }
+]
+

@@ -12,6 +12,8 @@ import {
   PerformanceEditorService,
   type PerformanceMediaChanges,
 } from '@/features/performances/editor'
+import LocationPickerScreen from '@/features/performances/LocationPickerScreen.vue'
+import { formatSelectedLocation } from '@/features/performances/location'
 import type { PerformanceDraft } from '@/features/performances/repository'
 import { choosePerformanceImage } from '@/platform/media/picker'
 import { createPerformanceMediaStorage } from '@/platform/media/factory'
@@ -24,6 +26,7 @@ interface PickerChangeEvent {
 
 const props = defineProps<{
   performanceId?: string
+  initialStartedAtMs?: number
 }>()
 
 const emit = defineEmits<{
@@ -34,8 +37,10 @@ const emit = defineEmits<{
 const draft = reactive<PerformanceDraft>(createEmptyPerformanceDraft())
 const categories = ref<PerformanceCategory[]>([])
 const tags = ref<PerformanceTag[]>([])
+const locationHistory = ref<Performance[]>([])
 const loading = ref(true)
 const saving = ref(false)
+const locationPickerVisible = ref(false)
 const service = ref<PerformanceEditorService | null>(null)
 const mediaChanges = reactive<PerformanceMediaChanges>({})
 const facetInputs = reactive<Record<PerformanceFacetKind, string>>({
@@ -60,8 +65,10 @@ const saveDisabled = computed(() =>
   loading.value
   || saving.value
   || !draft.name.trim()
-  || (!draft.city.trim() && !draft.venue.trim()),
+  || !draft.city.trim()
+  || !draft.venue.trim(),
 )
+const locationLabel = computed(() => formatSelectedLocation(draft.city, draft.venue))
 const dateValue = computed(() => formatDate(draft.startedAtMs))
 const timeValue = computed(() => formatTime(draft.startedAtMs))
 const categoryOptions = computed(() => [{ id: null, name: '无分类' }, ...categories.value])
@@ -81,17 +88,21 @@ onMounted(async () => {
       repositories.performances,
       createPerformanceMediaStorage(),
     )
-    const [categoryItems, tagItems] = await Promise.all([
+    const [categoryItems, tagItems, performancePage] = await Promise.all([
       repositories.referenceData.listCategories(),
       repositories.referenceData.listTags(),
+      repositories.performances.list({ sortDirection: 'descending', limit: 1000 }),
     ])
     categories.value = categoryItems
     tags.value = tagItems
+    locationHistory.value = performancePage.items
 
     if (props.performanceId) {
       const performance = await repositories.performances.get(props.performanceId)
       if (!performance) throw new Error('演出记录不存在')
       assignPerformance(performance)
+    } else if (props.initialStartedAtMs !== undefined) {
+      draft.startedAtMs = props.initialStartedAtMs
     }
   } catch (error) {
     showError(error, '表单初始化失败')
@@ -149,6 +160,13 @@ function toggleTag(id: string): void {
   draft.tagIds = draft.tagIds.includes(id)
     ? draft.tagIds.filter((tagId) => tagId !== id)
     : [...draft.tagIds, id]
+}
+
+function applyLocation(location: { city: string; venue: string }): void {
+  draft.city = location.city
+  draft.venue = location.venue
+  draft.coordinate = null
+  locationPickerVisible.value = false
 }
 
 async function selectImage(role: PerformanceImageRole): Promise<void> {
@@ -286,17 +304,23 @@ function pad(value: number): string {
               <view class="picker-value">{{ timeValue }}</view>
             </picker>
           </view>
-          <view class="form-grid">
-            <label class="form-field">
-              <text class="form-field__label">城市</text>
-              <input v-model="draft.city" class="form-input" aria-label="城市" maxlength="40" placeholder="例如：上海">
-            </label>
-            <label class="form-field">
-              <text class="form-field__label">场馆</text>
-              <input v-model="draft.venue" class="form-input" aria-label="场馆" maxlength="80" placeholder="请输入场馆">
-            </label>
+          <view class="form-field form-field--spaced">
+            <text class="form-field__label">场地 *</text>
+            <button
+              class="location-selector"
+              aria-label="选择城市与场地"
+              hover-class="location-selector--pressed"
+              @tap="locationPickerVisible = true"
+            >
+              <view class="location-selector__icon"><AppIcon name="location" /></view>
+              <view class="location-selector__copy">
+                <text v-if="locationLabel" class="location-selector__value">{{ locationLabel }}</text>
+                <text v-else class="location-selector__placeholder">选择城市与场地</text>
+                <text class="location-selector__hint">默认地区或其它地区 · 不使用地图</text>
+              </view>
+              <view class="location-selector__chevron"><AppIcon name="chevron" /></view>
+            </button>
           </view>
-          <text class="form-hint">城市和场馆至少填写一项</text>
         </view>
 
         <view class="form-section">
@@ -408,6 +432,15 @@ function pad(value: number): string {
         </button>
       </template>
     </scroll-view>
+
+    <LocationPickerScreen
+      :visible="locationPickerVisible"
+      :city="draft.city"
+      :venue="draft.venue"
+      :performances="locationHistory"
+      @close="locationPickerVisible = false"
+      @confirm="applyLocation"
+    />
   </view>
 </template>
 
@@ -428,7 +461,7 @@ function pad(value: number): string {
 .form-hint--inline { margin-top: 4rpx; }
 .chip-list { display: flex; flex-wrap: wrap; gap: 14rpx; }
 .choice-chip { min-height: 64rpx; margin: 0; padding: 0 24rpx; border: 1rpx solid var(--color-border); border-radius: 32rpx; background: var(--color-surface); color: var(--color-muted); font-size: 25rpx; line-height: 62rpx; }
-.choice-chip::after, .media-picker::after, .media-remove::after, .rating-button::after, .primary-save::after { border: 0; }
+.choice-chip::after, .media-picker::after, .media-remove::after, .rating-button::after, .primary-save::after, .location-selector::after { border: 0; }
 .choice-chip--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
 .choice-chip--pressed { opacity: 0.7; }
 .media-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22rpx; }
@@ -449,4 +482,13 @@ function pad(value: number): string {
 .primary-save { height: 92rpx; margin: 44rpx 34rpx 20rpx; border: 0; border-radius: 20rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 30rpx; font-weight: 650; line-height: 92rpx; }
 .primary-save--pressed { background: var(--color-accent-pressed); }
 .primary-save[disabled] { background: var(--color-border); color: var(--color-muted); opacity: 0.7; }
+.location-selector { box-sizing: border-box; display: flex; width: 100%; min-height: 100rpx; margin: 0; padding: 17rpx 20rpx; align-items: center; gap: 16rpx; border: 1rpx solid var(--color-border); border-radius: 17rpx; background: var(--color-surface); color: var(--color-text); text-align: left; }
+.location-selector--pressed { background: var(--color-row-pressed); }
+.location-selector__icon { width: 40rpx; height: 40rpx; flex: none; color: var(--color-accent); }
+.location-selector__copy { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.location-selector__value, .location-selector__placeholder { overflow: hidden; font-size: 27rpx; font-weight: 620; text-overflow: ellipsis; white-space: nowrap; }
+.location-selector__value { color: var(--color-text); }
+.location-selector__placeholder { color: var(--color-accent); }
+.location-selector__hint { margin-top: 5rpx; color: var(--color-muted); font-size: 20rpx; }
+.location-selector__chevron { width: 30rpx; height: 30rpx; flex: none; color: var(--color-muted); }
 </style>

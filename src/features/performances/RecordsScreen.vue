@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 
 import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import type { Performance } from '@/domain/performance'
+import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
+import PerformanceBrowseToolbar from '@/features/performances/PerformanceBrowseToolbar.vue'
+import PerformanceCard from '@/features/performances/PerformanceCard.vue'
+import PerformanceFilterSheet from '@/features/performances/PerformanceFilterSheet.vue'
 import {
-  formatPerformanceDate,
-  formatPerformanceLocation,
-  performanceLifecycleLabel,
-  performanceMediaPath,
-} from '@/features/performances/browser'
+  ALL_PERFORMANCE_LIFECYCLES,
+  yearRange,
+  type PerformanceDisplayMode,
+  type PerformanceFilter,
+} from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
+import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
 
 const props = defineProps<{
   theme: 'light' | 'dark'
@@ -21,9 +27,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: []
   open: [id: string]
-  loaded: [total: number]
 }>()
 
+const browseStore = useBrowsePreferencesStore()
+const { displayMode, filter } = storeToRefs(browseStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const hasMore = ref(false)
@@ -32,14 +39,29 @@ const loadingMore = ref(false)
 const searchExpanded = ref(false)
 const searchQuery = ref('')
 const searchInputFocused = ref(false)
+const filterVisible = ref(false)
+const categories = ref<PerformanceCategory[]>([])
+const tags = ref<PerformanceTag[]>([])
+const years = ref<number[]>([])
 let requestSequence = 0
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
 const headerCount = computed(() => `${total.value} 场`)
+const activeFilterCount = computed(() => (
+  (filter.value.categoryIds.length ? 1 : 0)
+  + (filter.value.tagIds.length ? 1 : 0)
+  + (filter.value.year === null ? 0 : 1)
+  + (filter.value.lifecycles.length === ALL_PERFORMANCE_LIFECYCLES.length ? 0 : 1)
+))
+const emptyIsFiltered = computed(() => Boolean(searchQuery.value) || activeFilterCount.value > 0)
 
-onMounted(() => void load(true))
+onMounted(async () => {
+  await browseStore.initialize()
+  await loadMetadata()
+  await load(true)
+})
 onBeforeUnmount(() => clearTimeout(searchTimer))
-watch(() => props.refreshKey, () => void load(true))
+watch(() => props.refreshKey, () => void refreshAll())
 watch(searchQuery, () => {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => void load(true), 220)
@@ -52,8 +74,16 @@ async function load(reset: boolean): Promise<void> {
   try {
     const repositories = await getAppRepositories()
     const offset = reset ? 0 : items.value.length
+    const range = yearRange(filter.value.year)
     const page = await repositories.performances.list({
       search: searchQuery.value,
+      categoryIds: filter.value.categoryIds.length ? filter.value.categoryIds : undefined,
+      tagIdsAny: filter.value.tagIds.length ? filter.value.tagIds : undefined,
+      lifecycles: filter.value.lifecycles.length === ALL_PERFORMANCE_LIFECYCLES.length
+        ? undefined
+        : filter.value.lifecycles,
+      referenceTimeMs: Date.now(),
+      ...range,
       sortDirection: 'descending',
       offset,
       limit: 30,
@@ -62,7 +92,6 @@ async function load(reset: boolean): Promise<void> {
     items.value = reset ? page.items : [...items.value, ...page.items]
     total.value = page.total
     hasMore.value = page.hasMore
-    emit('loaded', page.total)
   } catch (error) {
     if (sequence !== requestSequence) return
     uni.showToast({
@@ -75,6 +104,43 @@ async function load(reset: boolean): Promise<void> {
       loadingMore.value = false
     }
   }
+}
+
+async function loadMetadata(): Promise<void> {
+  try {
+    const repositories = await getAppRepositories()
+    const [categoryItems, tagItems, allPerformances] = await Promise.all([
+      repositories.referenceData.listCategories(),
+      repositories.referenceData.listTags(),
+      repositories.performances.list({ limit: 1000 }),
+    ])
+    categories.value = categoryItems
+    tags.value = tagItems
+    years.value = [...new Set(allPerformances.items.map(
+      ({ startedAtMs }) => new Date(startedAtMs).getFullYear(),
+    ))].sort((left, right) => right - left)
+    const categoryIds = new Set(categoryItems.map(({ id }) => id))
+    const tagIds = new Set(tagItems.map(({ id }) => id))
+    const normalizedFilter: PerformanceFilter = {
+      ...filter.value,
+      categoryIds: filter.value.categoryIds.filter((id) => categoryIds.has(id)),
+      tagIds: filter.value.tagIds.filter((id) => tagIds.has(id)),
+      year: filter.value.year !== null && !years.value.includes(filter.value.year)
+        ? null
+        : filter.value.year,
+      lifecycles: [...filter.value.lifecycles],
+    }
+    if (JSON.stringify(normalizedFilter) !== JSON.stringify(filter.value)) {
+      browseStore.setFilter(normalizedFilter)
+    }
+  } catch {
+    // Main list loading surfaces repository failures.
+  }
+}
+
+async function refreshAll(): Promise<void> {
+  await loadMetadata()
+  await load(true)
 }
 
 async function toggleSearch(): Promise<void> {
@@ -98,12 +164,18 @@ function clearSearch(): void {
   searchInputFocused.value = true
 }
 
-function shortMonth(timestamp: number): string {
-  return `${new Date(timestamp).getMonth() + 1}月`
+function applyFilter(value: PerformanceFilter): void {
+  browseStore.setFilter(value)
+  void load(true)
 }
 
-function day(timestamp: number): string {
-  return String(new Date(timestamp).getDate()).padStart(2, '0')
+function setDisplayMode(value: PerformanceDisplayMode): void {
+  browseStore.setDisplayMode(value)
+}
+
+function clearFilters(): void {
+  browseStore.resetFilter()
+  void load(true)
 }
 </script>
 
@@ -129,16 +201,21 @@ function day(timestamp: number): string {
           confirm-type="search"
           placeholder="搜索名称、阵容、城市、场馆、剧目…"
         >
-        <button v-if="searchQuery" class="search-clear" aria-label="清空搜索" @tap="clearSearch">
-          <AppIcon name="close" />
-        </button>
+        <button v-if="searchQuery" class="search-clear" aria-label="清空搜索" @tap="clearSearch"><AppIcon name="close" /></button>
       </view>
       <button class="search-cancel" @tap="closeSearch">取消</button>
     </view>
 
+    <PerformanceBrowseToolbar
+      :active-filter-count="activeFilterCount"
+      :display-mode="displayMode"
+      @filter="filterVisible = true"
+      @display-mode="setDisplayMode"
+    />
+
     <view v-if="loading" class="loading-state">正在读取演出记录…</view>
     <EmptyState
-      v-else-if="total === 0 && !searchQuery"
+      v-else-if="total === 0 && !emptyIsFiltered"
       kind="records"
       :theme="theme"
       title="还没有演出记录"
@@ -147,48 +224,34 @@ function day(timestamp: number): string {
       @action="$emit('add')"
     />
     <view v-else-if="total === 0" class="search-empty">
-      <view class="search-empty__icon"><AppIcon name="search" /></view>
-      <text class="search-empty__title">没有匹配的演出</text>
-      <text class="search-empty__description">换个名称、阵容、城市或场馆试试</text>
+      <view class="search-empty__icon"><AppIcon name="filter" /></view>
+      <text class="search-empty__title">没有符合条件的演出</text>
+      <text class="search-empty__description">调整搜索词或筛选条件后再试试</text>
+      <button v-if="activeFilterCount" class="empty-reset" @tap="clearFilters">清除筛选</button>
     </view>
     <scroll-view v-else class="records-list" scroll-y lower-threshold="120" @scrolltolower="load(false)">
-      <button
-        v-for="performance in items"
-        :key="performance.id"
-        class="performance-card"
-        hover-class="performance-card--pressed"
-        @tap="$emit('open', performance.id)"
-      >
-        <view class="performance-card__date">
-          <text class="performance-card__day">{{ day(performance.startedAtMs) }}</text>
-          <text class="performance-card__month">{{ shortMonth(performance.startedAtMs) }}</text>
-        </view>
-        <image
-          v-if="performanceMediaPath(performance, 'poster')"
-          class="performance-card__poster"
-          :src="performanceMediaPath(performance, 'poster')"
-          mode="aspectFill"
+      <view class="performance-collection" :class="{ 'performance-collection--poster': displayMode === 'poster' }">
+        <PerformanceCard
+          v-for="performance in items"
+          :key="performance.id"
+          :performance="performance"
+          :mode="displayMode"
+          @open="$emit('open', $event)"
         />
-        <view v-else class="performance-card__poster performance-card__poster--empty">
-          <AppIcon name="ticket" />
-        </view>
-        <view class="performance-card__content">
-          <view class="performance-card__title-row">
-            <text class="performance-card__title">{{ performance.name }}</text>
-            <text class="status-pill">{{ performanceLifecycleLabel(performance) }}</text>
-          </view>
-          <text class="performance-card__meta">{{ formatPerformanceDate(performance.startedAtMs, true) }}</text>
-          <text class="performance-card__meta">{{ formatPerformanceLocation(performance) }}</text>
-          <text v-if="performance.facets.artist?.length" class="performance-card__artist">
-            {{ performance.facets.artist.join('、') }}
-          </text>
-        </view>
-        <view class="performance-card__chevron"><AppIcon name="chevron" /></view>
-      </button>
-
+      </view>
       <text v-if="loadingMore" class="list-footer">正在加载…</text>
       <text v-else-if="!hasMore" class="list-footer">共 {{ total }} 场演出</text>
     </scroll-view>
+
+    <PerformanceFilterSheet
+      :visible="filterVisible"
+      :filter="filter"
+      :categories="categories"
+      :tags="tags"
+      :years="years"
+      @close="filterVisible = false"
+      @apply="applyFilter"
+    />
   </view>
 </template>
 
@@ -198,31 +261,19 @@ function day(timestamp: number): string {
 .search-field { display: flex; min-width: 0; height: 76rpx; padding: 0 18rpx; flex: 1; align-items: center; gap: 14rpx; border: 1rpx solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); }
 .search-field > :first-child { width: 34rpx; height: 34rpx; flex: none; color: var(--color-muted); }
 .search-input { min-width: 0; height: 76rpx; flex: 1; color: var(--color-text); font-size: 27rpx; }
-.search-clear, .search-cancel { margin: 0; padding: 0; border: 0; background: transparent; }
-.search-clear::after, .search-cancel::after, .performance-card::after { border: 0; }
+.search-clear, .search-cancel, .empty-reset { margin: 0; padding: 0; border: 0; background: transparent; }
+.search-clear::after, .search-cancel::after, .empty-reset::after { border: 0; }
 .search-clear { width: 52rpx; height: 52rpx; padding: 15rpx; color: var(--color-muted); }
 .search-cancel { color: var(--color-accent); font-size: 27rpx; line-height: 76rpx; }
-.loading-state, .search-empty { display: flex; min-height: calc(100vh - 368rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
+.loading-state, .search-empty { display: flex; min-height: calc(100vh - 460rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
 .search-empty { flex-direction: column; padding: 80rpx 40rpx 180rpx; text-align: center; }
-.search-empty__icon { width: 82rpx; height: 82rpx; color: var(--color-accent); opacity: 0.72; }
+.search-empty__icon { width: 82rpx; height: 82rpx; color: var(--color-accent); opacity: .72; }
 .search-empty__title { margin-top: 28rpx; color: var(--color-text); font-size: 32rpx; font-weight: 650; }
 .search-empty__description { margin-top: 12rpx; font-size: 25rpx; }
-.records-list { box-sizing: border-box; height: calc(100vh - 236rpx - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
-.search-bar + .loading-state, .search-bar ~ .records-list { height: calc(100vh - 236rpx - 116rpx - 132rpx - env(safe-area-inset-bottom)); }
-.performance-card { box-sizing: border-box; display: flex; width: 100%; min-height: 176rpx; margin: 0 0 18rpx; padding: 18rpx; align-items: center; gap: 18rpx; border: 1rpx solid var(--color-border); border-radius: 22rpx; background: var(--color-surface); color: var(--color-text); text-align: left; box-shadow: 0 8rpx 24rpx var(--color-tab-shadow); }
-.performance-card--pressed { background: var(--color-row-pressed); transform: scale(0.99); }
-.performance-card__date { display: flex; width: 68rpx; flex: none; flex-direction: column; align-items: center; }
-.performance-card__day { color: var(--color-accent); font-size: 38rpx; font-weight: 750; line-height: 1; }
-.performance-card__month { margin-top: 8rpx; color: var(--color-muted); font-size: 21rpx; }
-.performance-card__poster { width: 104rpx; height: 136rpx; flex: none; border-radius: 14rpx; background: var(--color-accent-soft); }
-.performance-card__poster--empty { display: flex; align-items: center; justify-content: center; color: var(--color-accent); }
-.performance-card__poster--empty > :first-child { width: 48rpx; height: 48rpx; }
-.performance-card__content { display: flex; min-width: 0; flex: 1; flex-direction: column; }
-.performance-card__title-row { display: flex; min-width: 0; align-items: center; gap: 12rpx; }
-.performance-card__title { min-width: 0; flex: 1; overflow: hidden; color: var(--color-text); font-size: 30rpx; font-weight: 680; text-overflow: ellipsis; white-space: nowrap; }
-.status-pill { flex: none; padding: 5rpx 12rpx; border-radius: 18rpx; background: var(--color-accent-soft); color: var(--color-accent); font-size: 20rpx; }
-.performance-card__meta, .performance-card__artist { margin-top: 7rpx; overflow: hidden; color: var(--color-muted); font-size: 23rpx; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
-.performance-card__artist { color: var(--color-accent); }
-.performance-card__chevron { width: 28rpx; height: 28rpx; flex: none; color: var(--color-muted); }
+.empty-reset { height: 72rpx; margin-top: 26rpx; padding: 0 26rpx; border: 1rpx solid var(--color-accent); border-radius: 18rpx; color: var(--color-accent); font-size: 25rpx; line-height: 70rpx; }
+.records-list { box-sizing: border-box; height: calc(100vh - 236rpx - 92rpx - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
+.search-bar ~ .records-list { height: calc(100vh - 236rpx - 116rpx - 92rpx - 132rpx - env(safe-area-inset-bottom)); }
+.performance-collection { display: flex; flex-direction: column; gap: 18rpx; }
+.performance-collection--poster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; }
 .list-footer { display: block; padding: 22rpx 0 40rpx; color: var(--color-muted); font-size: 23rpx; text-align: center; }
 </style>

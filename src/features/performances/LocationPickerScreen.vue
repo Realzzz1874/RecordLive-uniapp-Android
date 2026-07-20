@@ -255,8 +255,8 @@ function confirm(): void {
 .location-intro__title, .location-intro__description { display: block; }
 .location-intro__title { color: var(--color-text); font-size: 27rpx; font-weight: 700; }
 .location-intro__description { margin-top: 7rpx; color: var(--color-muted); font-size: 21rpx; line-height: 1.45; }
-.location-form-card { margin-top: 26rpx; overflow: hidden; border: 1rpx solid var(--color-border); border-radius: 22rpx; background: var(--color-surface); }
-.location-row { display: flex; width: 100%; min-height: 118rpx; margin: 0; padding: 20rpx 24rpx; align-items: center; border: 0; border-top: 1rpx solid var(--color-border-subtle); border-radius: 0; background: transparent; color: var(--color-text); text-align: left; }
+.location-form-card { margin-top: 26rpx; overflow: hidden; border: var(--app-border-width) solid var(--color-border); border-radius: 22rpx; background: var(--color-surface); }
+.location-row { display: flex; width: 100%; min-height: 118rpx; margin: 0; padding: 20rpx 24rpx; align-items: center; border: 0; border-top: var(--app-border-width) solid var(--color-border-subtle); border-radius: 0; background: transparent; color: var(--color-text); text-align: left; }
 .location-row:first-child { border-top: 0; }
 .location-row::after, .location-confirm::after, .region-tab::after, .manual-toggle::after, .manual-form button::after, .selection-row::after { border: 0; }
 .location-row__copy { display: flex; min-width: 0; flex: 1; flex-direction: column; }
@@ -272,20 +272,20 @@ function confirm(): void {
 .region-tabs { display: grid; margin: 22rpx 28rpx 16rpx; padding: 6rpx; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6rpx; border-radius: 18rpx; background: var(--color-row-pressed); }
 .region-tab { height: 62rpx; margin: 0; padding: 0; border: 0; border-radius: 14rpx; background: transparent; color: var(--color-muted); font-size: 24rpx; line-height: 62rpx; }
 .region-tab--active { background: var(--color-surface); color: var(--color-accent); font-weight: 680; box-shadow: 0 4rpx 14rpx var(--color-tab-shadow); }
-.location-search { display: flex; height: 74rpx; margin: 0 28rpx 18rpx; padding: 0 18rpx; align-items: center; gap: 13rpx; border: 1rpx solid var(--color-border); border-radius: 17rpx; background: var(--color-surface); }
+.location-search { display: flex; height: 74rpx; margin: 0 28rpx 18rpx; padding: 0 18rpx; align-items: center; gap: 13rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 17rpx; background: var(--color-surface); }
 .location-search > :first-child { width: 32rpx; height: 32rpx; flex: none; color: var(--color-muted); }
 .location-search input { min-width: 0; height: 74rpx; flex: 1; color: var(--color-text); font-size: 25rpx; }
 .selection-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 174rpx); padding: 0 28rpx calc(44rpx + env(safe-area-inset-bottom)); }
 .selection-list--venue { height: calc(100vh - var(--app-header-height) - 164rpx); }
-.manual-section, .selection-section { margin-bottom: 20rpx; overflow: hidden; border: 1rpx solid var(--color-border); border-radius: 20rpx; background: var(--color-surface); }
+.manual-section, .selection-section { margin-bottom: 20rpx; overflow: hidden; border: var(--app-border-width) solid var(--color-border); border-radius: 20rpx; background: var(--color-surface); }
 .manual-toggle { display: flex; width: 100%; height: 78rpx; margin: 0; padding: 0 22rpx; align-items: center; gap: 12rpx; border: 0; background: transparent; color: var(--color-accent); font-size: 24rpx; text-align: left; }
 .manual-toggle > :first-child { width: 30rpx; height: 30rpx; }
 .manual-form { display: flex; padding: 0 18rpx 18rpx; gap: 12rpx; }
-.manual-form input { box-sizing: border-box; min-width: 0; height: 70rpx; padding: 0 16rpx; flex: 1; border: 1rpx solid var(--color-border); border-radius: 14rpx; color: var(--color-text); font-size: 24rpx; }
+.manual-form input { box-sizing: border-box; min-width: 0; height: 70rpx; padding: 0 16rpx; flex: 1; border: var(--app-border-width) solid var(--color-border); border-radius: 14rpx; color: var(--color-text); font-size: 24rpx; }
 .manual-form button { width: 104rpx; height: 70rpx; margin: 0; padding: 0; border: 0; border-radius: 14rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 23rpx; line-height: 70rpx; }
 .manual-form button[disabled] { background: var(--color-border); color: var(--color-muted); }
 .selection-section__title { display: block; padding: 16rpx 20rpx 12rpx; color: var(--color-accent); font-size: 21rpx; font-weight: 700; }
-.selection-row { display: flex; width: 100%; min-height: 76rpx; margin: 0; padding: 0 20rpx; align-items: center; gap: 16rpx; border: 0; border-top: 1rpx solid var(--color-border-subtle); border-radius: 0; background: transparent; color: var(--color-text); font-size: 25rpx; text-align: left; }
+.selection-row { display: flex; width: 100%; min-height: 76rpx; margin: 0; padding: 0 20rpx; align-items: center; gap: 16rpx; border: 0; border-top: var(--app-border-width) solid var(--color-border-subtle); border-radius: 0; background: transparent; color: var(--color-text); font-size: 25rpx; text-align: left; }
 .selection-row > text { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .selection-row > :last-child { width: 27rpx; height: 27rpx; flex: none; color: var(--color-muted); }
 .selection-empty { padding: 70rpx 28rpx; color: var(--color-muted); font-size: 23rpx; line-height: 1.55; text-align: center; }

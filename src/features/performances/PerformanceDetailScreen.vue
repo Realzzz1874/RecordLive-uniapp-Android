@@ -247,10 +247,10 @@ function formatMoney(amount: string, currency: string): string {
 .hero__status, .title-block__status { padding: 7rpx 16rpx; border-radius: 20rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 21rpx; }
 .hero__title { margin-top: 18rpx; color: #fff; font-size: 42rpx; font-weight: 750; line-height: 1.25; }
 .hero__location { margin-top: 10rpx; color: rgba(255,255,255,.78); font-size: 25rpx; }
-.title-block { display: flex; padding: 48rpx 36rpx 42rpx; flex-direction: column; align-items: flex-start; border-bottom: 1rpx solid var(--color-border); }
+.title-block { display: flex; padding: 48rpx 36rpx 42rpx; flex-direction: column; align-items: flex-start; border-bottom: var(--app-border-width) solid var(--color-border); }
 .title-block__title { margin-top: 20rpx; color: var(--color-text); font-size: 42rpx; font-weight: 750; line-height: 1.3; }
 .title-block__date { margin-top: 13rpx; color: var(--color-muted); font-size: 26rpx; }
-.detail-section { padding: 36rpx; border-bottom: 1rpx solid var(--color-border); }
+.detail-section { padding: 36rpx; border-bottom: var(--app-border-width) solid var(--color-border); }
 .detail-section--facts { padding-top: 20rpx; padding-bottom: 20rpx; }
 .fact-row { display: flex; min-height: 104rpx; align-items: center; gap: 22rpx; }
 .fact-row__icon { width: 42rpx; height: 42rpx; flex: none; color: var(--color-accent); }
@@ -268,7 +268,7 @@ function formatMoney(amount: string, currency: string): string {
 .text-row__value--money { color: var(--color-accent); font-weight: 650; }
 .remark { color: var(--color-text); font-size: 27rpx; line-height: 1.75; white-space: pre-wrap; }
 .ticket-image { width: 100%; overflow: hidden; border-radius: 18rpx; background: var(--color-accent-soft); }
-.edit-button { display: flex; height: 92rpx; margin: 42rpx 36rpx 20rpx; align-items: center; justify-content: center; gap: 14rpx; border: 1rpx solid var(--color-accent); border-radius: 20rpx; background: var(--color-accent-soft); color: var(--color-accent); font-size: 28rpx; font-weight: 650; line-height: 92rpx; }
+.edit-button { display: flex; height: 92rpx; margin: 42rpx 36rpx 20rpx; align-items: center; justify-content: center; gap: 14rpx; border: var(--app-border-width) solid var(--color-accent); border-radius: 20rpx; background: var(--color-accent-soft); color: var(--color-accent); font-size: 28rpx; font-weight: 650; line-height: 92rpx; }
 .edit-button::after { border: 0; }
 .edit-button > :first-child { width: 34rpx; height: 34rpx; }
 .edit-button--pressed { background: var(--color-row-pressed); }

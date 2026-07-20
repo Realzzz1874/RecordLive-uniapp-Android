@@ -92,7 +92,7 @@ async function load(): Promise<void> {
 
 <style scoped>
 .imprints-screen { min-height: 100vh; background: var(--color-background); }
-.imprints-tabs { display: grid; width: 100%; height: 64rpx; padding: 4rpx; grid-template-columns: 1fr 1fr 1.6fr; border: 1rpx solid var(--color-border); border-radius: 16rpx; background: var(--color-surface); }
+.imprints-tabs { display: grid; width: 100%; height: 64rpx; padding: 4rpx; grid-template-columns: 1fr 1fr 1.6fr; border: var(--app-border-width) solid var(--color-border); border-radius: 16rpx; background: var(--color-surface); }
 .imprints-tab { height: 54rpx; margin: 0; padding: 0 12rpx; border: 0; border-radius: 12rpx; background: transparent; color: var(--color-muted); font-size: 23rpx; font-weight: 620; line-height: 54rpx; white-space: nowrap; }
 .imprints-tab::after { border: 0; }
 .imprints-tab--active { background: var(--color-accent); color: var(--color-on-accent); box-shadow: 0 4rpx 10rpx var(--color-tab-shadow); }

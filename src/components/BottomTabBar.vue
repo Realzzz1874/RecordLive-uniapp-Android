@@ -43,7 +43,7 @@ defineEmits<{
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   padding: 0 10rpx env(safe-area-inset-bottom);
-  border-top: 1rpx solid var(--color-border);
+  border-top: var(--app-border-width) solid var(--color-border);
   background: var(--color-tab-background);
   box-shadow: 0 -10rpx 32rpx var(--color-tab-shadow);
   backdrop-filter: blur(20rpx);

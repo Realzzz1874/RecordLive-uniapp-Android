@@ -75,7 +75,7 @@ defineEmits<{
 <style scoped>
 .performance-card, .poster-card { box-sizing: border-box; margin: 0; border: 0; color: var(--color-text); text-align: left; }
 .performance-card::after, .poster-card::after { border: 0; }
-.performance-card { display: flex; width: 100%; min-height: 252rpx; padding: 16rpx; align-items: stretch; gap: 16rpx; border: 1rpx solid var(--color-accent-border); border-radius: 10rpx; background: var(--color-surface); }
+.performance-card { display: flex; width: 100%; min-height: 252rpx; padding: 16rpx; align-items: stretch; gap: 16rpx; border: var(--app-border-width) solid var(--color-accent-border); border-radius: 10rpx; background: var(--color-surface); }
 .performance-card--pressed, .poster-card--pressed { transform: scale(0.985); opacity: .82; }
 .performance-card__poster { width: 26%; height: auto; aspect-ratio: 3 / 4; flex: none; align-self: flex-start; border-radius: 8rpx; background: var(--color-accent-soft); object-position: center; }
 .performance-card__poster--empty { display: flex; align-items: center; justify-content: center; color: var(--color-accent); }

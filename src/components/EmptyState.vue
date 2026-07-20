@@ -26,7 +26,7 @@ defineEmits<{
   <view class="empty-state">
     <EmptyIllustration :kind="kind" :theme="theme" />
     <view class="empty-state__copy">
-      <text class="empty-state__title">{{ title }}</text>
+      <!-- <text class="empty-state__title">{{ title }}</text> -->
       <text class="empty-state__description">{{ description }}</text>
     </view>
     <button
@@ -101,7 +101,7 @@ defineEmits<{
 }
 
 .empty-state__action--filled {
-  border: 1rpx solid var(--color-accent);
+  border: var(--app-border-width) solid var(--color-accent);
   background: var(--color-accent);
   color: var(--color-on-accent);
 }

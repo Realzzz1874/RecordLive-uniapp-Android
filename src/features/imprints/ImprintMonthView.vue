@@ -316,7 +316,7 @@ function startOfLocalDay(timestamp: number): number {
 .calendar-viewport { overflow: hidden; }
 .calendar-grid { gap: 6rpx; touch-action: pan-y; }
 .calendar-grid--settling { transition: transform 360ms cubic-bezier(.22,.8,.3,1); }
-.calendar-cell { box-sizing: border-box; position: relative; display: flex; min-width: 0; height: auto; aspect-ratio: 3 / 4; margin: 0; padding: 0; align-items: center; justify-content: center; overflow: hidden; border: 1rpx solid transparent; border-radius: 9rpx; background: var(--color-accent-soft); color: var(--color-on-accent); }
+.calendar-cell { box-sizing: border-box; position: relative; display: flex; min-width: 0; height: auto; aspect-ratio: 3 / 4; margin: 0; padding: 0; align-items: center; justify-content: center; overflow: hidden; border: var(--app-border-width) solid transparent; border-radius: 9rpx; background: var(--color-accent-soft); color: var(--color-on-accent); }
 .calendar-cell--blank { background: transparent; opacity: 0; }
 .calendar-cell--today { background: var(--color-accent); }
 .calendar-cell--selected { border-color: var(--color-accent-border); box-shadow: inset 0 0 0 2rpx var(--color-background); }
@@ -333,10 +333,10 @@ function startOfLocalDay(timestamp: number): number {
 .month-empty-tip { display: block; padding: 26rpx 0 4rpx; color: var(--color-muted); font-size: 22rpx; text-align: center; }
 .month-summary { padding: 22rpx; border-radius: 20rpx; background: var(--color-surface); box-shadow: 0 8rpx 26rpx var(--color-tab-shadow); }
 .summary-heading { display: flex; margin-bottom: 16rpx; align-items: center; gap: 10rpx; color: var(--color-accent); font-size: 25rpx; font-weight: 700; }
-.memory-row { display: flex; width: 100%; min-height: 60rpx; margin: 0; padding: 10rpx 0; align-items: center; gap: 14rpx; border: 0; border-top: 1rpx solid var(--color-border-subtle); background: transparent; text-align: left; }
+.memory-row { display: flex; width: 100%; min-height: 60rpx; margin: 0; padding: 10rpx 0; align-items: center; gap: 14rpx; border: 0; border-top: var(--app-border-width) solid var(--color-border-subtle); background: transparent; text-align: left; }
 .memory-row__date { flex: none; color: var(--color-accent); font-size: 20rpx; font-variant-numeric: tabular-nums; }
 .memory-row__name { min-width: 0; overflow: hidden; color: var(--color-text); font-size: 22rpx; text-overflow: ellipsis; white-space: nowrap; }
-.expense-row { display: flex; padding: 15rpx 0; align-items: center; justify-content: space-between; gap: 20rpx; border-top: 1rpx solid var(--color-border-subtle); }
+.expense-row { display: flex; padding: 15rpx 0; align-items: center; justify-content: space-between; gap: 20rpx; border-top: var(--app-border-width) solid var(--color-border-subtle); }
 .expense-row > view { display: flex; align-items: baseline; gap: 10rpx; }
 .expense-label { color: var(--color-accent); font-size: 20rpx; font-weight: 720; }
 .expense-value { color: var(--color-text); font-size: 29rpx; font-weight: 750; font-variant-numeric: tabular-nums; }

@@ -283,7 +283,7 @@ function showError(error: unknown, fallback: string): void {
 }
 
 .reference-section {
-  border-bottom: 1rpx solid var(--color-border);
+  border-bottom: var(--app-border-width) solid var(--color-border);
 }
 
 .reference-section--create {
@@ -315,7 +315,7 @@ function showError(error: unknown, fallback: string): void {
   height: 86rpx;
   padding: 0 24rpx;
   flex: 1;
-  border: 1rpx solid var(--color-border);
+  border: var(--app-border-width) solid var(--color-border);
   border-radius: 18rpx;
   background: var(--color-surface);
   color: var(--color-text);
@@ -385,7 +385,7 @@ function showError(error: unknown, fallback: string): void {
 }
 
 .reference-list {
-  border-top: 1rpx solid var(--color-border-subtle);
+  border-top: var(--app-border-width) solid var(--color-border-subtle);
 }
 
 .reference-row {
@@ -395,7 +395,7 @@ function showError(error: unknown, fallback: string): void {
   padding: 16rpx 26rpx 16rpx 0;
   align-items: center;
   gap: 10rpx;
-  border-bottom: 1rpx solid var(--color-border-subtle);
+  border-bottom: var(--app-border-width) solid var(--color-border-subtle);
 }
 
 .reference-row:last-child {

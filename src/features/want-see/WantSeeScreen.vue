@@ -151,7 +151,7 @@ function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMo
 <template>
   <view class="want-see-screen">
     <AppHeader
-      title="待看"
+      title="待观看"
       :count="headerCount"
       show-filter
       :filter-count="activeFilterCount"
@@ -182,9 +182,9 @@ function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMo
       v-else-if="total === 0 && !emptyIsFiltered"
       kind="want-see"
       :theme="theme"
-      title="暂无待看的演出"
-      description="未来的正常演出与待开票演出会出现在这里"
-      action-label="添加待看演出"
+      title="暂无待观看的演出"
+      description="暂无待观看的演出"
+      action-label="添加演出"
       action-style="outlined"
       @action="$emit('add')"
     />
@@ -227,8 +227,8 @@ function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMo
 
 <style scoped>
 .want-see-screen { min-height: 100vh; background: var(--color-background); }
-.search-bar { display: flex; gap: 18rpx; padding: 20rpx 30rpx; align-items: center; border-bottom: 1rpx solid var(--color-border); }
-.search-field { display: flex; min-width: 0; height: 76rpx; padding: 0 18rpx; flex: 1; align-items: center; gap: 14rpx; border: 1rpx solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); }
+.search-bar { display: flex; gap: 18rpx; padding: 20rpx 30rpx; align-items: center; border-bottom: var(--app-border-width) solid var(--color-border); }
+.search-field { display: flex; min-width: 0; height: 76rpx; padding: 0 18rpx; flex: 1; align-items: center; gap: 14rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); }
 .search-field > :first-child { width: 34rpx; height: 34rpx; flex: none; color: var(--color-muted); }
 .search-input { min-width: 0; height: 76rpx; flex: 1; color: var(--color-text); font-size: 27rpx; }
 .search-cancel { margin: 0; padding: 0; border: 0; background: transparent; color: var(--color-accent); font-size: 27rpx; line-height: 76rpx; }

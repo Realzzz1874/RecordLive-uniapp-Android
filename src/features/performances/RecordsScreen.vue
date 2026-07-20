@@ -212,8 +212,8 @@ function clearFilters(): void {
       kind="records"
       :theme="theme"
       title="还没有演出记录"
-      description="记录看过的现场，让每一次心动都有迹可循"
-      action-label="记录第一场演出"
+      description="将参与的每一次现场演出都记录下来"
+      action-label="开始记录"
       @action="$emit('add')"
     />
     <view v-else-if="total === 0" class="search-empty">
@@ -256,8 +256,8 @@ function clearFilters(): void {
 
 <style scoped>
 .records-screen { min-height: 100vh; background: var(--color-background); }
-.search-bar { display: flex; gap: 18rpx; padding: 20rpx 30rpx; align-items: center; border-bottom: 1rpx solid var(--color-border); }
-.search-field { display: flex; min-width: 0; height: 76rpx; padding: 0 18rpx; flex: 1; align-items: center; gap: 14rpx; border: 1rpx solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); }
+.search-bar { display: flex; gap: 18rpx; padding: 20rpx 30rpx; align-items: center; border-bottom: var(--app-border-width) solid var(--color-border); }
+.search-field { display: flex; min-width: 0; height: 76rpx; padding: 0 18rpx; flex: 1; align-items: center; gap: 14rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); }
 .search-field > :first-child { width: 34rpx; height: 34rpx; flex: none; color: var(--color-muted); }
 .search-input { min-width: 0; height: 76rpx; flex: 1; color: var(--color-text); font-size: 27rpx; }
 .search-clear, .search-cancel, .empty-reset { margin: 0; padding: 0; border: 0; background: transparent; }
@@ -269,7 +269,7 @@ function clearFilters(): void {
 .search-empty__icon { width: 82rpx; height: 82rpx; color: var(--color-accent); opacity: .72; }
 .search-empty__title { margin-top: 28rpx; color: var(--color-text); font-size: 32rpx; font-weight: 650; }
 .search-empty__description { margin-top: 12rpx; font-size: 25rpx; }
-.empty-reset { height: 72rpx; margin-top: 26rpx; padding: 0 26rpx; border: 1rpx solid var(--color-accent); border-radius: 18rpx; color: var(--color-accent); font-size: 25rpx; line-height: 70rpx; }
+.empty-reset { height: 72rpx; margin-top: 26rpx; padding: 0 26rpx; border: var(--app-border-width) solid var(--color-accent); border-radius: 18rpx; color: var(--color-accent); font-size: 25rpx; line-height: 70rpx; }
 .records-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
 .search-bar ~ .records-list { height: calc(100vh - var(--app-header-height) - 116rpx - 132rpx - env(safe-area-inset-bottom)); }
 .performance-collection { display: flex; flex-direction: column; gap: 18rpx; }

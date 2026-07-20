@@ -10,7 +10,7 @@ export interface AppTabDefinition {
 
 export const APP_TABS: readonly AppTabDefinition[] = [
   { id: 'records', label: '记录现场', icon: 'ticket' },
-  { id: 'want-see', label: '待看', icon: 'bookmark' },
+  { id: 'want-see', label: '待观看', icon: 'bookmark' },
   { id: 'imprints', label: '印记', icon: 'calendar' },
   { id: 'settings', label: '设置', icon: 'settings' },
 ] as const

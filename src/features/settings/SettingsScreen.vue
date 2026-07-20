@@ -163,7 +163,7 @@ const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报
 
 .settings-section {
   padding-top: 54rpx;
-  border-bottom: 1rpx solid var(--color-border);
+  border-bottom: var(--app-border-width) solid var(--color-border);
 }
 
 .settings-section__title {
@@ -223,7 +223,7 @@ const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报
   flex-direction: column;
   justify-content: center;
   gap: 5rpx;
-  border-bottom: 1rpx solid var(--color-border-subtle);
+  border-bottom: var(--app-border-width) solid var(--color-border-subtle);
 }
 
 .settings-row:last-child .settings-row__body {
@@ -259,7 +259,7 @@ const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报
   width: 42rpx;
   height: 42rpx;
   flex: none;
-  border: 1rpx solid var(--color-accent-border);
+  border: var(--app-border-width) solid var(--color-accent-border);
   border-radius: 10rpx;
   background: var(--color-accent);
 }

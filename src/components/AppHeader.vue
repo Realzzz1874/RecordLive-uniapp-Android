@@ -152,7 +152,7 @@ defineEmits<{
   box-sizing: border-box;
   height: var(--app-header-height, 96rpx);
   padding-top: var(--app-status-bar-height, 0px);
-  border-bottom: 1rpx solid var(--color-border);
+  border-bottom: var(--app-border-width) solid var(--color-border);
   background: var(--color-background);
 }
 
@@ -209,7 +209,7 @@ defineEmits<{
 }
 
 .app-header__filter--active {
-  box-shadow: inset 0 0 0 1rpx var(--color-accent-border);
+  box-shadow: inset 0 0 0 var(--app-border-width) var(--color-accent-border);
 }
 
 .app-header__filter-count {

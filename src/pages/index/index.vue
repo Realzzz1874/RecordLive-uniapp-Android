@@ -27,9 +27,14 @@ const selectedPerformanceId = ref('')
 const editorPerformanceId = ref<string | undefined>()
 const editorReturnDestination = ref<'root' | 'detail'>('root')
 const editorInitialStartedAtMs = ref<number | undefined>()
-const appStatusBarHeight = Math.max(0, uni.getSystemInfoSync().statusBarHeight ?? 0)
-const appShellStyle = {
+const systemInfo = uni.getSystemInfoSync()
+const appStatusBarHeight = Math.max(0, systemInfo.statusBarHeight ?? 0)
+const appShellStyle: Record<string, string> = {
   '--app-status-bar-height': `${appStatusBarHeight}px`,
+}
+
+if (systemInfo.uniPlatform === 'app') {
+  appShellStyle['--app-border-width'] = '1px'
 }
 
 function synchronizeSystemTheme(): void {
@@ -262,14 +267,15 @@ watch(
 
 <style scoped>
 .app-shell {
+  --app-border-width: 1rpx;
   --app-header-bar-height: 96rpx;
   --app-header-height: calc(var(--app-status-bar-height, 0px) + var(--app-header-bar-height));
   --color-background: #ffffff;
   --color-surface: #ffffff;
   --color-text: #1b1715;
   --color-muted: #6f6965;
-  --color-border: #e9e4e0;
-  --color-border-subtle: #eeeae7;
+  --color-border: #ded7d2;
+  --color-border-subtle: #e8e2de;
   --color-accent: #a74f17;
   --color-accent-pressed: #843b10;
   --color-accent-border: #8f4215;

@@ -14,6 +14,9 @@ withDefaults(
     showSave?: boolean
     showEdit?: boolean
     showDelete?: boolean
+    backIcon?: 'arrow-left' | 'close'
+    backLabel?: string
+    saveLabel?: string
     saveDisabled?: boolean
     saving?: boolean
   }>(),
@@ -28,6 +31,9 @@ withDefaults(
     showSave: false,
     showEdit: false,
     showDelete: false,
+    backIcon: 'arrow-left',
+    backLabel: '返回',
+    saveLabel: '保存',
     saveDisabled: false,
     saving: false,
   },
@@ -52,11 +58,11 @@ defineEmits<{
         <button
           v-if="showBack"
           class="icon-button icon-button--plain"
-          aria-label="返回"
+          :aria-label="backLabel"
           hover-class="icon-button--pressed"
           @tap="$emit('back')"
         >
-          <AppIcon name="arrow-left" />
+          <AppIcon :name="backIcon" />
         </button>
         <button
           v-else-if="showFilter"
@@ -112,11 +118,11 @@ defineEmits<{
           class="save-button"
           :class="{ 'save-button--disabled': saveDisabled }"
           :disabled="saveDisabled"
-          aria-label="保存"
+          :aria-label="saveLabel"
           hover-class="save-button--pressed"
           @tap="$emit('save')"
         >
-          {{ saving ? '保存中' : '保存' }}
+          {{ saving ? '保存中' : saveLabel }}
         </button>
         <button
           v-if="showCalendar"

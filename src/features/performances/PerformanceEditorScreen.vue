@@ -12,6 +12,7 @@ import {
   PerformanceEditorService,
   type PerformanceMediaChanges,
 } from '@/features/performances/editor'
+import ArtistPickerScreen from '@/features/performances/ArtistPickerScreen.vue'
 import LocationPickerScreen from '@/features/performances/LocationPickerScreen.vue'
 import { formatSelectedLocation } from '@/features/performances/location'
 import type { PerformanceDraft } from '@/features/performances/repository'
@@ -41,10 +42,12 @@ const locationHistory = ref<Performance[]>([])
 const loading = ref(true)
 const saving = ref(false)
 const locationPickerVisible = ref(false)
+const artistPickerVisible = ref(false)
 const service = ref<PerformanceEditorService | null>(null)
 const mediaChanges = reactive<PerformanceMediaChanges>({})
-const facetInputs = reactive<Record<PerformanceFacetKind, string>>({
-  artist: '',
+type TextFacetKind = Exclude<PerformanceFacetKind, 'artist'>
+const artistNames = ref<string[]>([])
+const facetInputs = reactive<Record<TextFacetKind, string>>({
   guest: '',
   play: '',
   channel: '',
@@ -80,6 +83,9 @@ const statusIndex = computed(() => Math.max(
   0,
   statusOptions.findIndex(({ value }) => value === draft.status),
 ))
+const artistSuggestions = computed(() => [...new Set(
+  locationHistory.value.flatMap((performance) => performance.facets.artist ?? []),
+)])
 
 onMounted(async () => {
   try {
@@ -124,7 +130,8 @@ function assignPerformance(performance: Performance): void {
     ),
     mediaAssets: performance.mediaAssets.map((asset) => ({ ...asset })),
   })
-  for (const kind of Object.keys(facetInputs) as PerformanceFacetKind[]) {
+  artistNames.value = [...(performance.facets.artist ?? [])]
+  for (const kind of Object.keys(facetInputs) as TextFacetKind[]) {
     facetInputs[kind] = performance.facets[kind]?.join('、') ?? ''
   }
 }
@@ -196,11 +203,15 @@ async function save(skipNearbyCheck = false): Promise<void> {
   if (!service.value || saving.value) return
   saving.value = true
   try {
-    draft.facets = Object.fromEntries(
-      (Object.keys(facetInputs) as PerformanceFacetKind[])
+    const textFacets = Object.fromEntries(
+      (Object.keys(facetInputs) as TextFacetKind[])
         .map((kind) => [kind, parseDelimitedValues(facetInputs[kind])])
         .filter(([, values]) => (values as string[]).length > 0),
     )
+    draft.facets = {
+      ...(artistNames.value.length ? { artist: [...artistNames.value] } : {}),
+      ...textFacets,
+    }
     const result = await service.value.save({ ...draft }, { ...mediaChanges }, skipNearbyCheck)
     if (result.kind === 'duplicate') {
       showNearbyConfirmation(result.nearby)
@@ -379,8 +390,20 @@ function pad(value: number): string {
 
         <view class="form-section">
           <text class="form-section__title">演出内容</text>
+          <button
+            class="artist-selector"
+            aria-label="选择阵容"
+            hover-class="artist-selector--pressed"
+            @tap="artistPickerVisible = true"
+          >
+            <text class="artist-selector__label">阵容</text>
+            <text
+              class="artist-selector__value"
+              :class="{ 'artist-selector__value--placeholder': !artistNames.length }"
+            >{{ artistNames.length ? artistNames.join('、') : '添加阵容' }}</text>
+            <view class="artist-selector__chevron"><AppIcon name="chevron" /></view>
+          </button>
           <label v-for="field in ([
-            ['artist', '阵容', '多项可用顿号分隔'],
             ['guest', '嘉宾', '多项可用顿号分隔'],
             ['play', '剧目 / 主题', '多项可用顿号分隔'],
             ['channel', '购票渠道', '例如：大麦'],
@@ -445,6 +468,12 @@ function pad(value: number): string {
       @close="locationPickerVisible = false"
       @confirm="applyLocation"
     />
+    <ArtistPickerScreen
+      v-model:values="artistNames"
+      :visible="artistPickerVisible"
+      :suggestions="artistSuggestions"
+      @close="artistPickerVisible = false"
+    />
   </view>
 </template>
 
@@ -465,7 +494,7 @@ function pad(value: number): string {
 .form-hint--inline { margin-top: 4rpx; }
 .chip-list { display: flex; flex-wrap: wrap; gap: 14rpx; }
 .choice-chip { min-height: 64rpx; margin: 0; padding: 0 24rpx; border: 1rpx solid var(--color-border); border-radius: 32rpx; background: var(--color-surface); color: var(--color-muted); font-size: 25rpx; line-height: 62rpx; }
-.choice-chip::after, .media-picker::after, .media-remove::after, .rating-button::after, .primary-save::after, .location-selector::after { border: 0; }
+.choice-chip::after, .media-picker::after, .media-remove::after, .rating-button::after, .primary-save::after, .location-selector::after, .artist-selector::after { border: 0; }
 .choice-chip--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
 .choice-chip--pressed { opacity: 0.7; }
 .media-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22rpx; }
@@ -495,4 +524,10 @@ function pad(value: number): string {
 .location-selector__value { color: var(--color-text); }
 .location-selector__placeholder { color: var(--color-accent); }
 .location-selector__chevron { width: 30rpx; height: 30rpx; flex: none; color: var(--color-muted); }
+.artist-selector { box-sizing: border-box; display: flex; width: 100%; min-height: 84rpx; margin: 0; padding: 0; align-items: center; gap: 14rpx; border: 0; border-bottom: 1rpx solid var(--color-border-subtle); border-radius: 0; background: transparent; color: var(--color-text); text-align: left; }
+.artist-selector--pressed { background: var(--color-row-pressed); }
+.artist-selector__label { width: 110rpx; flex: none; color: var(--color-text); font-size: 27rpx; }
+.artist-selector__value { min-width: 0; flex: 1; overflow: hidden; color: var(--color-accent); font-size: 26rpx; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.artist-selector__value--placeholder { font-weight: 620; }
+.artist-selector__chevron { width: 28rpx; height: 28rpx; flex: none; color: var(--color-muted); }
 </style>

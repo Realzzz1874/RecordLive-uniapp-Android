@@ -15,11 +15,18 @@ import {
   relativePerformanceDateText,
 } from '@/features/performances/browser'
 import {
+  appendArtistName,
   createEmptyPerformanceDraft,
+  moveArtistName,
   normalizePerformanceDraft,
   parseDelimitedValues,
   PerformanceEditorService,
+  replaceArtistName,
 } from '@/features/performances/editor'
+import {
+  artistNameSuggestions,
+  PREPARED_ARTIST_NAMES,
+} from '@/features/performances/artist-names'
 import type {
   PerformanceImageRole,
   PerformanceMediaStorage,
@@ -137,6 +144,23 @@ describe('in-memory performance repository', () => {
       tagIdsAny: ['tour', 'sale'],
     })).resolves.toMatchObject({ total: 2 })
     await expect(repository.list({ lifecycles: [], referenceTimeMs })).resolves.toMatchObject({ total: 0 })
+  })
+})
+
+describe('artist manual selection', () => {
+  it('adds unique names, edits a selected name and preserves manual order', () => {
+    expect(appendArtistName(['甲乐队'], ' 乙艺人 ')).toEqual(['甲乐队', '乙艺人'])
+    expect(appendArtistName(['甲乐队'], '甲乐队')).toEqual(['甲乐队'])
+    expect(replaceArtistName(['甲乐队', '乙艺人'], 1, ' 丙组合 ')).toEqual(['甲乐队', '丙组合'])
+    expect(moveArtistName(['甲乐队', '乙艺人', '丙组合'], 2, 0)).toEqual(['丙组合', '甲乐队', '乙艺人'])
+  })
+
+  it('filters the copied iOS prepared names after custom history names', () => {
+    expect(PREPARED_ARTIST_NAMES.length).toBeGreaterThan(6000)
+    expect(PREPARED_ARTIST_NAMES[0]).toBe('郑润泽')
+    expect(artistNameSuggestions([], 'YoungCaptain')).toContain('队长YoungCaptain')
+    expect(artistNameSuggestions(['自定义乐队'], '乐队')[0]).toBe('自定义乐队')
+    expect(artistNameSuggestions([], '')).toEqual([])
   })
 })
 

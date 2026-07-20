@@ -6,9 +6,10 @@ import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import type { Performance } from '@/domain/performance'
-import PerformanceBrowseToolbar from '@/features/performances/PerformanceBrowseToolbar.vue'
+import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
 import PerformanceCard from '@/features/performances/PerformanceCard.vue'
-import type { PerformanceDisplayMode } from '@/features/preferences/model'
+import PerformanceFilterSheet from '@/features/performances/PerformanceFilterSheet.vue'
+import { yearRange, type PerformanceDisplayMode, type PerformanceFilter } from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
 import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
 
@@ -23,24 +24,35 @@ const emit = defineEmits<{
 }>()
 
 const browseStore = useBrowsePreferencesStore()
-const { displayMode } = storeToRefs(browseStore)
+const { displayMode, filter } = storeToRefs(browseStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const loading = ref(true)
 const searchExpanded = ref(false)
 const searchQuery = ref('')
 const searchInputFocused = ref(false)
+const filterVisible = ref(false)
+const categories = ref<PerformanceCategory[]>([])
+const tags = ref<PerformanceTag[]>([])
+const years = ref<number[]>([])
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestSequence = 0
 
 const headerCount = computed(() => `${total.value}`)
+const activeFilterCount = computed(() => (
+  (filter.value.categoryIds.length ? 1 : 0)
+  + (filter.value.tagIds.length ? 1 : 0)
+  + (filter.value.year === null ? 0 : 1)
+))
+const emptyIsFiltered = computed(() => Boolean(searchQuery.value) || activeFilterCount.value > 0)
 
 onMounted(async () => {
   await browseStore.initialize()
+  await loadMetadata()
   await load()
 })
 onBeforeUnmount(() => clearTimeout(searchTimer))
-watch(() => props.refreshKey, () => void load())
+watch(() => props.refreshKey, () => void refreshAll())
 watch(searchQuery, () => {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => void load(), 220)
@@ -53,8 +65,11 @@ async function load(): Promise<void> {
     const repositories = await getAppRepositories()
     const page = await repositories.performances.list({
       search: searchQuery.value,
+      categoryIds: filter.value.categoryIds.length ? filter.value.categoryIds : undefined,
+      tagIdsAny: filter.value.tagIds.length ? filter.value.tagIds : undefined,
       lifecycles: ['upcoming', 'pending-sale'],
       referenceTimeMs: Date.now(),
+      ...yearRange(filter.value.year),
       sortDirection: 'ascending',
       limit: 200,
     })
@@ -70,6 +85,43 @@ async function load(): Promise<void> {
   } finally {
     if (sequence === requestSequence) loading.value = false
   }
+}
+
+async function loadMetadata(): Promise<void> {
+  try {
+    const repositories = await getAppRepositories()
+    const [categoryItems, tagItems, allPerformances] = await Promise.all([
+      repositories.referenceData.listCategories(),
+      repositories.referenceData.listTags(),
+      repositories.performances.list({ limit: 1000 }),
+    ])
+    categories.value = categoryItems
+    tags.value = tagItems
+    years.value = [...new Set(allPerformances.items.map(
+      ({ startedAtMs }) => new Date(startedAtMs).getFullYear(),
+    ))].sort((left, right) => right - left)
+    const categoryIds = new Set(categoryItems.map(({ id }) => id))
+    const tagIds = new Set(tagItems.map(({ id }) => id))
+    const normalizedFilter: PerformanceFilter = {
+      ...filter.value,
+      categoryIds: filter.value.categoryIds.filter((id) => categoryIds.has(id)),
+      tagIds: filter.value.tagIds.filter((id) => tagIds.has(id)),
+      year: filter.value.year !== null && !years.value.includes(filter.value.year)
+        ? null
+        : filter.value.year,
+      lifecycles: [...filter.value.lifecycles],
+    }
+    if (JSON.stringify(normalizedFilter) !== JSON.stringify(filter.value)) {
+      browseStore.setFilter(normalizedFilter)
+    }
+  } catch {
+    // Main list loading surfaces repository failures.
+  }
+}
+
+async function refreshAll(): Promise<void> {
+  await loadMetadata()
+  await load()
 }
 
 async function toggleSearch(): Promise<void> {
@@ -88,8 +140,10 @@ function closeSearch(): void {
   searchQuery.value = ''
 }
 
-function setDisplayMode(value: PerformanceDisplayMode): void {
-  browseStore.setDisplayMode(value)
+function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMode): void {
+  browseStore.setFilter(value)
+  browseStore.setDisplayMode(mode)
+  void load()
 }
 </script>
 
@@ -98,8 +152,11 @@ function setDisplayMode(value: PerformanceDisplayMode): void {
     <AppHeader
       title="待看"
       :count="headerCount"
+      show-filter
+      :filter-count="activeFilterCount"
       show-search
       show-add
+      @filter="filterVisible = true"
       @search="toggleSearch"
       @add="$emit('add')"
     />
@@ -119,15 +176,9 @@ function setDisplayMode(value: PerformanceDisplayMode): void {
       <button class="search-cancel" @tap="closeSearch">取消</button>
     </view>
 
-    <PerformanceBrowseToolbar
-      :display-mode="displayMode"
-      :show-filter="false"
-      @display-mode="setDisplayMode"
-    />
-
     <view v-if="loading" class="loading-state">正在读取待看演出…</view>
     <EmptyState
-      v-else-if="total === 0 && !searchQuery"
+      v-else-if="total === 0 && !emptyIsFiltered"
       kind="want-see"
       :theme="theme"
       title="暂无待看的演出"
@@ -153,6 +204,18 @@ function setDisplayMode(value: PerformanceDisplayMode): void {
       </view>
       <text class="list-footer">共 {{ total }} 场待看演出</text>
     </scroll-view>
+
+    <PerformanceFilterSheet
+      :visible="filterVisible"
+      :filter="filter"
+      :display-mode="displayMode"
+      :categories="categories"
+      :tags="tags"
+      :years="years"
+      :show-lifecycle="false"
+      @close="filterVisible = false"
+      @apply="applyBrowseOptions"
+    />
   </view>
 </template>
 
@@ -164,13 +227,13 @@ function setDisplayMode(value: PerformanceDisplayMode): void {
 .search-input { min-width: 0; height: 76rpx; flex: 1; color: var(--color-text); font-size: 27rpx; }
 .search-cancel { margin: 0; padding: 0; border: 0; background: transparent; color: var(--color-accent); font-size: 27rpx; line-height: 76rpx; }
 .search-cancel::after { border: 0; }
-.loading-state, .search-empty { display: flex; min-height: calc(100vh - var(--app-header-height) - 224rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
+.loading-state, .search-empty { display: flex; min-height: calc(100vh - var(--app-header-height) - 132rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
 .search-empty { flex-direction: column; padding: 80rpx 40rpx 180rpx; text-align: center; }
 .search-empty__icon { width: 82rpx; height: 82rpx; color: var(--color-accent); opacity: .72; }
 .search-empty__title { margin-top: 28rpx; color: var(--color-text); font-size: 32rpx; font-weight: 650; }
 .search-empty__description { margin-top: 12rpx; font-size: 25rpx; }
-.want-see-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 92rpx - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
-.search-bar ~ .want-see-list { height: calc(100vh - var(--app-header-height) - 116rpx - 92rpx - 132rpx - env(safe-area-inset-bottom)); }
+.want-see-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
+.search-bar ~ .want-see-list { height: calc(100vh - var(--app-header-height) - 116rpx - 132rpx - env(safe-area-inset-bottom)); }
 .performance-collection { display: flex; flex-direction: column; gap: 18rpx; }
 .performance-collection--poster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; }
 .list-footer { display: block; padding: 22rpx 0 40rpx; color: var(--color-muted); font-size: 23rpx; text-align: center; }

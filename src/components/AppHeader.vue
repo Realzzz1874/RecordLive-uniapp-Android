@@ -9,6 +9,8 @@ withDefaults(
     showAdd?: boolean
     showCalendar?: boolean
     showBack?: boolean
+    showFilter?: boolean
+    filterCount?: number
     showSave?: boolean
     showEdit?: boolean
     showDelete?: boolean
@@ -21,6 +23,8 @@ withDefaults(
     showAdd: false,
     showCalendar: false,
     showBack: false,
+    showFilter: false,
+    filterCount: 0,
     showSave: false,
     showEdit: false,
     showDelete: false,
@@ -34,6 +38,7 @@ defineEmits<{
   add: []
   calendar: []
   back: []
+  filter: []
   save: []
   edit: []
   delete: []
@@ -53,13 +58,26 @@ defineEmits<{
         >
           <AppIcon name="arrow-left" />
         </button>
+        <button
+          v-else-if="showFilter"
+          class="icon-button icon-button--soft-accent app-header__filter"
+          :class="{ 'app-header__filter--active': filterCount > 0 }"
+          aria-label="筛选演出"
+          hover-class="icon-button--soft-accent-pressed"
+          @tap="$emit('filter')"
+        >
+          <AppIcon name="filter" />
+          <text v-if="filterCount" class="app-header__filter-count">{{ filterCount }}</text>
+        </button>
       </view>
 
-      <view class="app-header__titles">
-        <text class="app-header__title">{{ title }}</text>
-        <text v-if="count" class="app-header__separator">✗</text>
-        <text v-if="count" class="app-header__count">{{ count }}</text>
-      </view>
+      <slot name="center">
+        <view class="app-header__titles">
+          <text class="app-header__title">{{ title }}</text>
+          <text v-if="count" class="app-header__separator">✗</text>
+          <text v-if="count" class="app-header__count">{{ count }}</text>
+        </view>
+      </slot>
 
       <view class="app-header__side app-header__side--right">
         <button
@@ -82,9 +100,9 @@ defineEmits<{
         </button>
         <button
           v-if="showSearch"
-          class="icon-button icon-button--plain"
+          class="icon-button icon-button--soft-accent"
           aria-label="搜索演出"
-          hover-class="icon-button--pressed"
+          hover-class="icon-button--soft-accent-pressed"
           @tap="$emit('search')"
         >
           <AppIcon name="search" />
@@ -179,6 +197,34 @@ defineEmits<{
   flex: none;
 }
 
+.app-header__filter {
+  position: relative;
+  overflow: visible;
+}
+
+.app-header__filter--active {
+  box-shadow: inset 0 0 0 1rpx var(--color-accent-border);
+}
+
+.app-header__filter-count {
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  display: flex;
+  min-width: 29rpx;
+  height: 29rpx;
+  padding: 0 6rpx;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--color-background);
+  border-radius: 16rpx;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 17rpx;
+  font-weight: 650;
+  line-height: 29rpx;
+}
+
 .app-header__side {
   display: flex;
   align-items: center;
@@ -221,21 +267,36 @@ defineEmits<{
   background: transparent;
 }
 
+.icon-button--soft-accent,
 .icon-button--accent {
   width: 64rpx;
   height: 64rpx;
   padding: 18rpx;
+}
+
+.icon-button--soft-accent {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.icon-button--accent {
   background: var(--color-accent);
   color: var(--color-on-accent);
 }
 
 .icon-button--pressed,
+.icon-button--soft-accent-pressed,
 .icon-button--accent-pressed {
   transform: scale(0.94);
 }
 
 .icon-button--pressed {
   background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.icon-button--soft-accent-pressed {
+  background: var(--color-row-pressed);
   color: var(--color-accent);
 }
 

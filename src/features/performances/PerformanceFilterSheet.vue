@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 
 import AppIcon from '@/components/AppIcon.vue'
 import type { PerformanceLifecycle } from '@/domain/performance'
@@ -7,23 +7,29 @@ import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-dat
 import {
   ALL_PERFORMANCE_LIFECYCLES,
   DEFAULT_BROWSE_PREFERENCES,
+  type PerformanceDisplayMode,
   type PerformanceFilter,
 } from '@/features/preferences/model'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   visible: boolean
   filter: PerformanceFilter
+  displayMode: PerformanceDisplayMode
   categories: PerformanceCategory[]
   tags: PerformanceTag[]
   years: number[]
-}>()
+  showLifecycle?: boolean
+}>(), {
+  showLifecycle: true,
+})
 
 const emit = defineEmits<{
   close: []
-  apply: [filter: PerformanceFilter]
+  apply: [filter: PerformanceFilter, displayMode: PerformanceDisplayMode]
 }>()
 
 const draft = reactive<PerformanceFilter>(cloneFilter(props.filter))
+const displayModeDraft = ref<PerformanceDisplayMode>(props.displayMode)
 const lifecycleOptions: readonly { value: PerformanceLifecycle; label: string }[] = [
   { value: 'attended', label: '已看' },
   { value: 'upcoming', label: '待看' },
@@ -33,9 +39,12 @@ const lifecycleOptions: readonly { value: PerformanceLifecycle; label: string }[
 ] as const
 
 watch(
-  () => [props.visible, props.filter] as const,
+  () => [props.visible, props.filter, props.displayMode] as const,
   ([visible]) => {
-    if (visible) Object.assign(draft, cloneFilter(props.filter))
+    if (visible) {
+      Object.assign(draft, cloneFilter(props.filter))
+      displayModeDraft.value = props.displayMode
+    }
   },
   { deep: true },
 )
@@ -54,11 +63,14 @@ function toggleLifecycle(value: PerformanceLifecycle): void {
 }
 
 function reset(): void {
-  Object.assign(draft, cloneFilter(DEFAULT_BROWSE_PREFERENCES.filter))
+  const resetFilter = cloneFilter(DEFAULT_BROWSE_PREFERENCES.filter)
+  if (!props.showLifecycle) resetFilter.lifecycles = [...props.filter.lifecycles]
+  Object.assign(draft, resetFilter)
+  displayModeDraft.value = DEFAULT_BROWSE_PREFERENCES.displayMode
 }
 
 function apply(): void {
-  emit('apply', cloneFilter(draft))
+  emit('apply', cloneFilter(draft), displayModeDraft.value)
   emit('close')
 }
 
@@ -78,7 +90,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
     <view class="filter-sheet" aria-label="演出筛选面板">
       <view class="filter-header">
         <view>
-          <text class="filter-header__title">筛选演出</text>
+          <text class="filter-header__title">筛选与显示</text>
           <text class="filter-header__subtitle">选择多项时，分类和标签均按任一命中</text>
         </view>
         <button class="close-button" aria-label="关闭筛选" @tap="$emit('close')"><AppIcon name="close" /></button>
@@ -86,6 +98,30 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 
       <scroll-view class="filter-content" scroll-y>
         <view class="filter-section">
+          <text class="filter-section__title">展示方式</text>
+          <view class="display-options" aria-label="展示方式">
+            <button
+              class="display-option"
+              :class="{ 'display-option--selected': displayModeDraft === 'card' }"
+              aria-label="卡片展示"
+              @tap="displayModeDraft = 'card'"
+            >
+              <AppIcon name="list" />
+              <text>卡片</text>
+            </button>
+            <button
+              class="display-option"
+              :class="{ 'display-option--selected': displayModeDraft === 'poster' }"
+              aria-label="海报展示"
+              @tap="displayModeDraft = 'poster'"
+            >
+              <AppIcon name="grid" />
+              <text>海报</text>
+            </button>
+          </view>
+        </view>
+
+        <view v-if="showLifecycle" class="filter-section">
           <text class="filter-section__title">状态</text>
           <view class="chip-list">
             <button
@@ -151,7 +187,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 <style scoped>
 .filter-layer { position: fixed; z-index: 30; inset: 0; display: flex; align-items: flex-end; }
 .filter-scrim { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: rgba(15,10,8,.5); }
-.filter-scrim::after, .close-button::after, .filter-chip::after, .reset-button::after, .apply-button::after { border: 0; }
+.filter-scrim::after, .close-button::after, .filter-chip::after, .display-option::after, .reset-button::after, .apply-button::after { border: 0; }
 .filter-sheet { position: relative; z-index: 1; box-sizing: border-box; width: 100%; max-height: 82vh; overflow: hidden; border-radius: 30rpx 30rpx 0 0; background: var(--color-background); box-shadow: 0 -18rpx 60rpx rgba(0,0,0,.2); }
 .filter-header { display: flex; min-height: 122rpx; padding: 28rpx 30rpx 22rpx 36rpx; align-items: center; justify-content: space-between; border-bottom: 1rpx solid var(--color-border); }
 .filter-header__title { display: block; color: var(--color-text); font-size: 34rpx; font-weight: 720; }
@@ -160,6 +196,10 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 .filter-content { box-sizing: border-box; max-height: calc(82vh - 122rpx - 120rpx - env(safe-area-inset-bottom)); }
 .filter-section { padding: 28rpx 36rpx; border-bottom: 1rpx solid var(--color-border-subtle); }
 .filter-section__title { display: block; margin-bottom: 18rpx; color: var(--color-muted); font-size: 23rpx; font-weight: 620; }
+.display-options { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; }
+.display-option { display: flex; height: 78rpx; margin: 0; padding: 0 24rpx; align-items: center; justify-content: center; gap: 13rpx; border: 1rpx solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); color: var(--color-muted); font-size: 25rpx; font-weight: 620; }
+.display-option > :first-child { width: 31rpx; height: 31rpx; }
+.display-option--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
 .chip-list { display: flex; flex-wrap: wrap; gap: 13rpx; }
 .filter-chip { min-height: 62rpx; margin: 0; padding: 0 22rpx; border: 1rpx solid var(--color-border); border-radius: 31rpx; background: var(--color-surface); color: var(--color-muted); font-size: 24rpx; line-height: 60rpx; }
 .filter-chip--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); font-weight: 620; }

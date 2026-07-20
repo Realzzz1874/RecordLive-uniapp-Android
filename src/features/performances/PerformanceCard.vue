@@ -96,7 +96,7 @@ function day(timestamp: number): string {
 .performance-card__date { display: flex; width: 68rpx; flex: none; flex-direction: column; align-items: center; }
 .performance-card__day { color: var(--color-accent); font-size: 38rpx; font-weight: 750; line-height: 1; }
 .performance-card__month { margin-top: 8rpx; color: var(--color-muted); font-size: 21rpx; }
-.performance-card__poster { width: 104rpx; height: 136rpx; flex: none; border-radius: 14rpx; background: var(--color-accent-soft); }
+.performance-card__poster { width: 104rpx; height: auto; aspect-ratio: 3 / 4; flex: none; border-radius: 14rpx; background: var(--color-accent-soft); object-position: center; }
 .performance-card__poster--empty { display: flex; align-items: center; justify-content: center; color: var(--color-accent); }
 .performance-card__poster--empty > :first-child { width: 48rpx; height: 48rpx; }
 .performance-card__content { display: flex; min-width: 0; flex: 1; flex-direction: column; }
@@ -106,8 +106,8 @@ function day(timestamp: number): string {
 .performance-card__meta, .performance-card__artist { margin-top: 7rpx; overflow: hidden; color: var(--color-muted); font-size: 23rpx; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .performance-card__artist { color: var(--color-accent); }
 .performance-card__chevron { width: 28rpx; height: 28rpx; flex: none; color: var(--color-muted); }
-.poster-card { position: relative; width: 100%; height: 420rpx; overflow: hidden; border-radius: 22rpx; background: var(--color-accent-soft); box-shadow: 0 8rpx 24rpx var(--color-tab-shadow); }
-.poster-card__image { width: 100%; height: 100%; }
+.poster-card { position: relative; width: 100%; height: auto; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 22rpx; background: var(--color-accent-soft); box-shadow: 0 8rpx 24rpx var(--color-tab-shadow); }
+.poster-card__image { position: absolute; inset: 0; width: 100%; height: 100%; object-position: center; }
 .poster-card__image--empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20rpx; color: var(--color-accent); }
 .poster-card__image--empty > :first-child { width: 76rpx; height: 76rpx; opacity: .84; }
 .poster-card__image--empty > text { font-size: 25rpx; font-weight: 650; }

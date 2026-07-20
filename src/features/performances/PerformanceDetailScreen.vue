@@ -159,7 +159,7 @@ function formatMoney(amount: string, currency: string): string {
     <view v-if="loading" class="loading-state">正在读取演出详情…</view>
     <scroll-view v-else-if="performance" class="detail-content" scroll-y>
       <view v-if="performanceMediaPath(performance, 'poster')" class="hero">
-        <image class="hero__image" :src="performanceMediaPath(performance, 'poster')" mode="aspectFill" />
+        <image class="hero__image" :src="performanceMediaPath(performance, 'poster')" mode="widthFix" />
         <view class="hero__shade" />
         <view class="hero__copy">
           <text class="hero__status">{{ performanceLifecycleLabel(performance) }}</text>
@@ -240,8 +240,8 @@ function formatMoney(amount: string, currency: string): string {
 .detail-screen { min-height: 100vh; background: var(--color-background); }
 .loading-state { display: flex; min-height: calc(100vh - var(--app-header-height)); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
 .detail-content { box-sizing: border-box; height: calc(100vh - var(--app-header-height)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); }
-.hero { position: relative; height: 560rpx; overflow: hidden; background: var(--color-accent-soft); }
-.hero__image { width: 100%; height: 100%; }
+.hero { position: relative; width: 100%; overflow: hidden; background: var(--color-accent-soft); }
+.hero__image { display: block; width: 100%; height: auto; }
 .hero__shade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 38%, rgba(20, 14, 11, 0.88)); }
 .hero__copy { position: absolute; right: 36rpx; bottom: 38rpx; left: 36rpx; display: flex; flex-direction: column; align-items: flex-start; }
 .hero__status, .title-block__status { padding: 7rpx 16rpx; border-radius: 20rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 21rpx; }

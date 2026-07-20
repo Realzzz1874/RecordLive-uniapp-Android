@@ -189,6 +189,25 @@ export function localDateKey(timestamp: number): string {
   ].join('-')
 }
 
+export function shiftImprintMonth(
+  year: number,
+  monthIndex: number,
+  offset: number,
+): { year: number; monthIndex: number } {
+  const date = new Date(year, monthIndex + offset, 1)
+  return { year: date.getFullYear(), monthIndex: date.getMonth() }
+}
+
+export function seedImprintDateTime(
+  dateMs: number,
+  hour = 19,
+  minute = 30,
+): number {
+  const date = new Date(dateMs)
+  date.setHours(hour, minute, 0, 0)
+  return date.getTime()
+}
+
 export function formatAggregatedAmount(value: string): string {
   const [integer, decimal = ''] = value.split('.')
   if (!decimal) return `${integer}.00`

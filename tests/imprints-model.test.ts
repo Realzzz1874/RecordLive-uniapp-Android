@@ -7,6 +7,8 @@ import {
   ImprintQueryService,
   imprintYears,
   localDateKey,
+  seedImprintDateTime,
+  shiftImprintMonth,
   summarizeImprintYear,
 } from '@/features/imprints/model'
 import { InMemoryPerformanceRepository } from '@/platform/repositories/in-memory-performance-repository'
@@ -69,6 +71,15 @@ describe('Milestone 4 imprint calendar', () => {
 
     expect(selected).toMatchObject({ count: 2, hasPoster: true })
     expect(selected?.performances.map(({ id }) => id)).toEqual(['morning', 'evening'])
+  })
+
+  it('rolls month navigation across years and seeds the default evening time', () => {
+    expect(shiftImprintMonth(2026, 0, -1)).toEqual({ year: 2025, monthIndex: 11 })
+    expect(shiftImprintMonth(2026, 11, 1)).toEqual({ year: 2027, monthIndex: 0 })
+
+    const seeded = new Date(seedImprintDateTime(new Date(2026, 6, 8).getTime()))
+    expect([seeded.getFullYear(), seeded.getMonth(), seeded.getDate()]).toEqual([2026, 6, 8])
+    expect([seeded.getHours(), seeded.getMinutes()]).toEqual([19, 30])
   })
 })
 

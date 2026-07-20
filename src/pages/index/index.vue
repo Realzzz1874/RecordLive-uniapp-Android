@@ -92,6 +92,13 @@ function openPerformanceEditor(fromWantSee = false): void {
   recordsDestination.value = 'editor'
 }
 
+function openPerformanceEditorForDate(initialStartedAtMs: number): void {
+  editorPerformanceId.value = undefined
+  editorInitialStartedAtMs.value = initialStartedAtMs
+  editorReturnDestination.value = 'root'
+  recordsDestination.value = 'editor'
+}
+
 function closePerformanceEditor(): void {
   recordsDestination.value = editorReturnDestination.value
 }
@@ -222,6 +229,7 @@ watch(
         v-else-if="activeTab === 'imprints'"
         :theme="resolvedTheme"
         :refresh-key="recordsRefreshKey"
+        @add="openPerformanceEditorForDate"
         @open="openPerformanceDetail"
       />
       <template v-else>

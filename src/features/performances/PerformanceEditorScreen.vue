@@ -359,7 +359,12 @@ function pad(value: number): string {
           <view class="media-grid">
             <view v-for="role in (['poster', 'ticket'] as const)" :key="role" class="media-field">
               <text class="form-field__label">{{ role === 'poster' ? '海报' : '票根图片' }}</text>
-              <button class="media-picker" hover-class="media-picker--pressed" @tap="selectImage(role)">
+              <button
+                class="media-picker"
+                :class="{ 'media-picker--poster': role === 'poster' }"
+                hover-class="media-picker--pressed"
+                @tap="selectImage(role)"
+              >
                 <image v-if="mediaPreview(role)" class="media-picker__image" :src="mediaPreview(role)" mode="aspectFill" />
                 <view v-else class="media-picker__empty">
                   <AppIcon :name="role === 'poster' ? 'image' : 'ticket'" />
@@ -465,8 +470,9 @@ function pad(value: number): string {
 .choice-chip--pressed { opacity: 0.7; }
 .media-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22rpx; }
 .media-picker { display: block; width: 100%; height: 300rpx; margin: 0; padding: 0; overflow: hidden; border: 1rpx dashed var(--color-border); border-radius: 20rpx; background: var(--color-surface); color: var(--color-accent); }
+.media-picker--poster { height: auto; aspect-ratio: 3 / 4; }
 .media-picker--pressed { opacity: 0.75; }
-.media-picker__image { width: 100%; height: 100%; }
+.media-picker__image { width: 100%; height: 100%; object-position: center; }
 .media-picker__empty { display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 16rpx; color: var(--color-muted); font-size: 24rpx; }
 .media-picker__empty > :first-child { width: 52rpx; height: 52rpx; color: var(--color-accent); }
 .media-remove { height: 60rpx; margin: 8rpx 0 0; padding: 0; border: 0; background: transparent; color: #b43b32; font-size: 24rpx; line-height: 60rpx; }

@@ -157,7 +157,7 @@ const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报
 
 .settings-content {
   box-sizing: border-box;
-  height: calc(100vh - 236rpx - env(safe-area-inset-bottom));
+  height: calc(100vh - var(--app-header-height) - env(safe-area-inset-bottom));
   padding-bottom: calc(156rpx + env(safe-area-inset-bottom));
 }
 

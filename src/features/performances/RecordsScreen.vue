@@ -46,7 +46,7 @@ const years = ref<number[]>([])
 let requestSequence = 0
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
-const headerCount = computed(() => `${total.value} 场`)
+const headerCount = computed(() => `${total.value}`)
 const activeFilterCount = computed(() => (
   (filter.value.categoryIds.length ? 1 : 0)
   + (filter.value.tagIds.length ? 1 : 0)
@@ -265,14 +265,14 @@ function clearFilters(): void {
 .search-clear::after, .search-cancel::after, .empty-reset::after { border: 0; }
 .search-clear { width: 52rpx; height: 52rpx; padding: 15rpx; color: var(--color-muted); }
 .search-cancel { color: var(--color-accent); font-size: 27rpx; line-height: 76rpx; }
-.loading-state, .search-empty { display: flex; min-height: calc(100vh - 460rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
+.loading-state, .search-empty { display: flex; min-height: calc(100vh - var(--app-header-height) - 224rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
 .search-empty { flex-direction: column; padding: 80rpx 40rpx 180rpx; text-align: center; }
 .search-empty__icon { width: 82rpx; height: 82rpx; color: var(--color-accent); opacity: .72; }
 .search-empty__title { margin-top: 28rpx; color: var(--color-text); font-size: 32rpx; font-weight: 650; }
 .search-empty__description { margin-top: 12rpx; font-size: 25rpx; }
 .empty-reset { height: 72rpx; margin-top: 26rpx; padding: 0 26rpx; border: 1rpx solid var(--color-accent); border-radius: 18rpx; color: var(--color-accent); font-size: 25rpx; line-height: 70rpx; }
-.records-list { box-sizing: border-box; height: calc(100vh - 236rpx - 92rpx - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
-.search-bar ~ .records-list { height: calc(100vh - 236rpx - 116rpx - 92rpx - 132rpx - env(safe-area-inset-bottom)); }
+.records-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 92rpx - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
+.search-bar ~ .records-list { height: calc(100vh - var(--app-header-height) - 116rpx - 92rpx - 132rpx - env(safe-area-inset-bottom)); }
 .performance-collection { display: flex; flex-direction: column; gap: 18rpx; }
 .performance-collection--poster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; }
 .list-footer { display: block; padding: 22rpx 0 40rpx; color: var(--color-muted); font-size: 23rpx; text-align: center; }

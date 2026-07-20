@@ -278,7 +278,7 @@ function showError(error: unknown, fallback: string): void {
 
 .reference-content {
   box-sizing: border-box;
-  height: calc(100vh - 236rpx);
+  height: calc(100vh - var(--app-header-height));
   padding-bottom: calc(52rpx + env(safe-area-inset-bottom));
 }
 

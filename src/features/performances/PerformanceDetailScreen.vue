@@ -238,8 +238,8 @@ function formatMoney(amount: string, currency: string): string {
 
 <style scoped>
 .detail-screen { min-height: 100vh; background: var(--color-background); }
-.loading-state { display: flex; min-height: calc(100vh - 236rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
-.detail-content { box-sizing: border-box; height: calc(100vh - 236rpx); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); }
+.loading-state { display: flex; min-height: calc(100vh - var(--app-header-height)); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
+.detail-content { box-sizing: border-box; height: calc(100vh - var(--app-header-height)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); }
 .hero { position: relative; height: 560rpx; overflow: hidden; background: var(--color-accent-soft); }
 .hero__image { width: 100%; height: 100%; }
 .hero__shade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 38%, rgba(20, 14, 11, 0.88)); }

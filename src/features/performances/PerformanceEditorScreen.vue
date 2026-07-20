@@ -316,7 +316,6 @@ function pad(value: number): string {
               <view class="location-selector__copy">
                 <text v-if="locationLabel" class="location-selector__value">{{ locationLabel }}</text>
                 <text v-else class="location-selector__placeholder">选择城市与场地</text>
-                <text class="location-selector__hint">默认地区或其它地区 · 不使用地图</text>
               </view>
               <view class="location-selector__chevron"><AppIcon name="chevron" /></view>
             </button>
@@ -446,7 +445,7 @@ function pad(value: number): string {
 
 <style scoped>
 .editor-screen { min-height: 100vh; background: var(--color-background); }
-.editor-content { box-sizing: border-box; height: calc(100vh - 236rpx); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); }
+.editor-content { box-sizing: border-box; height: calc(100vh - var(--app-header-height)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); }
 .loading-state { padding: 100rpx 40rpx; color: var(--color-muted); text-align: center; }
 .form-section { padding: 42rpx 34rpx; border-bottom: 1rpx solid var(--color-border); }
 .form-section__title { display: block; margin-bottom: 26rpx; color: var(--color-accent); font-size: 28rpx; font-weight: 650; }
@@ -489,6 +488,5 @@ function pad(value: number): string {
 .location-selector__value, .location-selector__placeholder { overflow: hidden; font-size: 27rpx; font-weight: 620; text-overflow: ellipsis; white-space: nowrap; }
 .location-selector__value { color: var(--color-text); }
 .location-selector__placeholder { color: var(--color-accent); }
-.location-selector__hint { margin-top: 5rpx; color: var(--color-muted); font-size: 20rpx; }
 .location-selector__chevron { width: 30rpx; height: 30rpx; flex: none; color: var(--color-muted); }
 </style>

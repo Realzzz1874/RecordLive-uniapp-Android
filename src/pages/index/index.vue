@@ -27,6 +27,10 @@ const selectedPerformanceId = ref('')
 const editorPerformanceId = ref<string | undefined>()
 const editorReturnDestination = ref<'root' | 'detail'>('root')
 const editorInitialStartedAtMs = ref<number | undefined>()
+const appStatusBarHeight = Math.max(0, uni.getSystemInfoSync().statusBarHeight ?? 0)
+const appShellStyle = {
+  '--app-status-bar-height': `${appStatusBarHeight}px`,
+}
 
 function synchronizeSystemTheme(): void {
   appShellStore.initialize()
@@ -184,7 +188,7 @@ watch(
 </script>
 
 <template>
-  <view class="app-shell" :class="`theme-${resolvedTheme}`">
+  <view class="app-shell" :class="`theme-${resolvedTheme}`" :style="appShellStyle">
     <main class="app-shell__content">
       <PerformanceDetailScreen
         v-if="(activeTab === 'records' || activeTab === 'want-see' || activeTab === 'imprints') && recordsDestination === 'detail'"
@@ -250,6 +254,8 @@ watch(
 
 <style scoped>
 .app-shell {
+  --app-header-bar-height: 96rpx;
+  --app-header-height: calc(var(--app-status-bar-height, 0px) + var(--app-header-bar-height));
   --color-background: #ffffff;
   --color-surface: #ffffff;
   --color-text: #1b1715;

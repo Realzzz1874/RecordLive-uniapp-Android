@@ -45,7 +45,7 @@ defineEmits<{
 .empty-state {
   box-sizing: border-box;
   display: flex;
-  min-height: calc(100vh - 368rpx - env(safe-area-inset-bottom));
+  min-height: calc(100vh - var(--app-header-height) - 132rpx - env(safe-area-inset-bottom));
   padding: 70rpx 48rpx 96rpx;
   flex-direction: column;
   align-items: center;

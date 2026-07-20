@@ -48,7 +48,7 @@ const monthPerformances = computed(() => calendarCells.value
 const selectedDayPerformances = computed(() =>
   calendarCells.value.find(({ isSelected }) => isSelected)?.performances ?? [])
 const annualSummary = computed(() => summarizeImprintYear(selectedYear.value, performances.value))
-const headerCount = computed(() => `${annualSummary.value.total} 场 · ${selectedYear.value}`)
+const headerCount = computed(() => `${annualSummary.value.total}`)
 const monthTitle = computed(() => `${selectedYear.value}年 ${selectedMonthIndex.value + 1}月`)
 const selectedDayTitle = computed(() => `${formatPerformanceDate(selectedDateMs.value)} · ${selectedDayPerformances.value.length} 场`)
 const selectedYearIndex = computed(() => Math.max(0, years.value.indexOf(selectedYear.value)))
@@ -309,8 +309,8 @@ function startOfLocalDay(timestamp: number): number {
 
 <style scoped>
 .imprints-screen { min-height: 100vh; background: var(--color-background); }
-.loading-state { display: flex; min-height: calc(100vh - 368rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
-.imprints-scroll { box-sizing: border-box; height: calc(100vh - 236rpx - 132rpx - env(safe-area-inset-bottom)); }
+.loading-state { display: flex; min-height: calc(100vh - var(--app-header-height) - 132rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
+.imprints-scroll { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 132rpx - env(safe-area-inset-bottom)); }
 .imprints-content { display: flex; padding: 24rpx 24rpx 64rpx; flex-direction: column; gap: 22rpx; }
 .surface { box-sizing: border-box; padding: 26rpx; border: 1rpx solid var(--color-border); border-radius: 24rpx; background: var(--color-surface); box-shadow: 0 8rpx 26rpx var(--color-tab-shadow); }
 .calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; }

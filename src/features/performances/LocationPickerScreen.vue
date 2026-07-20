@@ -107,13 +107,13 @@ function confirm(): void {
     <AppHeader :title="title" show-back @back="handleBack" />
 
     <scroll-view v-if="step === 'form'" class="location-picker-content" scroll-y>
-      <view class="location-intro">
+<!--      <view class="location-intro">
         <view class="location-intro__icon"><AppIcon name="location" /></view>
         <view>
           <text class="location-intro__title">手动选择演出地点</text>
           <text class="location-intro__description">选择城市后，再从该城市的场地列表中选择；本流程不使用地图或定位。</text>
         </view>
-      </view>
+      </view> -->
 
       <view class="location-form-card">
         <button class="location-row" aria-label="选择城市" @tap="step = 'city'">
@@ -249,7 +249,7 @@ function confirm(): void {
 
 <style scoped>
 .location-picker-screen { position: fixed; z-index: 60; inset: 0; width: 100%; max-width: 560px; margin: 0 auto; overflow: hidden; background: var(--color-background); color: var(--color-text); }
-.location-picker-content { box-sizing: border-box; height: calc(100vh - 236rpx); padding: 28rpx 28rpx calc(60rpx + env(safe-area-inset-bottom)); }
+.location-picker-content { box-sizing: border-box; height: calc(100vh - var(--app-header-height)); padding: 28rpx 28rpx calc(60rpx + env(safe-area-inset-bottom)); }
 .location-intro { display: flex; padding: 24rpx; align-items: center; gap: 20rpx; border-radius: 20rpx; background: var(--color-accent-soft); }
 .location-intro__icon { width: 48rpx; height: 48rpx; flex: none; color: var(--color-accent); }
 .location-intro__title, .location-intro__description { display: block; }
@@ -275,8 +275,8 @@ function confirm(): void {
 .location-search { display: flex; height: 74rpx; margin: 0 28rpx 18rpx; padding: 0 18rpx; align-items: center; gap: 13rpx; border: 1rpx solid var(--color-border); border-radius: 17rpx; background: var(--color-surface); }
 .location-search > :first-child { width: 32rpx; height: 32rpx; flex: none; color: var(--color-muted); }
 .location-search input { min-width: 0; height: 74rpx; flex: 1; color: var(--color-text); font-size: 25rpx; }
-.selection-list { box-sizing: border-box; height: calc(100vh - 236rpx - 174rpx); padding: 0 28rpx calc(44rpx + env(safe-area-inset-bottom)); }
-.selection-list--venue { height: calc(100vh - 236rpx - 164rpx); }
+.selection-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 174rpx); padding: 0 28rpx calc(44rpx + env(safe-area-inset-bottom)); }
+.selection-list--venue { height: calc(100vh - var(--app-header-height) - 164rpx); }
 .manual-section, .selection-section { margin-bottom: 20rpx; overflow: hidden; border: 1rpx solid var(--color-border); border-radius: 20rpx; background: var(--color-surface); }
 .manual-toggle { display: flex; width: 100%; height: 78rpx; margin: 0; padding: 0 22rpx; align-items: center; gap: 12rpx; border: 0; background: transparent; color: var(--color-accent); font-size: 24rpx; text-align: left; }
 .manual-toggle > :first-child { width: 30rpx; height: 30rpx; }

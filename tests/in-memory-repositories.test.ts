@@ -15,18 +15,22 @@ import {
   relativePerformanceDateText,
 } from '@/features/performances/browser'
 import {
-  appendArtistName,
+  appendSelectedName,
   createEmptyPerformanceDraft,
-  moveArtistName,
+  moveSelectedName,
   normalizePerformanceDraft,
   parseDelimitedValues,
   PerformanceEditorService,
-  replaceArtistName,
+  replaceSelectedName,
 } from '@/features/performances/editor'
 import {
   artistNameSuggestions,
   PREPARED_ARTIST_NAMES,
 } from '@/features/performances/artist-names'
+import {
+  playNameSuggestions,
+  PREPARED_PLAY_NAMES,
+} from '@/features/performances/play-names'
 import type {
   PerformanceImageRole,
   PerformanceMediaStorage,
@@ -147,12 +151,12 @@ describe('in-memory performance repository', () => {
   })
 })
 
-describe('artist manual selection', () => {
+describe('artist, guest and play manual selection', () => {
   it('adds unique names, edits a selected name and preserves manual order', () => {
-    expect(appendArtistName(['甲乐队'], ' 乙艺人 ')).toEqual(['甲乐队', '乙艺人'])
-    expect(appendArtistName(['甲乐队'], '甲乐队')).toEqual(['甲乐队'])
-    expect(replaceArtistName(['甲乐队', '乙艺人'], 1, ' 丙组合 ')).toEqual(['甲乐队', '丙组合'])
-    expect(moveArtistName(['甲乐队', '乙艺人', '丙组合'], 2, 0)).toEqual(['丙组合', '甲乐队', '乙艺人'])
+    expect(appendSelectedName(['甲乐队'], ' 乙艺人 ')).toEqual(['甲乐队', '乙艺人'])
+    expect(appendSelectedName(['甲乐队'], '甲乐队')).toEqual(['甲乐队'])
+    expect(replaceSelectedName(['甲乐队', '乙艺人'], 1, ' 丙组合 ')).toEqual(['甲乐队', '丙组合'])
+    expect(moveSelectedName(['甲乐队', '乙艺人', '丙组合'], 2, 0)).toEqual(['丙组合', '甲乐队', '乙艺人'])
   })
 
   it('filters the copied iOS prepared names after custom history names', () => {
@@ -161,6 +165,16 @@ describe('artist manual selection', () => {
     expect(artistNameSuggestions([], 'YoungCaptain')).toContain('队长YoungCaptain')
     expect(artistNameSuggestions(['自定义乐队'], '乐队')[0]).toBe('自定义乐队')
     expect(artistNameSuggestions([], '')).toEqual([])
+  })
+
+  it('filters the copied iOS play sources without mixing artist data', () => {
+    expect(PREPARED_PLAY_NAMES).toHaveLength(621)
+    expect(PREPARED_PLAY_NAMES[0]).toBe('I LOVE YOU…')
+    expect(playNameSuggestions([], '阿波罗尼亚')).toContain('阿波罗尼亚')
+    expect(playNameSuggestions([], '锁麟囊')).toContain('锁麟囊')
+    expect(playNameSuggestions(['自定义剧目'], '剧目')[0]).toBe('自定义剧目')
+    expect(playNameSuggestions([], 'YoungCaptain')).toEqual([])
+    expect(playNameSuggestions([], '')).toEqual([])
   })
 })
 

@@ -134,18 +134,18 @@ export function parseDelimitedValues(value: string): string[] {
   return uniqueValues(value.split(/[、,，;；\n]/))
 }
 
-export function appendArtistName(names: readonly string[], name: string): string[] {
+export function appendSelectedName(names: readonly string[], name: string): string[] {
   return uniqueValues([...names, name])
 }
 
-export function replaceArtistName(names: readonly string[], index: number, name: string): string[] {
+export function replaceSelectedName(names: readonly string[], index: number, name: string): string[] {
   if (index < 0 || index >= names.length || !name.trim()) return [...names]
   const next = [...names]
   next[index] = name
   return uniqueValues(next)
 }
 
-export function moveArtistName(names: readonly string[], from: number, to: number): string[] {
+export function moveSelectedName(names: readonly string[], from: number, to: number): string[] {
   if (from < 0 || from >= names.length || to < 0 || to >= names.length || from === to) return [...names]
   const next = [...names]
   const [moved] = next.splice(from, 1)

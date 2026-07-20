@@ -51,7 +51,7 @@ const detailRows = computed(() => {
 const facetSections: readonly { kind: PerformanceFacetKind; label: string }[] = [
   { kind: 'artist', label: '阵容' },
   { kind: 'guest', label: '嘉宾' },
-  { kind: 'play', label: '剧目 / 主题' },
+  { kind: 'play', label: '剧目/主题' },
   { kind: 'company', label: '出品方' },
   { kind: 'channel', label: '购票渠道' },
   { kind: 'friend', label: '同行好友' },

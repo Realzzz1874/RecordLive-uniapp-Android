@@ -4,13 +4,15 @@ import { computed, ref, watch } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import { artistNameSuggestions } from '@/features/performances/artist-names'
+import { playNameSuggestions } from '@/features/performances/play-names'
 import {
-  appendArtistName,
-  moveArtistName,
-  replaceArtistName,
+  appendSelectedName,
+  moveSelectedName,
+  replaceSelectedName,
 } from '@/features/performances/editor'
 
 const props = defineProps<{
+  kind: 'artist' | 'guest' | 'play'
   visible: boolean
   values: readonly string[]
   suggestions?: readonly string[]
@@ -22,35 +24,44 @@ const emit = defineEmits<{
 }>()
 
 const mode = ref<'select' | 'sort'>('select')
-const artistNames = ref<string[]>([])
+const selectedNames = ref<string[]>([])
 const inputName = ref('')
 const editingIndex = ref<number | null>(null)
 const editingName = ref('')
 
-const title = computed(() => mode.value === 'sort' ? '调整顺序' : '选择阵容')
+const entityLabel = computed(() => ({
+  artist: '阵容',
+  guest: '嘉宾',
+  play: '剧目/主题',
+})[props.kind])
+const title = computed(() => {
+  if (mode.value === 'sort') return '调整顺序'
+  return props.kind === 'play' ? '添加剧目/主题' : `选择${entityLabel.value}`
+})
 const filteredSuggestions = computed(() => {
-  return artistNameSuggestions(props.suggestions ?? [], inputName.value, 50)
+  const suggestionBuilder = props.kind === 'play' ? playNameSuggestions : artistNameSuggestions
+  return suggestionBuilder(props.suggestions ?? [], inputName.value, 50)
 })
 
 watch(() => props.visible, (visible) => {
   if (!visible) return
   mode.value = 'select'
-  artistNames.value = [...props.values]
+  selectedNames.value = [...props.values]
   inputName.value = ''
   cancelEditing()
 }, { immediate: true })
 
 function publish(values: string[]): void {
-  artistNames.value = values
+  selectedNames.value = values
   emit('update:values', [...values])
 }
 
 function addArtist(): void {
   const normalized = inputName.value.trim()
   if (!normalized) return
-  const next = appendArtistName(artistNames.value, normalized)
-  if (next.length === artistNames.value.length) {
-    uni.showToast({ title: '该阵容已添加', icon: 'none' })
+  const next = appendSelectedName(selectedNames.value, normalized)
+  if (next.length === selectedNames.value.length) {
+    uni.showToast({ title: `该${entityLabel.value}已添加`, icon: 'none' })
     return
   }
   publish(next)
@@ -58,18 +69,18 @@ function addArtist(): void {
 }
 
 function chooseSuggestion(name: string): void {
-  const next = appendArtistName(artistNames.value, name)
-  if (next.length !== artistNames.value.length) publish(next)
+  const next = appendSelectedName(selectedNames.value, name)
+  if (next.length !== selectedNames.value.length) publish(next)
   inputName.value = ''
 }
 
 function removeArtist(index: number): void {
-  if (!artistNames.value[index]) return
-  publish(artistNames.value.filter((_, currentIndex) => currentIndex !== index))
+  if (!selectedNames.value[index]) return
+  publish(selectedNames.value.filter((_, currentIndex) => currentIndex !== index))
 }
 
 function beginEditing(index: number): void {
-  const current = artistNames.value[index]
+  const current = selectedNames.value[index]
   if (!current) return
   editingIndex.value = index
   editingName.value = current
@@ -82,12 +93,12 @@ function cancelEditing(): void {
 
 function saveEditing(): void {
   if (editingIndex.value === null || !editingName.value.trim()) return
-  publish(replaceArtistName(artistNames.value, editingIndex.value, editingName.value))
+  publish(replaceSelectedName(selectedNames.value, editingIndex.value, editingName.value))
   cancelEditing()
 }
 
 function moveArtist(index: number, offset: -1 | 1): void {
-  publish(moveArtistName(artistNames.value, index, index + offset))
+  publish(moveSelectedName(selectedNames.value, index, index + offset))
 }
 
 function handleBack(): void {
@@ -114,31 +125,31 @@ function handleConfirm(): void {
       show-back
       show-save
       :back-icon="mode === 'select' ? 'close' : 'arrow-left'"
-      :back-label="mode === 'select' ? '关闭阵容选择' : '返回阵容选择'"
+      :back-label="mode === 'select' ? `关闭${entityLabel}选择` : `返回${entityLabel}选择`"
       save-label="确定"
       @back="handleBack"
       @save="handleConfirm"
     />
 
     <scroll-view v-if="mode === 'select'" class="artist-picker-content" scroll-y>
-      <view v-if="artistNames.length" class="selected-section">
+      <view v-if="selectedNames.length" class="selected-section">
         <view class="selection-heading">
           <view class="selection-count">
             <text>已选择:</text>
-            <text>{{ artistNames.length }}</text>
+            <text>{{ selectedNames.length }}</text>
           </view>
           <button
-            v-if="artistNames.length > 1"
+            v-if="selectedNames.length > 1"
             class="sort-button"
-            aria-label="调整阵容顺序"
+            :aria-label="`调整${entityLabel}顺序`"
             @tap="mode = 'sort'"
           >调整顺序</button>
         </view>
-        <text v-if="artistNames.length > 1" class="selection-hint">点击单个阵容可修改名称</text>
+        <text v-if="selectedNames.length > 1" class="selection-hint">点击单个{{ entityLabel }}可修改名称</text>
         <view class="artist-chips">
-          <view v-for="(artist, index) in artistNames" :key="`${artist}-${index}`" class="artist-chip">
-            <button class="artist-chip__name" :aria-label="`修改阵容${artist}`" @tap="beginEditing(index)">{{ artist }}</button>
-            <button class="artist-chip__remove" :aria-label="`删除阵容${artist}`" @tap="removeArtist(index)">
+          <view v-for="(artist, index) in selectedNames" :key="`${artist}-${index}`" class="artist-chip">
+            <button class="artist-chip__name" :aria-label="`修改${entityLabel}${artist}`" @tap="beginEditing(index)">{{ artist }}</button>
+            <button class="artist-chip__remove" :aria-label="`删除${entityLabel}${artist}`" @tap="removeArtist(index)">
               <AppIcon name="close" />
             </button>
           </view>
@@ -149,7 +160,7 @@ function handleConfirm(): void {
         <input
           v-model="inputName"
           class="artist-input"
-          aria-label="阵容名称"
+          :aria-label="`${entityLabel}名称`"
           maxlength="100"
           confirm-type="done"
           placeholder="请输入名称"
@@ -158,37 +169,37 @@ function handleConfirm(): void {
         <button
           class="add-button"
           :disabled="!inputName.trim()"
-          aria-label="添加阵容名称"
+          :aria-label="`添加${entityLabel}名称`"
           @tap="addArtist"
         >添加</button>
       </view>
       <view v-if="filteredSuggestions.length" class="suggestion-list">
-        <text class="suggestion-list__title">预选阵容</text>
+        <text class="suggestion-list__title">预选{{ entityLabel }}</text>
         <button
           v-for="suggestion in filteredSuggestions"
           :key="suggestion"
           class="suggestion-row"
-          :aria-label="`选择阵容${suggestion}`"
+          :aria-label="`选择${entityLabel}${suggestion}`"
           @tap="chooseSuggestion(suggestion)"
         >
           <text>{{ suggestion }}</text>
-          <view v-if="artistNames.includes(suggestion)" class="suggestion-row__check"><AppIcon name="check" /></view>
+          <view v-if="selectedNames.includes(suggestion)" class="suggestion-row__check"><AppIcon name="check" /></view>
         </button>
       </view>
-      <text v-if="!artistNames.length" class="empty-hint">逐个输入阵容名称并添加</text>
+      <text v-if="!selectedNames.length" class="empty-hint">逐个输入{{ entityLabel }}名称并添加</text>
     </scroll-view>
 
     <scroll-view v-else class="sort-content" scroll-y>
-      <text class="sort-hint">使用右侧按钮调整阵容显示顺序</text>
+      <text class="sort-hint">使用右侧按钮调整{{ entityLabel }}显示顺序</text>
       <view class="sort-list">
-        <view v-for="(artist, index) in artistNames" :key="`${artist}-${index}`" class="sort-row">
+        <view v-for="(artist, index) in selectedNames" :key="`${artist}-${index}`" class="sort-row">
           <text class="sort-row__index">{{ index + 1 }}</text>
           <text class="sort-row__name">{{ artist }}</text>
           <view class="sort-row__actions">
             <button :disabled="index === 0" :aria-label="`上移${artist}`" @tap="moveArtist(index, -1)">
               <AppIcon name="chevron" />
             </button>
-            <button :disabled="index === artistNames.length - 1" :aria-label="`下移${artist}`" @tap="moveArtist(index, 1)">
+            <button :disabled="index === selectedNames.length - 1" :aria-label="`下移${artist}`" @tap="moveArtist(index, 1)">
               <AppIcon name="chevron" />
             </button>
           </view>
@@ -197,10 +208,10 @@ function handleConfirm(): void {
     </scroll-view>
 
     <view v-if="editingIndex !== null" class="edit-layer">
-      <button class="edit-scrim" aria-label="取消修改阵容" @tap="cancelEditing" />
-      <view class="edit-dialog" aria-label="修改阵容名称">
+      <button class="edit-scrim" :aria-label="`取消修改${entityLabel}`" @tap="cancelEditing" />
+      <view class="edit-dialog" :aria-label="`修改${entityLabel}名称`">
         <text class="edit-dialog__title">修改名称</text>
-        <input v-model="editingName" aria-label="新的阵容名称" maxlength="100" placeholder="请输入名称">
+        <input v-model="editingName" :aria-label="`新的${entityLabel}名称`" maxlength="100" placeholder="请输入名称">
         <view class="edit-dialog__actions">
           <button @tap="cancelEditing">取消</button>
           <button :disabled="!editingName.trim()" @tap="saveEditing">保存</button>

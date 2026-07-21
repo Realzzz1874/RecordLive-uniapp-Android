@@ -1,9 +1,11 @@
 import type { SelectedImage } from '@/platform/media/types'
 import { ParsePlatformError, type ParsePlatformHttpClient } from './types'
+import { parseHttpUrl, type ParsePlatformUrl } from './url'
 
 const DAMAI_DETAIL_HOST = 'detail.damai.cn'
 const DAMAI_IMAGE_HOST = 'img.alicdn.com'
-const ANDROID_USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
+const DAMAI_PAGE_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+const ANDROID_IMAGE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
 
 export const defaultParsePlatformHttpClient: ParsePlatformHttpClient = {
   getText(url) {
@@ -26,7 +28,7 @@ export async function downloadParsePlatformImage(value: string): Promise<Selecte
     uni.downloadFile({
       url: sourceUrl,
       timeout: 15_000,
-      header: { 'User-Agent': ANDROID_USER_AGENT },
+      header: { 'User-Agent': ANDROID_IMAGE_USER_AGENT },
       success: ({ statusCode, tempFilePath }) => {
         if (statusCode < 200 || statusCode >= 300 || !tempFilePath) {
           resolve(null)
@@ -44,7 +46,7 @@ export async function downloadParsePlatformImage(value: string): Promise<Selecte
   })
 }
 
-function platformRequestUrl(url: URL): string {
+function platformRequestUrl(url: ParsePlatformUrl): string {
   if (!isAppPlatform() && url.hostname === DAMAI_DETAIL_HOST) {
     return `/damai-proxy${url.pathname}${url.search}`
   }
@@ -60,7 +62,7 @@ function requestText(url: string): Promise<string> {
       timeout: 15_000,
       header: {
         Accept: 'text/html',
-        'User-Agent': ANDROID_USER_AGENT,
+        'User-Agent': DAMAI_PAGE_USER_AGENT,
       },
       success: ({ statusCode, data }) => {
         if (statusCode < 200 || statusCode >= 300) {
@@ -82,12 +84,8 @@ function isAppPlatform(): boolean {
   return uni.getSystemInfoSync().uniPlatform === 'app'
 }
 
-function toUrl(value: string): URL | null {
-  try {
-    return new URL(value)
-  } catch {
-    return null
-  }
+function toUrl(value: string): ParsePlatformUrl | null {
+  return parseHttpUrl(value)
 }
 
 function inferImageMimeType(path: string): string {

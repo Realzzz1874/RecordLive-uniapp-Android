@@ -80,7 +80,7 @@ defineEmits<{
       <slot name="center">
         <view class="app-header__titles">
           <text class="app-header__title">{{ title }}</text>
-          <text v-if="count" class="app-header__separator">✗</text>
+          <text v-if="count" class="app-header__separator">✘</text>
           <text v-if="count" class="app-header__count">{{ count }}</text>
         </view>
       </slot>

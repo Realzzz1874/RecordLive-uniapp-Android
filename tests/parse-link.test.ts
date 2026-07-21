@@ -11,8 +11,10 @@ import {
   normalizeDamaiUrl,
   parseDamaiHtml,
 } from '@/features/performances/parse-platform/damai'
+import { defaultParsePlatformHttpClient } from '@/features/performances/parse-platform/networking'
 import { ParsePlatformRouter } from '@/features/performances/parse-platform/router'
 import { ParsePlatformError, type ParsePlatformResult } from '@/features/performances/parse-platform/types'
+import { parseHttpUrl, type ParsePlatformUrl } from '@/features/performances/parse-platform/url'
 
 const fixture = `
   <html><body>
@@ -33,16 +35,16 @@ const fixture = `
 describe('parse platform routing', () => {
   it('accepts only exact Damai hosts and paths and normalizes mobile links', () => {
     const parser = new DamaiParser({ getText: vi.fn() })
-    expect(parser.canParse(new URL('https://detail.damai.cn/item.htm?id=743069303901'))).toBe(true)
-    expect(parser.canParse(new URL('https://m.damai.cn/shows/item.html?itemId=743069303901'))).toBe(true)
-    expect(parser.canParse(new URL('https://m.damai.cn/damai/detail/item.html?itemId=743069303901'))).toBe(true)
-    expect(parser.canParse(new URL('http://detail.damai.cn/item.htm?id=743069303901'))).toBe(false)
-    expect(parser.canParse(new URL('https://detail.damai.cn.evil.test/item.htm?id=743069303901'))).toBe(false)
-    expect(parser.canParse(new URL('https://detail.damai.cn/other?id=743069303901'))).toBe(false)
-    expect(parser.canParse(new URL('https://detail.damai.cn/item.htm?id=abc'))).toBe(false)
+    expect(parser.canParse(url('https://detail.damai.cn/item.htm?id=743069303901'))).toBe(true)
+    expect(parser.canParse(url('https://m.damai.cn/shows/item.html?itemId=743069303901'))).toBe(true)
+    expect(parser.canParse(url('https://m.damai.cn/damai/detail/item.html?itemId=743069303901'))).toBe(true)
+    expect(parser.canParse(url('http://detail.damai.cn/item.htm?id=743069303901'))).toBe(false)
+    expect(parser.canParse(url('https://detail.damai.cn.evil.test/item.htm?id=743069303901'))).toBe(false)
+    expect(parser.canParse(url('https://detail.damai.cn/other?id=743069303901'))).toBe(false)
+    expect(parser.canParse(url('https://detail.damai.cn/item.htm?id=abc'))).toBe(false)
 
     expect(normalizeDamaiUrl(
-      new URL('https://m.damai.cn/shows/item.html?itemId=743069303901&from=share'),
+      url('https://m.damai.cn/shows/item.html?itemId=743069303901&from=share'),
     ).href).toBe('https://detail.damai.cn/item.htm?id=743069303901')
   })
 
@@ -50,17 +52,76 @@ describe('parse platform routing', () => {
     const getText = vi.fn().mockResolvedValue(fixture)
     const router = new ParsePlatformRouter([new DamaiParser({ getText })])
     const parsed = await router.parse(
-      new URL('https://m.damai.cn/damai/detail/item.html?itemId=743069303901'),
+      url('https://m.damai.cn/damai/detail/item.html?itemId=743069303901'),
     )
 
     expect(getText).toHaveBeenCalledWith(
-      new URL('https://detail.damai.cn/item.htm?id=743069303901'),
+      url('https://detail.damai.cn/item.htm?id=743069303901'),
     )
     expect(parsed.platformName).toBe('大麦')
-    expect(() => router.parserFor(new URL('https://example.com/item.htm?id=1')))
+    expect(() => router.parserFor(url('https://example.com/item.htm?id=1')))
       .toThrowError(ParsePlatformError)
   })
+
+  it('parses a Damai result when browser URL APIs are unavailable', async () => {
+    vi.stubGlobal('URL', undefined)
+    try {
+      const parsedUrl = extractFirstHttpUrl(
+        '复制 https://m.damai.cn/shows/item.html?itemId=1061626307208 即可查看',
+      )
+      expect(parsedUrl?.href).toBe('https://m.damai.cn/shows/item.html?itemId=1061626307208')
+      if (!parsedUrl) throw new Error('Expected the Damai URL to be parsed')
+
+      const getText = vi.fn().mockResolvedValue(fixture)
+      const router = new ParsePlatformRouter([new DamaiParser({ getText })])
+      const result = await router.parse(parsedUrl)
+
+      expect(getText).toHaveBeenCalledWith(
+        url('https://detail.damai.cn/item.htm?id=1061626307208'),
+      )
+      expect(result.name).toBe('【上海】音乐剧《时光代理人》')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })
+
+describe('parse platform networking', () => {
+  it('uses a desktop user agent for App page requests to avoid Damai mobile redirects', async () => {
+    interface RequestOptions {
+      url: string
+      header: Record<string, string>
+      success: (result: { statusCode: number; data: string }) => void
+    }
+
+    const request = vi.fn((options: RequestOptions) => {
+      options.success({ statusCode: 200, data: fixture })
+    })
+    vi.stubGlobal('uni', {
+      getSystemInfoSync: () => ({ uniPlatform: 'app' }),
+      request,
+    })
+
+    try {
+      await expect(defaultParsePlatformHttpClient.getText(
+        url('https://detail.damai.cn/item.htm?id=1061626307208'),
+      )).resolves.toBe(fixture)
+
+      const options = request.mock.calls[0]?.[0]
+      expect(options?.url).toBe('https://detail.damai.cn/item.htm?id=1061626307208')
+      expect(options?.header['User-Agent']).toContain('Linux x86_64')
+      expect(options?.header['User-Agent']).not.toContain('Mobile')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+})
+
+function url(value: string): ParsePlatformUrl {
+  const parsed = parseHttpUrl(value)
+  if (!parsed) throw new Error(`Invalid test URL: ${value}`)
+  return parsed
+}
 
 describe('Damai parser', () => {
   it('parses the same staticDataDefault contract used by the iOS parser', () => {

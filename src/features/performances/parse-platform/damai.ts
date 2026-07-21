@@ -5,6 +5,7 @@ import {
   type ParsePlatformParser,
   type ParsePlatformResult,
 } from './types'
+import { type ParsePlatformUrl, urlSearchParam } from './url'
 
 const DESKTOP_HOST = 'detail.damai.cn'
 const MOBILE_HOST = 'm.damai.cn'
@@ -21,38 +22,44 @@ export class DamaiParser implements ParsePlatformParser {
     private readonly httpClient: ParsePlatformHttpClient = defaultParsePlatformHttpClient,
   ) {}
 
-  canParse(url: URL): boolean {
+  canParse(url: ParsePlatformUrl): boolean {
     if (url.protocol !== 'https:') return false
     if (url.hostname === DESKTOP_HOST && url.pathname === DESKTOP_PATH) {
-      return isItemId(url.searchParams.get('id'))
+      return isItemId(urlSearchParam(url, 'id'))
     }
     if (url.hostname === MOBILE_HOST && MOBILE_PATHS.has(url.pathname)) {
-      return isItemId(url.searchParams.get('itemId'))
+      return isItemId(urlSearchParam(url, 'itemId'))
     }
     return false
   }
 
-  async parse(url: URL): Promise<ParsePlatformResult> {
+  async parse(url: ParsePlatformUrl): Promise<ParsePlatformResult> {
     const normalizedUrl = normalizeDamaiUrl(url)
     const html = await this.httpClient.getText(normalizedUrl)
     return parseDamaiHtml(html)
   }
 }
 
-export function normalizeDamaiUrl(url: URL): URL {
+export function normalizeDamaiUrl(url: ParsePlatformUrl): ParsePlatformUrl {
   if (url.protocol !== 'https:') {
     throw new ParsePlatformError('invalid-url', '大麦链接必须使用 HTTPS')
   }
 
   const itemId = url.hostname === DESKTOP_HOST && url.pathname === DESKTOP_PATH
-    ? url.searchParams.get('id')
+    ? urlSearchParam(url, 'id')
     : url.hostname === MOBILE_HOST && MOBILE_PATHS.has(url.pathname)
-      ? url.searchParams.get('itemId')
+      ? urlSearchParam(url, 'itemId')
       : null
   if (!isItemId(itemId)) {
     throw new ParsePlatformError('invalid-url', '大麦链接缺少有效的演出 ID')
   }
-  return new URL(`https://${DESKTOP_HOST}${DESKTOP_PATH}?id=${itemId}`)
+  return {
+    href: `https://${DESKTOP_HOST}${DESKTOP_PATH}?id=${itemId}`,
+    protocol: 'https:',
+    hostname: DESKTOP_HOST,
+    pathname: DESKTOP_PATH,
+    search: `?id=${itemId}`,
+  }
 }
 
 export function parseDamaiHtml(html: string): ParsePlatformResult {

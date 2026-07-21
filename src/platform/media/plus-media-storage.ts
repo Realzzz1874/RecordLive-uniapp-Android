@@ -5,6 +5,7 @@ import type {
   PreparedImage,
   SelectedImage,
 } from './types'
+import { sha256Hex } from './sha256'
 
 const MEDIA_DIRECTORY = '_doc/recordlive/media'
 
@@ -103,8 +104,7 @@ async function hashFile(file: PlusIoFile): Promise<string> {
   const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
   const binary = atob(base64)
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0))
-  const digest = await crypto.subtle.digest('SHA-256', bytes)
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+  return sha256Hex(bytes)
 }
 
 async function removeFileIfPresent(path: string): Promise<void> {
@@ -127,7 +127,7 @@ function resolveFile(path: string): Promise<PlusIoFileEntry> {
 }
 
 function createId(): string {
-  return typeof crypto.randomUUID === 'function'
+  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 }

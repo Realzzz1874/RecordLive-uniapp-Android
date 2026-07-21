@@ -1,3 +1,5 @@
+import type { ParsePlatformUrl } from './url'
+
 export interface ParsePlatformResult {
   platformName: string
   name: string
@@ -28,10 +30,10 @@ export class ParsePlatformError extends Error {
 
 export interface ParsePlatformParser {
   readonly platformName: string
-  canParse(url: URL): boolean
-  parse(url: URL): Promise<ParsePlatformResult>
+  canParse(url: ParsePlatformUrl): boolean
+  parse(url: ParsePlatformUrl): Promise<ParsePlatformResult>
 }
 
 export interface ParsePlatformHttpClient {
-  getText(url: URL): Promise<string>
+  getText(url: ParsePlatformUrl): Promise<string>
 }

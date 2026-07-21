@@ -1,6 +1,7 @@
 import type { Performance } from '@/domain/performance'
 import type { PerformanceDraft } from '@/features/performances/repository'
 import type { ParsePlatformResult } from './parse-platform/types'
+import { parseHttpUrl, type ParsePlatformUrl } from './parse-platform/url'
 
 export const PARSE_LINK_FIELDS = [
   'poster',
@@ -14,14 +15,10 @@ export const PARSE_LINK_FIELDS = [
 
 export type ParseLinkField = typeof PARSE_LINK_FIELDS[number]
 
-export function extractFirstHttpUrl(value: string): URL | null {
-  const match = value.match(/https?:\/\/[^\s<>"'，。！？；：）】]+/i)
+export function extractFirstHttpUrl(value: string): ParsePlatformUrl | null {
+  const match = value.match(/https?:\/\/[^\s<>"'，。！？；：）】)\]]+/i)
   if (!match) return null
-  try {
-    return new URL(match[0])
-  } catch {
-    return null
-  }
+  return parseHttpUrl(match[0])
 }
 
 export function availableParseLinkFields(result: ParsePlatformResult): ParseLinkField[] {

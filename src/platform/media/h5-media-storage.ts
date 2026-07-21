@@ -5,6 +5,7 @@ import type {
   PreparedImage,
   SelectedImage,
 } from './types'
+import { sha256Hex } from './sha256'
 
 export class H5MediaStorage implements PerformanceMediaStorage {
   async prepare(role: PerformanceImageRole, selected: SelectedImage): Promise<PreparedImage> {
@@ -40,13 +41,8 @@ async function hashPreview(path: string): Promise<string> {
   }
 }
 
-async function sha256Hex(value: BufferSource): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', value)
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-}
-
 function createId(): string {
-  return typeof crypto.randomUUID === 'function'
+  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
 }

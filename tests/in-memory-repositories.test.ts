@@ -258,6 +258,10 @@ describe('performance browse preferences', () => {
       displayMode: 'poster',
       posterColumnCount: 9,
     }).posterColumnCount).toBe(4)
+
+    expect(normalizeBrowsePreferences({ displayMode: 'simple' }).displayMode).toBe('simple')
+    expect(normalizeBrowsePreferences({ displayMode: 'timeline' }).displayMode).toBe('timeline')
+    expect(normalizeBrowsePreferences({ displayMode: 'unknown' }).displayMode).toBe('card')
   })
 
   it('creates an inclusive local-time year range', () => {

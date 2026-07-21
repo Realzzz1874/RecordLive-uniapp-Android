@@ -7,7 +7,10 @@
 		THEME_LABELS,
 		type ThemePreference,
 	} from '@/features/app-shell/model'
-	import type { PerformanceDisplayMode } from '@/features/preferences/model'
+	import {
+		PERFORMANCE_DISPLAY_MODE_LABELS,
+		type PerformanceDisplayMode,
+	} from '@/features/preferences/model'
 
 	const props = defineProps<{
 		themePreference : ThemePreference
@@ -24,7 +27,7 @@
 	}>()
 
 	const themeLabel = computed(() => THEME_LABELS[props.themePreference])
-	const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报' : '卡片')
+	const displayModeLabel = computed(() => PERFORMANCE_DISPLAY_MODE_LABELS[props.displayMode])
 </script>
 
 <template>

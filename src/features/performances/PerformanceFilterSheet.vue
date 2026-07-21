@@ -108,20 +108,38 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
             <button
               class="display-option"
               :class="{ 'display-option--selected': displayModeDraft === 'card' }"
-              aria-label="卡片展示"
+              aria-label="演出卡片1展示"
               @tap="displayModeDraft = 'card'"
             >
+              <AppIcon name="image" />
+              <text>演出卡片1</text>
+            </button>
+            <button
+              class="display-option"
+              :class="{ 'display-option--selected': displayModeDraft === 'simple' }"
+              aria-label="演出卡片2无海报展示"
+              @tap="displayModeDraft = 'simple'"
+            >
               <AppIcon name="list" />
-              <text>卡片</text>
+              <text>演出卡片2（无海报）</text>
+            </button>
+            <button
+              class="display-option"
+              :class="{ 'display-option--selected': displayModeDraft === 'timeline' }"
+              aria-label="文字时间线展示"
+              @tap="displayModeDraft = 'timeline'"
+            >
+              <AppIcon name="calendar" />
+              <text>文字时间线</text>
             </button>
             <button
               class="display-option"
               :class="{ 'display-option--selected': displayModeDraft === 'poster' }"
-              aria-label="海报展示"
+              aria-label="仅海报展示"
               @tap="displayModeDraft = 'poster'"
             >
               <AppIcon name="grid" />
-              <text>海报</text>
+              <text>仅海报</text>
             </button>
           </view>
           <view v-if="displayModeDraft === 'poster'" class="poster-column-setting">
@@ -215,8 +233,9 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 .filter-section { padding: 28rpx 36rpx; border-bottom: var(--app-border-width) solid var(--color-border-subtle); }
 .filter-section__title { display: block; margin-bottom: 18rpx; color: var(--color-muted); font-size: 23rpx; font-weight: 620; }
 .display-options { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; }
-.display-option { display: flex; height: 78rpx; margin: 0; padding: 0 24rpx; align-items: center; justify-content: center; gap: 13rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); color: var(--color-muted); font-size: 25rpx; font-weight: 620; }
+.display-option { display: flex; min-width: 0; height: 78rpx; margin: 0; padding: 0 15rpx; align-items: center; justify-content: center; gap: 10rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); color: var(--color-muted); font-size: 23rpx; font-weight: 620; }
 .display-option > :first-child { width: 31rpx; height: 31rpx; }
+.display-option text { min-width: 0; white-space: nowrap; }
 .display-option--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
 .poster-column-setting { margin-top: 24rpx; }
 .poster-column-setting__label { display: block; margin-bottom: 13rpx; color: var(--color-muted); font-size: 22rpx; }

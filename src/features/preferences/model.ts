@@ -1,6 +1,13 @@
 import type { PerformanceLifecycle } from '@/domain/performance'
 
-export type PerformanceDisplayMode = 'card' | 'poster'
+export type PerformanceDisplayMode = 'card' | 'simple' | 'timeline' | 'poster'
+
+export const PERFORMANCE_DISPLAY_MODE_LABELS: Record<PerformanceDisplayMode, string> = {
+  card: '演出卡片1',
+  simple: '演出卡片2（无海报）',
+  timeline: '文字时间线',
+  poster: '仅海报',
+}
 
 export interface PerformanceFilter {
   categoryIds: string[]
@@ -37,7 +44,7 @@ export const DEFAULT_BROWSE_PREFERENCES: PerformanceBrowsePreferences = {
 export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePreferences {
   if (!isRecord(value)) return cloneBrowsePreferences(DEFAULT_BROWSE_PREFERENCES)
   const rawFilter = isRecord(value.filter) ? value.filter : {}
-  const displayMode = value.displayMode === 'poster' ? 'poster' : 'card'
+  const displayMode = isPerformanceDisplayMode(value.displayMode) ? value.displayMode : 'card'
   const posterColumnCount = normalizePosterColumnCount(value.posterColumnCount)
   const year = Number.isSafeInteger(rawFilter.year) && Number(rawFilter.year) >= 1970
     ? Number(rawFilter.year)
@@ -101,6 +108,11 @@ function uniqueStrings(value: unknown): string[] {
 
 function isPerformanceLifecycle(value: string): value is PerformanceLifecycle {
   return ALL_PERFORMANCE_LIFECYCLES.includes(value as PerformanceLifecycle)
+}
+
+function isPerformanceDisplayMode(value: unknown): value is PerformanceDisplayMode {
+  return typeof value === 'string'
+    && Object.prototype.hasOwnProperty.call(PERFORMANCE_DISPLAY_MODE_LABELS, value)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

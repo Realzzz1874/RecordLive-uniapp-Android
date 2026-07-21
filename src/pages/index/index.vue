@@ -13,6 +13,10 @@ import type { Performance } from '@/domain/performance'
 import ReferenceDataScreen from '@/features/reference-data/ReferenceDataScreen.vue'
 import SettingsScreen from '@/features/settings/SettingsScreen.vue'
 import WantSeeScreen from '@/features/want-see/WantSeeScreen.vue'
+import {
+  PERFORMANCE_DISPLAY_MODE_LABELS,
+  type PerformanceDisplayMode,
+} from '@/features/preferences/model'
 import { useAppShellStore } from '@/stores/app-shell'
 import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
 
@@ -66,11 +70,13 @@ function selectTheme(): void {
 }
 
 function selectDisplayMode(): void {
+  const modes = Object.keys(PERFORMANCE_DISPLAY_MODE_LABELS) as PerformanceDisplayMode[]
   uni.showActionSheet({
     title: '默认展示方式',
-    itemList: ['卡片', '海报'],
+    itemList: modes.map((mode) => PERFORMANCE_DISPLAY_MODE_LABELS[mode]),
     success: ({ tapIndex }) => {
-      browsePreferencesStore.setDisplayMode(tapIndex === 1 ? 'poster' : 'card')
+      const mode = modes[tapIndex]
+      if (mode) browsePreferencesStore.setDisplayMode(mode)
     },
   })
 }

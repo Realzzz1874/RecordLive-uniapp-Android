@@ -14,7 +14,11 @@ defineEmits<{
 }>()
 
 const quickAddPreferencesStore = useQuickAddPreferencesStore()
-const { copyExisting, chineseMusicalSchedule } = storeToRefs(quickAddPreferencesStore)
+const {
+  copyExisting,
+  chineseMusicalSchedule,
+  koreanMusicalSchedule,
+} = storeToRefs(quickAddPreferencesStore)
 
 onMounted(() => {
   void quickAddPreferencesStore.initialize()
@@ -28,6 +32,11 @@ function updateCopyExisting(event: Event): void {
 function updateChineseMusicalSchedule(event: Event): void {
   const detail = (event as unknown as SwitchChangeEvent).detail
   quickAddPreferencesStore.setChineseMusicalSchedule(Boolean(detail.value))
+}
+
+function updateKoreanMusicalSchedule(event: Event): void {
+  const detail = (event as unknown as SwitchChangeEvent).detail
+  quickAddPreferencesStore.setKoreanMusicalSchedule(Boolean(detail.value))
 }
 </script>
 
@@ -60,6 +69,18 @@ function updateChineseMusicalSchedule(event: Event): void {
             aria-label="启用中文音乐剧排期"
             color="#a74f17"
             @change="updateChineseMusicalSchedule"
+          />
+        </view>
+        <view class="settings-row settings-row--separated">
+          <view class="settings-row__copy">
+            <text class="settings-row__label">韩国音乐剧排期</text>
+            <text class="settings-row__supporting">数据源：myukit.com</text>
+          </view>
+          <switch
+            :checked="koreanMusicalSchedule"
+            aria-label="启用韩国音乐剧排期"
+            color="#a74f17"
+            @change="updateKoreanMusicalSchedule"
           />
         </view>
       </view>

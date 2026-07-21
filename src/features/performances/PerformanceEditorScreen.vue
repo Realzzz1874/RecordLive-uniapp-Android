@@ -24,10 +24,16 @@ import ArtistPickerScreen from '@/features/performances/ArtistPickerScreen.vue'
 import ChineseMusicalScheduleScreen from '@/features/performances/ChineseMusicalScheduleScreen.vue'
 import CompanyPickerScreen from '@/features/performances/CompanyPickerScreen.vue'
 import FriendsPickerScreen from '@/features/performances/FriendsPickerScreen.vue'
+import KoreanMusicalScheduleScreen from '@/features/performances/KoreanMusicalScheduleScreen.vue'
 import LocationPickerScreen from '@/features/performances/LocationPickerScreen.vue'
 import PurchaseChannelPickerScreen from '@/features/performances/PurchaseChannelPickerScreen.vue'
 import PerformanceCopyPickerScreen from '@/features/performances/PerformanceCopyPickerScreen.vue'
 import { formatSelectedLocation } from '@/features/performances/location'
+import {
+  applyKoreanMusicalSchedule,
+  type KoreanMusicalSchedule,
+  type KoreanMusicalScheduleField,
+} from '@/features/performances/korean-musical-schedule'
 import type { PerformanceDraft } from '@/features/performances/repository'
 import { choosePerformanceImage } from '@/platform/media/picker'
 import { createPerformanceMediaStorage } from '@/platform/media/factory'
@@ -64,6 +70,7 @@ const friendPickerVisible = ref(false)
 const channelPickerVisible = ref(false)
 const copyPickerVisible = ref(false)
 const chineseMusicalScheduleVisible = ref(false)
+const koreanMusicalScheduleVisible = ref(false)
 const service = ref<PerformanceEditorService | null>(null)
 const mediaChanges = reactive<PerformanceMediaChanges>({})
 const playNames = ref<string[]>([])
@@ -73,7 +80,11 @@ const companyNames = ref<string[]>([])
 const friendNames = ref<string[]>([])
 const selectedChannel = ref('')
 const quickAddPreferencesStore = useQuickAddPreferencesStore()
-const { copyExisting, chineseMusicalSchedule } = storeToRefs(quickAddPreferencesStore)
+const {
+  copyExisting,
+  chineseMusicalSchedule,
+  koreanMusicalSchedule,
+} = storeToRefs(quickAddPreferencesStore)
 
 const statusOptions = [
   { label: '正常', value: PerformanceStatus.Normal },
@@ -91,12 +102,15 @@ const quickAddActions = computed(() => [
   ...(chineseMusicalSchedule.value
     ? [{ label: '中文音乐剧排期', kind: 'chinese-musical' as const }]
     : []),
+  ...(koreanMusicalSchedule.value
+    ? [{ label: '韩国音乐剧排期', kind: 'korean-musical' as const }]
+    : []),
 ])
 const quickAddAvailable = computed(() => !props.performanceId && quickAddActions.value.length > 0)
 const quickAddLabel = computed(() => {
   const labels = [
     ...(copyExisting.value ? ['复制'] : []),
-    ...(chineseMusicalSchedule.value ? ['排期'] : []),
+    ...(chineseMusicalSchedule.value || koreanMusicalSchedule.value ? ['排期'] : []),
   ]
   return `${labels.join('/')}...`
 })
@@ -195,6 +209,7 @@ function openQuickAddMenu(): void {
       const action = actions[tapIndex]
       if (action?.kind === 'copy') copyPickerVisible.value = true
       if (action?.kind === 'chinese-musical') chineseMusicalScheduleVisible.value = true
+      if (action?.kind === 'korean-musical') koreanMusicalScheduleVisible.value = true
     },
   })
 }
@@ -233,6 +248,21 @@ function applyChineseMusicalScheduleSelection(payload: {
   synchronizeFacetEditors(applied.facets)
   chineseMusicalScheduleVisible.value = false
   uni.showToast({ title: '已填入所选排期字段', icon: 'none' })
+}
+
+function applyKoreanMusicalScheduleSelection(payload: {
+  schedule: KoreanMusicalSchedule
+  fields: KoreanMusicalScheduleField[]
+}): void {
+  const applied = applyKoreanMusicalSchedule(
+    { ...draft, facets: collectEditorFacets() },
+    payload.schedule,
+    payload.fields,
+  )
+  Object.assign(draft, applied)
+  synchronizeFacetEditors(applied.facets)
+  koreanMusicalScheduleVisible.value = false
+  uni.showToast({ title: '已填入所选韩国排期字段', icon: 'none' })
 }
 
 function collectEditorFacets(): Performance['facets'] {
@@ -697,6 +727,11 @@ function pad(value: number): string {
       :initial-started-at-ms="draft.startedAtMs"
       @close="chineseMusicalScheduleVisible = false"
       @apply="applyChineseMusicalScheduleSelection"
+    />
+    <KoreanMusicalScheduleScreen
+      :visible="koreanMusicalScheduleVisible"
+      @close="koreanMusicalScheduleVisible = false"
+      @apply="applyKoreanMusicalScheduleSelection"
     />
   </view>
 </template>

@@ -12,6 +12,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/yyj-proxy/, ''),
       },
+      '/myukit-proxy': {
+        target: 'https://myukit.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/myukit-proxy/, ''),
+      },
     },
   },
 })

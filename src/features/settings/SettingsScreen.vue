@@ -37,13 +37,13 @@ const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报
 
         <button
           class="settings-row"
-          aria-label="主题与显示"
+          aria-label="主题"
           hover-class="settings-row--pressed"
           @tap="$emit('selectTheme')"
         >
           <view class="settings-row__icon"><AppIcon name="sun" /></view>
           <view class="settings-row__body">
-            <text class="settings-row__label">主题与显示</text>
+            <text class="settings-row__label">主题</text>
           </view>
           <text class="settings-row__value">{{ themeLabel }}</text>
           <view class="settings-row__chevron"><AppIcon name="chevron" /></view>
@@ -65,13 +65,13 @@ const displayModeLabel = computed(() => props.displayMode === 'poster' ? '海报
 
         <button
           class="settings-row"
-          aria-label="强调色"
+          aria-label="颜色"
           hover-class="settings-row--pressed"
           @tap="$emit('plannedAction', '当前版本固定使用暖棕强调色')"
         >
           <view class="settings-row__icon"><AppIcon name="droplet" /></view>
           <view class="settings-row__body">
-            <text class="settings-row__label">强调色</text>
+            <text class="settings-row__label">颜色</text>
           </view>
           <view class="settings-row__swatch" aria-label="暖棕" />
           <view class="settings-row__chevron"><AppIcon name="chevron" /></view>

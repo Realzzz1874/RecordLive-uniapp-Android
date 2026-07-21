@@ -40,6 +40,12 @@ import {
   friendOptions,
   normalizeFriends,
 } from '@/features/performances/friends'
+import {
+  companyNameSuggestions,
+  mergeCustomCompanyNames,
+  normalizeCompanyNames,
+  PREPARED_COMPANY_NAMES,
+} from '@/features/performances/company-names'
 import type {
   PerformanceImageRole,
   PerformanceMediaStorage,
@@ -204,6 +210,21 @@ describe('friend selection', () => {
     expect(normalizeFriends(undefined)).toEqual([])
     expect(normalizeFriends([' 小林 ', '小林', '', 3, '阿宁'])).toEqual(['小林', '阿宁'])
     expect(friendOptions(['小林', '阿宁'], ['历史好友', '小林'])).toEqual(['历史好友', '小林', '阿宁'])
+  })
+})
+
+describe('company selection', () => {
+  it('uses the copied iOS company source and searches it without mixing other prepared data', () => {
+    expect(PREPARED_COMPANY_NAMES).toHaveLength(249)
+    expect(PREPARED_COMPANY_NAMES[0]).toBe('aRTS')
+    expect(companyNameSuggestions([], '国家大剧院')).toContain('国家大剧院')
+    expect(companyNameSuggestions([' 自定义厂牌 '], '自定义')[0]).toBe('自定义厂牌')
+    expect(companyNameSuggestions([], '')).toEqual([])
+  })
+
+  it('normalizes and persists only custom selected companies', () => {
+    expect(normalizeCompanyNames([' aRTS ', 'aRTS', '', 3, '我的厂牌'])).toEqual(['aRTS', '我的厂牌'])
+    expect(mergeCustomCompanyNames(['旧厂牌'], ['国家大剧院', '新厂牌', '旧厂牌'])).toEqual(['旧厂牌', '新厂牌'])
   })
 })
 

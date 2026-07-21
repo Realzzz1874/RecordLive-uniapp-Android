@@ -3,16 +3,16 @@ import { computed, onMounted, reactive, ref } from 'vue'
 
 import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
-import type { Performance, PerformanceFacetKind } from '@/domain/performance'
+import type { Performance } from '@/domain/performance'
 import { PerformanceStatus } from '@/domain/performance'
 import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
 import {
   createEmptyPerformanceDraft,
-  parseDelimitedValues,
   PerformanceEditorService,
   type PerformanceMediaChanges,
 } from '@/features/performances/editor'
 import ArtistPickerScreen from '@/features/performances/ArtistPickerScreen.vue'
+import CompanyPickerScreen from '@/features/performances/CompanyPickerScreen.vue'
 import FriendsPickerScreen from '@/features/performances/FriendsPickerScreen.vue'
 import LocationPickerScreen from '@/features/performances/LocationPickerScreen.vue'
 import PurchaseChannelPickerScreen from '@/features/performances/PurchaseChannelPickerScreen.vue'
@@ -47,19 +47,17 @@ const locationPickerVisible = ref(false)
 const playPickerVisible = ref(false)
 const artistPickerVisible = ref(false)
 const guestPickerVisible = ref(false)
+const companyPickerVisible = ref(false)
 const friendPickerVisible = ref(false)
 const channelPickerVisible = ref(false)
 const service = ref<PerformanceEditorService | null>(null)
 const mediaChanges = reactive<PerformanceMediaChanges>({})
-type TextFacetKind = Exclude<PerformanceFacetKind, 'artist' | 'guest' | 'play' | 'channel' | 'friend'>
 const playNames = ref<string[]>([])
 const artistNames = ref<string[]>([])
 const guestNames = ref<string[]>([])
+const companyNames = ref<string[]>([])
 const friendNames = ref<string[]>([])
 const selectedChannel = ref('')
-const facetInputs = reactive<Record<TextFacetKind, string>>({
-  company: '',
-})
 
 const statusOptions = [
   { label: '正常', value: PerformanceStatus.Normal },
@@ -97,6 +95,9 @@ const performerSuggestions = computed(() => [...new Set(
 )])
 const playSuggestions = computed(() => [...new Set(
   locationHistory.value.flatMap((performance) => performance.facets.play ?? []),
+)])
+const companySuggestions = computed(() => [...new Set(
+  locationHistory.value.flatMap((performance) => performance.facets.company ?? []),
 )])
 
 onMounted(async () => {
@@ -145,11 +146,9 @@ function assignPerformance(performance: Performance): void {
   playNames.value = [...(performance.facets.play ?? [])]
   artistNames.value = [...(performance.facets.artist ?? [])]
   guestNames.value = [...(performance.facets.guest ?? [])]
+  companyNames.value = [...(performance.facets.company ?? [])]
   friendNames.value = [...(performance.facets.friend ?? [])]
   selectedChannel.value = (performance.facets.channel ?? []).join('、')
-  for (const kind of Object.keys(facetInputs) as TextFacetKind[]) {
-    facetInputs[kind] = performance.facets[kind]?.join('、') ?? ''
-  }
 }
 
 function updateDate(event: PickerChangeEvent): void {
@@ -219,18 +218,13 @@ async function save(skipNearbyCheck = false): Promise<void> {
   if (!service.value || saving.value) return
   saving.value = true
   try {
-    const textFacets = Object.fromEntries(
-      (Object.keys(facetInputs) as TextFacetKind[])
-        .map((kind) => [kind, parseDelimitedValues(facetInputs[kind])])
-        .filter(([, values]) => (values as string[]).length > 0),
-    )
     draft.facets = {
       ...(playNames.value.length ? { play: [...playNames.value] } : {}),
       ...(artistNames.value.length ? { artist: [...artistNames.value] } : {}),
       ...(guestNames.value.length ? { guest: [...guestNames.value] } : {}),
+      ...(companyNames.value.length ? { company: [...companyNames.value] } : {}),
       ...(friendNames.value.length ? { friend: [...friendNames.value] } : {}),
       ...(selectedChannel.value ? { channel: [selectedChannel.value] } : {}),
-      ...textFacets,
     }
     const result = await service.value.save({ ...draft }, { ...mediaChanges }, skipNearbyCheck)
     if (result.kind === 'duplicate') {
@@ -392,7 +386,6 @@ function pad(value: number): string {
               <text class="form-field__label">{{ role === 'poster' ? '海报' : '票根图片' }}</text>
               <button
                 class="media-picker"
-                :class="{ 'media-picker--poster': role === 'poster' }"
                 hover-class="media-picker--pressed"
                 @tap="selectImage(role)"
               >
@@ -449,32 +442,33 @@ function pad(value: number): string {
             >{{ guestNames.length ? guestNames.join('、') : '添加嘉宾' }}</text>
             <view class="name-selector__chevron"><AppIcon name="chevron" /></view>
           </button>
-          <view class="friend-selector-row">
+          <button
+            class="name-selector"
+            aria-label="选择同行好友"
+            hover-class="name-selector--pressed"
+            @tap="friendPickerVisible = true"
+          >
             <text class="name-selector__label">同行好友</text>
-            <button
-              v-if="friendNames.length"
-              class="friend-selector-row__clear"
-              aria-label="清空同行好友"
-              @tap="friendNames = []"
-            ><AppIcon name="close" /></button>
-            <button
-              class="friend-selector-row__value"
-              aria-label="选择同行好友"
-              hover-class="name-selector--pressed"
-              @tap="friendPickerVisible = true"
-            >
-              <text
-                class="name-selector__value"
-                :class="{ 'name-selector__value--placeholder': !friendNames.length }"
-              >{{ friendNames.length ? friendNames.join('、') : '添加同行好友' }}</text>
-              <view class="name-selector__chevron"><AppIcon name="chevron" /></view>
-            </button>
-          </view>
+            <text
+              class="name-selector__value"
+              :class="{ 'name-selector__value--placeholder': !friendNames.length }"
+            >{{ friendNames.length ? friendNames.join('、') : '添加同行好友' }}</text>
+            <view class="name-selector__chevron"><AppIcon name="chevron" /></view>
+          </button>
 
-          <label class="form-field form-field--spaced">
-            <text class="form-field__label">出品方</text>
-            <input v-model="facetInputs.company" class="form-input" aria-label="出品方" placeholder="多项可用顿号分隔">
-          </label>
+          <button
+            class="name-selector"
+            aria-label="选择厂牌"
+            hover-class="name-selector--pressed"
+            @tap="companyPickerVisible = true"
+          >
+            <text class="name-selector__label">厂牌</text>
+            <text
+              class="name-selector__value"
+              :class="{ 'name-selector__value--placeholder': !companyNames.length }"
+            >{{ companyNames.length ? companyNames.join('、') : '添加厂牌' }}</text>
+            <view class="name-selector__chevron"><AppIcon name="chevron" /></view>
+          </button>
 
           <label class="form-field form-field--spaced">
             <text class="form-field__label">座位号</text>
@@ -574,6 +568,12 @@ function pad(value: number): string {
       :visible="friendPickerVisible"
       @close="friendPickerVisible = false"
     />
+    <CompanyPickerScreen
+      v-model:values="companyNames"
+      :visible="companyPickerVisible"
+      :suggestions="companySuggestions"
+      @close="companyPickerVisible = false"
+    />
   </view>
 </template>
 
@@ -598,8 +598,7 @@ function pad(value: number): string {
 .choice-chip--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
 .choice-chip--pressed { opacity: 0.7; }
 .media-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22rpx; }
-.media-picker { display: block; width: 100%; height: 300rpx; margin: 0; padding: 0; overflow: hidden; border: var(--app-border-width) dashed var(--color-border); border-radius: 20rpx; background: var(--color-surface); color: var(--color-accent); }
-.media-picker--poster { height: auto; aspect-ratio: 3 / 4; }
+.media-picker { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; margin: 0; padding: 0; overflow: hidden; border: var(--app-border-width) dashed var(--color-border); border-radius: 20rpx; background: var(--color-surface); color: var(--color-accent); }
 .media-picker--pressed { opacity: 0.75; }
 .media-picker__image { width: 100%; height: 100%; object-position: center; }
 .media-picker__empty { display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 16rpx; color: var(--color-muted); font-size: 24rpx; }
@@ -630,9 +629,5 @@ function pad(value: number): string {
 .name-selector__value { min-width: 0; flex: 1; overflow: hidden; color: var(--color-accent); font-size: 26rpx; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 .name-selector__value--placeholder { font-weight: 620; }
 .name-selector__chevron { width: 28rpx; height: 28rpx; flex: none; color: var(--color-muted); }
-.friend-selector-row { display: flex; width: 100%; min-height: 84rpx; align-items: center; gap: 10rpx; border-bottom: var(--app-border-width) solid var(--color-border-subtle); }
-.friend-selector-row__clear { width: 38rpx; height: 38rpx; margin: 0; padding: 8rpx; flex: none; border: 0; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); }
-.friend-selector-row__value { display: flex; min-width: 0; min-height: 84rpx; margin: 0; padding: 0; align-items: center; gap: 14rpx; flex: 1; border: 0; border-radius: 0; background: transparent; text-align: right; }
-.friend-selector-row__clear::after, .friend-selector-row__value::after { border: 0; }
 .cost-channel-selector { margin-bottom: 4rpx; }
 </style>

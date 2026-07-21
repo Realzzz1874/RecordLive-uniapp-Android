@@ -6,5 +6,12 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     strictPort: true,
+    proxy: {
+      '/yyj-proxy': {
+        target: 'https://y.saoju.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/yyj-proxy/, ''),
+      },
+    },
   },
 })

@@ -13,6 +13,7 @@ import PerformanceEditorScreen from '@/features/performances/PerformanceEditorSc
 import PlayDetailScreen from '@/features/performances/PlayDetailScreen.vue'
 import type { Performance } from '@/domain/performance'
 import ReferenceDataScreen from '@/features/reference-data/ReferenceDataScreen.vue'
+import QuickAddSettingsScreen from '@/features/settings/QuickAddSettingsScreen.vue'
 import SettingsScreen from '@/features/settings/SettingsScreen.vue'
 import WantSeeScreen from '@/features/want-see/WantSeeScreen.vue'
 import {
@@ -21,12 +22,14 @@ import {
 } from '@/features/preferences/model'
 import { useAppShellStore } from '@/stores/app-shell'
 import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
+import { useQuickAddPreferencesStore } from '@/stores/quick-add-preferences'
 
 const appShellStore = useAppShellStore()
 const browsePreferencesStore = useBrowsePreferencesStore()
+const quickAddPreferencesStore = useQuickAddPreferencesStore()
 const { activeTab, resolvedTheme, themePreference } = storeToRefs(appShellStore)
 const { displayMode } = storeToRefs(browsePreferencesStore)
-const settingsDestination = ref<'root' | 'category' | 'tag'>('root')
+const settingsDestination = ref<'root' | 'category' | 'tag' | 'quick-add'>('root')
 const recordsDestination = ref<'root' | 'artist' | 'play' | 'detail' | 'editor'>('root')
 const recordsRefreshKey = ref(0)
 const selectedPerformanceId = ref('')
@@ -49,6 +52,7 @@ if (systemInfo.uniPlatform === 'app') {
 function synchronizeSystemTheme(): void {
   appShellStore.initialize()
   void browsePreferencesStore.initialize()
+  void quickAddPreferencesStore.initialize()
 }
 
 function showPlannedAction(message: string): void {
@@ -177,6 +181,10 @@ function handlePerformanceDeleted(): void {
 
 function openReferenceData(kind: 'category' | 'tag'): void {
   settingsDestination.value = kind
+}
+
+function openQuickAddSettings(): void {
+  settingsDestination.value = 'quick-add'
 }
 
 function closeReferenceData(): void {
@@ -312,6 +320,11 @@ watch(
           @show-about="showAbout"
           @open-categories="openReferenceData('category')"
           @open-tags="openReferenceData('tag')"
+          @open-quick-add-settings="openQuickAddSettings"
+        />
+        <QuickAddSettingsScreen
+          v-else-if="settingsDestination === 'quick-add'"
+          @back="closeReferenceData"
         />
         <ReferenceDataScreen
           v-else

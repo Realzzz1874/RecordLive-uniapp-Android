@@ -23,6 +23,7 @@
 		showAbout : []
 		openCategories : []
 		openTags : []
+		openQuickAddSettings : []
 		selectDisplayMode : []
 	}>()
 
@@ -79,6 +80,24 @@
 				</button>
 
 
+			</view>
+
+			<view class="settings-section">
+				<text class="settings-section__title">应用设置</text>
+
+				<button class="settings-row settings-row--supporting" aria-label="快速添加"
+					hover-class="settings-row--pressed" @tap="$emit('openQuickAddSettings')">
+					<view class="settings-row__icon">
+						<AppIcon name="plus" />
+					</view>
+					<view class="settings-row__body">
+						<text class="settings-row__label">快速添加</text>
+						<text class="settings-row__supporting">选择添加演出页显示的快速添加方式</text>
+					</view>
+					<view class="settings-row__chevron">
+						<AppIcon name="chevron" />
+					</view>
+				</button>
 			</view>
 
 			<view class="settings-section">

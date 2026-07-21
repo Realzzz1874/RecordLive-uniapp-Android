@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import AppHeader from '@/components/AppHeader.vue'
@@ -7,21 +8,32 @@ import type { Performance } from '@/domain/performance'
 import { PerformanceStatus } from '@/domain/performance'
 import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
 import {
+  copyPerformanceFields,
   createEmptyPerformanceDraft,
+  performancePosterAsSelectedImage,
   PerformanceEditorService,
+  type PerformanceCopyField,
   type PerformanceMediaChanges,
 } from '@/features/performances/editor'
+import {
+  applyChineseMusicalSchedule,
+  type ChineseMusicalSchedule,
+  type ChineseMusicalScheduleField,
+} from '@/features/performances/chinese-musical-schedule'
 import ArtistPickerScreen from '@/features/performances/ArtistPickerScreen.vue'
+import ChineseMusicalScheduleScreen from '@/features/performances/ChineseMusicalScheduleScreen.vue'
 import CompanyPickerScreen from '@/features/performances/CompanyPickerScreen.vue'
 import FriendsPickerScreen from '@/features/performances/FriendsPickerScreen.vue'
 import LocationPickerScreen from '@/features/performances/LocationPickerScreen.vue'
 import PurchaseChannelPickerScreen from '@/features/performances/PurchaseChannelPickerScreen.vue'
+import PerformanceCopyPickerScreen from '@/features/performances/PerformanceCopyPickerScreen.vue'
 import { formatSelectedLocation } from '@/features/performances/location'
 import type { PerformanceDraft } from '@/features/performances/repository'
 import { choosePerformanceImage } from '@/platform/media/picker'
 import { createPerformanceMediaStorage } from '@/platform/media/factory'
 import type { PerformanceImageRole } from '@/platform/media/types'
 import { getAppRepositories } from '@/platform/repositories/context'
+import { useQuickAddPreferencesStore } from '@/stores/quick-add-preferences'
 
 interface PickerChangeEvent {
   detail: { value: string | number }
@@ -50,6 +62,8 @@ const guestPickerVisible = ref(false)
 const companyPickerVisible = ref(false)
 const friendPickerVisible = ref(false)
 const channelPickerVisible = ref(false)
+const copyPickerVisible = ref(false)
+const chineseMusicalScheduleVisible = ref(false)
 const service = ref<PerformanceEditorService | null>(null)
 const mediaChanges = reactive<PerformanceMediaChanges>({})
 const playNames = ref<string[]>([])
@@ -58,6 +72,8 @@ const guestNames = ref<string[]>([])
 const companyNames = ref<string[]>([])
 const friendNames = ref<string[]>([])
 const selectedChannel = ref('')
+const quickAddPreferencesStore = useQuickAddPreferencesStore()
+const { copyExisting, chineseMusicalSchedule } = storeToRefs(quickAddPreferencesStore)
 
 const statusOptions = [
   { label: '正常', value: PerformanceStatus.Normal },
@@ -68,6 +84,28 @@ const statusOptions = [
 const currencies = ['CNY', 'USD', 'HKD', 'JPY', 'EUR'] as const
 
 const title = computed(() => props.performanceId ? '编辑演出' : '添加演出')
+const quickAddActions = computed(() => [
+  ...(copyExisting.value
+    ? [{ label: '复制已有演出内容', kind: 'copy' as const }]
+    : []),
+  ...(chineseMusicalSchedule.value
+    ? [{ label: '中文音乐剧排期', kind: 'chinese-musical' as const }]
+    : []),
+])
+const quickAddAvailable = computed(() => !props.performanceId && quickAddActions.value.length > 0)
+const quickAddLabel = computed(() => {
+  const labels = [
+    ...(copyExisting.value ? ['复制'] : []),
+    ...(chineseMusicalSchedule.value ? ['排期'] : []),
+  ]
+  return `${labels.join('/')}...`
+})
+const categoryNames = computed(() => Object.fromEntries(
+  categories.value.map(({ id, name }) => [id, name]),
+))
+const tagNames = computed(() => Object.fromEntries(
+  tags.value.map(({ id, name }) => [id, name]),
+))
 const saveDisabled = computed(() =>
   loading.value
   || saving.value
@@ -101,6 +139,7 @@ const companySuggestions = computed(() => [...new Set(
 )])
 
 onMounted(async () => {
+  void quickAddPreferencesStore.initialize()
   try {
     const repositories = await getAppRepositories()
     service.value = new PerformanceEditorService(
@@ -143,12 +182,77 @@ function assignPerformance(performance: Performance): void {
     ),
     mediaAssets: performance.mediaAssets.map((asset) => ({ ...asset })),
   })
-  playNames.value = [...(performance.facets.play ?? [])]
-  artistNames.value = [...(performance.facets.artist ?? [])]
-  guestNames.value = [...(performance.facets.guest ?? [])]
-  companyNames.value = [...(performance.facets.company ?? [])]
-  friendNames.value = [...(performance.facets.friend ?? [])]
-  selectedChannel.value = (performance.facets.channel ?? []).join('、')
+  synchronizeFacetEditors(performance.facets)
+}
+
+function openQuickAddMenu(): void {
+  const actions = quickAddActions.value
+  if (!actions.length) return
+  uni.showActionSheet({
+    title: '快速添加',
+    itemList: actions.map(({ label }) => label),
+    success: ({ tapIndex }) => {
+      const action = actions[tapIndex]
+      if (action?.kind === 'copy') copyPickerVisible.value = true
+      if (action?.kind === 'chinese-musical') chineseMusicalScheduleVisible.value = true
+    },
+  })
+}
+
+function applyCopiedPerformance(payload: {
+  performance: Performance
+  fields: PerformanceCopyField[]
+}): void {
+  const copied = copyPerformanceFields(
+    { ...draft, facets: collectEditorFacets() },
+    payload.performance,
+    payload.fields,
+  )
+  Object.assign(draft, copied)
+  synchronizeFacetEditors(copied.facets)
+
+  if (payload.fields.includes('poster')) {
+    const poster = performancePosterAsSelectedImage(payload.performance)
+    if (poster) mediaChanges.poster = poster
+  }
+
+  copyPickerVisible.value = false
+  uni.showToast({ title: '已复制所选字段', icon: 'none' })
+}
+
+function applyChineseMusicalScheduleSelection(payload: {
+  schedule: ChineseMusicalSchedule
+  fields: ChineseMusicalScheduleField[]
+}): void {
+  const applied = applyChineseMusicalSchedule(
+    { ...draft, facets: collectEditorFacets() },
+    payload.schedule,
+    payload.fields,
+  )
+  Object.assign(draft, applied)
+  synchronizeFacetEditors(applied.facets)
+  chineseMusicalScheduleVisible.value = false
+  uni.showToast({ title: '已填入所选排期字段', icon: 'none' })
+}
+
+function collectEditorFacets(): Performance['facets'] {
+  return {
+    ...(playNames.value.length ? { play: [...playNames.value] } : {}),
+    ...(artistNames.value.length ? { artist: [...artistNames.value] } : {}),
+    ...(guestNames.value.length ? { guest: [...guestNames.value] } : {}),
+    ...(companyNames.value.length ? { company: [...companyNames.value] } : {}),
+    ...(friendNames.value.length ? { friend: [...friendNames.value] } : {}),
+    ...(selectedChannel.value ? { channel: [selectedChannel.value] } : {}),
+  }
+}
+
+function synchronizeFacetEditors(facets: Performance['facets']): void {
+  playNames.value = [...(facets.play ?? [])]
+  artistNames.value = [...(facets.artist ?? [])]
+  guestNames.value = [...(facets.guest ?? [])]
+  companyNames.value = [...(facets.company ?? [])]
+  friendNames.value = [...(facets.friend ?? [])]
+  selectedChannel.value = (facets.channel ?? []).join('、')
 }
 
 function updateDate(event: PickerChangeEvent): void {
@@ -218,14 +322,7 @@ async function save(skipNearbyCheck = false): Promise<void> {
   if (!service.value || saving.value) return
   saving.value = true
   try {
-    draft.facets = {
-      ...(playNames.value.length ? { play: [...playNames.value] } : {}),
-      ...(artistNames.value.length ? { artist: [...artistNames.value] } : {}),
-      ...(guestNames.value.length ? { guest: [...guestNames.value] } : {}),
-      ...(companyNames.value.length ? { company: [...companyNames.value] } : {}),
-      ...(friendNames.value.length ? { friend: [...friendNames.value] } : {}),
-      ...(selectedChannel.value ? { channel: [selectedChannel.value] } : {}),
-    }
+    draft.facets = collectEditorFacets()
     const result = await service.value.save({ ...draft }, { ...mediaChanges }, skipNearbyCheck)
     if (result.kind === 'duplicate') {
       showNearbyConfirmation(result.nearby)
@@ -313,6 +410,19 @@ function pad(value: number): string {
     <scroll-view class="editor-content" scroll-y>
       <view v-if="loading" class="loading-state">正在准备表单…</view>
       <template v-else>
+        <view v-if="quickAddAvailable" class="form-section form-section--quick-add">
+          <text class="form-section__title quick-add-title">⚡️快速添加（支持多方式组合使用）</text>
+          <button
+            class="quick-add-row"
+            aria-label="打开快速添加"
+            hover-class="quick-add-row--pressed"
+            @tap="openQuickAddMenu"
+          >
+            <text>{{ quickAddLabel }}</text>
+            <view class="quick-add-row__chevron"><AppIcon name="chevron" /></view>
+          </button>
+        </view>
+
         <view class="form-section">
           <text class="form-section__title">基础信息</text>
           <label class="form-field">
@@ -574,6 +684,20 @@ function pad(value: number): string {
       :suggestions="companySuggestions"
       @close="companyPickerVisible = false"
     />
+    <PerformanceCopyPickerScreen
+      :visible="copyPickerVisible"
+      :performances="locationHistory"
+      :category-names="categoryNames"
+      :tag-names="tagNames"
+      @close="copyPickerVisible = false"
+      @apply="applyCopiedPerformance"
+    />
+    <ChineseMusicalScheduleScreen
+      :visible="chineseMusicalScheduleVisible"
+      :initial-started-at-ms="draft.startedAtMs"
+      @close="chineseMusicalScheduleVisible = false"
+      @apply="applyChineseMusicalScheduleSelection"
+    />
   </view>
 </template>
 
@@ -583,6 +707,11 @@ function pad(value: number): string {
 .loading-state { padding: 100rpx 40rpx; color: var(--color-muted); text-align: center; }
 .form-section { padding: 42rpx 34rpx; border-bottom: var(--app-border-width) solid var(--color-border); }
 .form-section__title { display: block; margin-bottom: 26rpx; color: var(--color-accent); font-size: 28rpx; font-weight: 650; }
+.form-section--quick-add { padding-top: 28rpx; padding-bottom: 28rpx; }
+.quick-add-title { margin-bottom: 14rpx; font-size: 22rpx; font-weight: 550; }
+.quick-add-row { box-sizing: border-box; display: flex; width: 100%; min-height: 82rpx; margin: 0; padding: 0 18rpx; align-items: center; justify-content: space-between; border: var(--app-border-width) solid var(--color-border); border-radius: 16rpx; background: var(--color-surface); color: var(--color-text); font-size: 27rpx; font-weight: 600; text-align: left; }
+.quick-add-row--pressed { background: var(--color-row-pressed); }
+.quick-add-row__chevron { width: 28rpx; height: 28rpx; flex: none; color: var(--color-muted); }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; margin-top: 20rpx; }
 .form-field { display: block; min-width: 0; }
 .form-field--block, .form-field--spaced { margin-top: 24rpx; }
@@ -594,7 +723,7 @@ function pad(value: number): string {
 .form-hint--inline { margin-top: 4rpx; }
 .chip-list { display: flex; flex-wrap: wrap; gap: 14rpx; }
 .choice-chip { min-height: 64rpx; margin: 0; padding: 0 24rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 32rpx; background: var(--color-surface); color: var(--color-muted); font-size: 25rpx; line-height: 62rpx; }
-.choice-chip::after, .media-picker::after, .media-remove::after, .rating-button::after, .primary-save::after, .location-selector::after, .name-selector::after { border: 0; }
+.choice-chip::after, .media-picker::after, .media-remove::after, .rating-button::after, .primary-save::after, .location-selector::after, .name-selector::after, .quick-add-row::after { border: 0; }
 .choice-chip--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); }
 .choice-chip--pressed { opacity: 0.7; }
 .media-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22rpx; }

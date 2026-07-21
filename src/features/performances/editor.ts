@@ -14,6 +14,29 @@ import type {
 
 export const NEARBY_PERFORMANCE_WINDOW_MS = 2 * 60 * 60 * 1000
 
+export const PERFORMANCE_COPY_FIELDS = [
+  'poster',
+  'name',
+  'date',
+  'city',
+  'venue',
+  'remark',
+  'ticketPrice',
+  'paidPrice',
+  'artist',
+  'play',
+  'seat',
+  'rating',
+  'guest',
+  'category',
+  'tags',
+  'channel',
+  'friend',
+  'company',
+] as const
+
+export type PerformanceCopyField = typeof PERFORMANCE_COPY_FIELDS[number]
+
 export type PerformanceMediaChanges = Partial<Record<PerformanceImageRole, SelectedImage | null>>
 
 export type SavePerformanceResult =
@@ -102,6 +125,73 @@ export function createEmptyPerformanceDraft(now = Date.now()): PerformanceDraft 
   }
 }
 
+export function copyPerformanceFields(
+  destination: PerformanceDraft,
+  source: Performance,
+  selectedFields: readonly PerformanceCopyField[],
+): PerformanceDraft {
+  const selected = new Set(selectedFields)
+  const next: PerformanceDraft = {
+    ...destination,
+    ticketPrice: { ...destination.ticketPrice },
+    paidPrice: { ...destination.paidPrice },
+    otherCost: { ...destination.otherCost },
+    coordinate: destination.coordinate ? { ...destination.coordinate } : null,
+    tagIds: [...destination.tagIds],
+    facets: cloneFacets(destination.facets),
+    mediaAssets: destination.mediaAssets.map((asset) => ({ ...asset })),
+  }
+
+  if (selected.has('name') && source.name.trim()) next.name = source.name
+  if (selected.has('date')) next.startedAtMs = source.startedAtMs
+  if (selected.has('city') && source.city.trim()) {
+    next.city = source.city
+    next.coordinate = null
+  }
+  if (selected.has('venue') && source.venue.trim()) {
+    next.venue = source.venue
+    next.coordinate = null
+  }
+  if (selected.has('remark') && source.remark.trim()) next.remark = source.remark
+  if (selected.has('ticketPrice') && isPositiveAmount(source.ticketPrice.amount)) {
+    next.ticketPrice = { ...source.ticketPrice }
+  }
+  if (selected.has('paidPrice') && isPositiveAmount(source.paidPrice.amount)) {
+    next.paidPrice = { ...source.paidPrice }
+  }
+  if (selected.has('seat') && source.seat.trim()) next.seat = source.seat
+  if (selected.has('rating') && source.rating > 0) next.rating = source.rating
+  if (selected.has('category') && source.categoryId) next.categoryId = source.categoryId
+  if (selected.has('tags') && source.tagIds.length) next.tagIds = [...source.tagIds]
+
+  const facetFields: ReadonlyArray<[PerformanceCopyField, keyof Performance['facets']]> = [
+    ['artist', 'artist'],
+    ['play', 'play'],
+    ['guest', 'guest'],
+    ['channel', 'channel'],
+    ['friend', 'friend'],
+    ['company', 'company'],
+  ]
+  for (const [field, kind] of facetFields) {
+    const values = source.facets[kind]
+    if (selected.has(field) && values?.length) next.facets[kind] = [...values]
+  }
+
+  return next
+}
+
+export function performancePosterAsSelectedImage(performance: Performance): SelectedImage | null {
+  const asset = performance.mediaAssets.find(({ kind }) => kind === 'poster')
+    ?? performance.mediaAssets.find(({ kind }) => kind === 'poster_thumb')
+  if (!asset?.relativePath) return null
+  return {
+    sourcePath: asset.relativePath,
+    previewPath: asset.relativePath,
+    byteSize: asset.byteSize,
+    mimeType: asset.mimeType,
+  }
+}
+
 export function normalizePerformanceDraft(draft: PerformanceDraft): PerformanceDraft {
   const name = draft.name.trim()
   const city = draft.city.trim()
@@ -172,6 +262,17 @@ function belongsToRole(asset: MediaAsset, role: PerformanceImageRole): boolean {
   return role === 'poster'
     ? asset.kind === 'poster' || asset.kind === 'poster_thumb'
     : asset.kind === 'ticket_original' || asset.kind === 'ticket_thumb'
+}
+
+function cloneFacets(facets: Performance['facets']): Performance['facets'] {
+  return Object.fromEntries(
+    Object.entries(facets).map(([kind, values]) => [kind, values ? [...values] : values]),
+  ) as Performance['facets']
+}
+
+function isPositiveAmount(value: string): boolean {
+  const amount = Number(value)
+  return Number.isFinite(amount) && amount > 0
 }
 
 function uniqueValues(values: readonly string[]): string[] {

@@ -1,6 +1,6 @@
 import type { PerformanceLifecycle } from '@/domain/performance'
 
-export type PerformanceDisplayMode = 'card' | 'simple' | 'timeline' | 'artist' | 'play' | 'poster'
+export type PerformanceDisplayMode = 'card' | 'simple' | 'timeline' | 'artist' | 'play' | 'poster' | 'poster-text'
 export type ArtistSortMode = 'times' | 'date'
 
 export const PERFORMANCE_DISPLAY_MODE_LABELS: Record<PerformanceDisplayMode, string> = {
@@ -10,6 +10,7 @@ export const PERFORMANCE_DISPLAY_MODE_LABELS: Record<PerformanceDisplayMode, str
   artist: '阵容',
   play: '剧目/主题（名称）',
   poster: '仅海报',
+  'poster-text': '海报+演出名称',
 }
 
 export interface PerformanceFilter {
@@ -23,6 +24,7 @@ export interface PerformanceBrowsePreferences {
   displayMode: PerformanceDisplayMode
   artistSortMode: ArtistSortMode
   posterColumnCount: number
+  posterTextColumnCount: number
   filter: PerformanceFilter
 }
 
@@ -38,6 +40,7 @@ export const DEFAULT_BROWSE_PREFERENCES: PerformanceBrowsePreferences = {
   displayMode: 'card',
   artistSortMode: 'times',
   posterColumnCount: 4,
+  posterTextColumnCount: 2,
   filter: {
     categoryIds: [],
     tagIds: [],
@@ -52,6 +55,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
   const displayMode = isPerformanceDisplayMode(value.displayMode) ? value.displayMode : 'card'
   const artistSortMode = value.artistSortMode === 'date' ? 'date' : 'times'
   const posterColumnCount = normalizePosterColumnCount(value.posterColumnCount)
+  const posterTextColumnCount = normalizePosterTextColumnCount(value.posterTextColumnCount)
   const year = Number.isSafeInteger(rawFilter.year) && Number(rawFilter.year) >= 1970
     ? Number(rawFilter.year)
     : null
@@ -61,6 +65,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
     displayMode,
     artistSortMode,
     posterColumnCount,
+    posterTextColumnCount,
     filter: {
       categoryIds: uniqueStrings(rawFilter.categoryIds),
       tagIds: uniqueStrings(rawFilter.tagIds),
@@ -79,6 +84,7 @@ export function cloneBrowsePreferences(
     displayMode: value.displayMode,
     artistSortMode: value.artistSortMode,
     posterColumnCount: value.posterColumnCount,
+    posterTextColumnCount: value.posterTextColumnCount,
     filter: {
       categoryIds: [...value.filter.categoryIds],
       tagIds: [...value.filter.tagIds],
@@ -89,11 +95,18 @@ export function cloneBrowsePreferences(
 }
 
 export const POSTER_COLUMN_COUNTS = [2, 3, 4, 5, 6, 7, 8] as const
+export const POSTER_TEXT_COLUMN_COUNTS = [2, 3, 4] as const
 
 export function normalizePosterColumnCount(value: unknown): number {
   return POSTER_COLUMN_COUNTS.includes(value as typeof POSTER_COLUMN_COUNTS[number])
     ? Number(value)
     : DEFAULT_BROWSE_PREFERENCES.posterColumnCount
+}
+
+export function normalizePosterTextColumnCount(value: unknown): number {
+  return POSTER_TEXT_COLUMN_COUNTS.includes(value as typeof POSTER_TEXT_COLUMN_COUNTS[number])
+    ? Number(value)
+    : DEFAULT_BROWSE_PREFERENCES.posterTextColumnCount
 }
 
 export function yearRange(year: number | null): {

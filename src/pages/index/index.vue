@@ -336,6 +336,7 @@ watch(
   --app-header-height: calc(var(--app-status-bar-height, 0px) + var(--app-header-bar-height));
   --color-background: #ffffff;
   --color-surface: #ffffff;
+  --color-secondary-surface: rgba(242, 242, 247, 0.6);
   --color-text: #1b1715;
   --color-muted: #6f6965;
   --color-border: #ded7d2;
@@ -373,6 +374,7 @@ watch(
 .app-shell.theme-dark {
   --color-background: #171311;
   --color-surface: #211c19;
+  --color-secondary-surface: rgba(28, 28, 30, 0.6);
   --color-text: #f8f2ee;
   --color-muted: #b7aaa3;
   --color-border: #39312d;

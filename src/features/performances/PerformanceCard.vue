@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue'
-import type { Performance } from '@/domain/performance'
+import { PerformanceStatus, type Performance } from '@/domain/performance'
 import {
   formatPerformanceCardDate,
   formatPerformanceLocation,
@@ -30,6 +30,20 @@ function formatTimelineDate(timestamp: number): string {
 
 function formatTimelineTitle(performance: Performance): string {
   return [performance.city.trim(), performance.name.trim()].filter(Boolean).join(' · ')
+}
+
+function formatPosterTextDate(timestamp: number): string {
+  const date = new Date(timestamp)
+  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`
+}
+
+function posterTextStatus(performance: Performance): string {
+  switch (performance.status) {
+    case PerformanceStatus.Cancelled: return '已取消'
+    case PerformanceStatus.PendingSale: return '待开票'
+    case PerformanceStatus.Missed: return '未赴约'
+    case PerformanceStatus.Normal: return ''
+  }
 }
 
 function pad(value: number): string {
@@ -111,6 +125,34 @@ function pad(value: number): string {
   </button>
 
   <button
+    v-else-if="mode === 'poster-text'"
+    class="poster-text-card"
+    :aria-label="`查看${performance.name}`"
+    hover-class="poster-card--pressed"
+    @tap="$emit('open', performance.id)"
+  >
+    <view
+      class="poster-text-card__media"
+      :class="{ 'poster-text-card__media--inactive': posterTextStatus(performance) }"
+    >
+      <image
+        v-if="performanceMediaPath(performance, 'poster')"
+        class="poster-text-card__image"
+        :src="performanceMediaPath(performance, 'poster')"
+        mode="aspectFill"
+      />
+      <view v-else class="poster-text-card__image poster-text-card__image--empty">
+        <AppIcon name="image" />
+      </view>
+      <text v-if="posterTextStatus(performance)" class="poster-text-card__status">{{ posterTextStatus(performance) }}</text>
+    </view>
+    <view class="poster-text-card__copy">
+      <text class="poster-text-card__title">{{ performance.name }}</text>
+      <text class="poster-text-card__date">{{ formatPosterTextDate(performance.startedAtMs) }}</text>
+    </view>
+  </button>
+
+  <button
     v-else-if="mode === 'poster'"
     class="poster-card"
     :aria-label="`查看${performance.name}`"
@@ -130,8 +172,8 @@ function pad(value: number): string {
 </template>
 
 <style scoped>
-.performance-card, .simple-card, .timeline-item, .poster-card { box-sizing: border-box; margin: 0; border: 0; color: var(--color-text); text-align: left; }
-.performance-card::after, .simple-card::after, .timeline-item::after, .poster-card::after { border: 0; }
+.performance-card, .simple-card, .timeline-item, .poster-card, .poster-text-card { box-sizing: border-box; margin: 0; border: 0; color: var(--color-text); text-align: left; }
+.performance-card::after, .simple-card::after, .timeline-item::after, .poster-card::after, .poster-text-card::after { border: 0; }
 .performance-card { display: flex; width: 100%; min-height: 252rpx; padding: 16rpx; align-items: stretch; gap: 16rpx; border: var(--app-border-width) solid var(--color-accent-border); border-radius: 10rpx; background: var(--color-surface); }
 .performance-card--pressed, .simple-card--pressed, .timeline-item--pressed, .poster-card--pressed { transform: scale(0.985); opacity: .82; }
 .performance-card__poster { width: 26%; height: auto; aspect-ratio: 3 / 4; flex: none; align-self: flex-start; border-radius: 8rpx; background: var(--color-accent-soft); object-position: center; }
@@ -168,4 +210,14 @@ function pad(value: number): string {
 .poster-card__image { position: absolute; inset: 0; width: 100%; height: 100%; object-position: center; }
 .poster-card__image--empty { display: flex; align-items: center; justify-content: center; color: var(--color-accent); }
 .poster-card__image--empty > :first-child { width: 42%; height: 42%; max-width: 76rpx; max-height: 76rpx; opacity: .7; }
+.poster-text-card { width: 100%; overflow: hidden; padding: 0; border-radius: 12rpx; background: var(--color-secondary-surface); }
+.poster-text-card__media { position: relative; width: 100%; aspect-ratio: 3 / 4; overflow: hidden; background: var(--color-accent-soft); }
+.poster-text-card__media--inactive::after { position: absolute; z-index: 1; inset: 0; background: rgba(238, 233, 229, .52); content: ''; }
+.poster-text-card__image { position: absolute; inset: 0; width: 100%; height: 100%; object-position: center; }
+.poster-text-card__image--empty { display: flex; align-items: center; justify-content: center; color: var(--color-muted); }
+.poster-text-card__image--empty > :first-child { width: 36%; height: 36%; max-width: 82rpx; max-height: 82rpx; opacity: .62; }
+.poster-text-card__status { position: absolute; z-index: 2; top: 10rpx; right: 10rpx; padding: 6rpx 10rpx; border-radius: 10rpx; background: rgba(93, 82, 75, .82); color: #fff; font-size: 18rpx; font-weight: 650; line-height: 1.2; }
+.poster-text-card__copy { display: flex; min-width: 0; padding: 10rpx 11rpx 12rpx; flex-direction: column; gap: 5rpx; }
+.poster-text-card__title { overflow: hidden; color: var(--color-text); font-size: 24rpx; font-weight: 620; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.poster-text-card__date { overflow: hidden; color: var(--color-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20rpx; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
 </style>

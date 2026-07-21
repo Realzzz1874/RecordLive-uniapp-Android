@@ -21,6 +21,7 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
   const displayMode = computed(() => preferences.value.displayMode)
   const artistSortMode = computed(() => preferences.value.artistSortMode)
   const posterColumnCount = computed(() => preferences.value.posterColumnCount)
+  const posterTextColumnCount = computed(() => preferences.value.posterTextColumnCount)
   const filter = computed(() => preferences.value.filter)
 
   function initialize(): Promise<void> {
@@ -74,6 +75,14 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
     void persist()
   }
 
+  function setPosterTextColumnCount(value: number): void {
+    preferences.value = normalizeBrowsePreferences({
+      ...preferences.value,
+      posterTextColumnCount: value,
+    })
+    void persist()
+  }
+
   async function persist(): Promise<void> {
     try {
       const repositories = await getAppRepositories()
@@ -90,6 +99,7 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
     displayMode,
     artistSortMode,
     posterColumnCount,
+    posterTextColumnCount,
     filter,
     initialized,
     initialize,
@@ -97,6 +107,7 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
     setDisplayMode,
     setArtistSortMode,
     setPosterColumnCount,
+    setPosterTextColumnCount,
     setFilter,
   }
 })

@@ -34,7 +34,7 @@ const emit = defineEmits<{
 }>()
 
 const browseStore = useBrowsePreferencesStore()
-const { displayMode, artistSortMode, posterColumnCount, filter } = storeToRefs(browseStore)
+const { displayMode, artistSortMode, posterColumnCount, posterTextColumnCount, filter } = storeToRefs(browseStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const hasMore = ref(false)
@@ -190,11 +190,13 @@ function applyFilter(
   value: PerformanceFilter,
   mode: PerformanceDisplayMode,
   columns: number,
+  posterTextColumns: number,
   artistSort: ArtistSortMode,
 ): void {
   browseStore.setFilter(value)
   browseStore.setDisplayMode(mode)
   browseStore.setPosterColumnCount(columns)
+  browseStore.setPosterTextColumnCount(posterTextColumns)
   browseStore.setArtistSortMode(artistSort)
   void load(true)
 }
@@ -255,8 +257,12 @@ function clearFilters(): void {
       <view
         v-if="displayMode !== 'artist' && displayMode !== 'play'"
         class="performance-collection"
-        :class="{ 'performance-collection--poster': displayMode === 'poster' }"
-        :style="displayMode === 'poster' ? { gridTemplateColumns: `repeat(${posterColumnCount}, minmax(0, 1fr))` } : undefined"
+        :class="{ 'performance-collection--poster': displayMode === 'poster' || displayMode === 'poster-text' }"
+        :style="displayMode === 'poster'
+          ? { gridTemplateColumns: `repeat(${posterColumnCount}, minmax(0, 1fr))` }
+          : displayMode === 'poster-text'
+            ? { gridTemplateColumns: `repeat(${posterTextColumnCount}, minmax(0, 1fr))` }
+            : undefined"
       >
         <PerformanceCard
           v-for="performance in items"
@@ -288,6 +294,7 @@ function clearFilters(): void {
       :display-mode="displayMode"
       :artist-sort-mode="artistSortMode"
       :poster-column-count="posterColumnCount"
+      :poster-text-column-count="posterTextColumnCount"
       :categories="categories"
       :tags="tags"
       :years="years"

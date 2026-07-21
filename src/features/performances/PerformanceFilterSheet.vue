@@ -8,6 +8,7 @@ import {
   ALL_PERFORMANCE_LIFECYCLES,
   DEFAULT_BROWSE_PREFERENCES,
   POSTER_COLUMN_COUNTS,
+  POSTER_TEXT_COLUMN_COUNTS,
   type ArtistSortMode,
   type PerformanceDisplayMode,
   type PerformanceFilter,
@@ -19,6 +20,7 @@ const props = withDefaults(defineProps<{
   displayMode: PerformanceDisplayMode
   artistSortMode: ArtistSortMode
   posterColumnCount: number
+  posterTextColumnCount: number
   categories: PerformanceCategory[]
   tags: PerformanceTag[]
   years: number[]
@@ -33,6 +35,7 @@ const emit = defineEmits<{
     filter: PerformanceFilter,
     displayMode: PerformanceDisplayMode,
     posterColumnCount: number,
+    posterTextColumnCount: number,
     artistSortMode: ArtistSortMode,
   ]
 }>()
@@ -41,6 +44,7 @@ const draft = reactive<PerformanceFilter>(cloneFilter(props.filter))
 const displayModeDraft = ref<PerformanceDisplayMode>(props.displayMode)
 const artistSortModeDraft = ref<ArtistSortMode>(props.artistSortMode)
 const posterColumnCountDraft = ref(props.posterColumnCount)
+const posterTextColumnCountDraft = ref(props.posterTextColumnCount)
 const lifecycleOptions: readonly { value: PerformanceLifecycle; label: string }[] = [
   { value: 'attended', label: '已看' },
   { value: 'upcoming', label: '待看' },
@@ -55,6 +59,7 @@ watch(
     props.filter,
     props.displayMode,
     props.posterColumnCount,
+    props.posterTextColumnCount,
     props.artistSortMode,
   ] as const,
   ([visible]) => {
@@ -63,6 +68,7 @@ watch(
       displayModeDraft.value = props.displayMode
       artistSortModeDraft.value = props.artistSortMode
       posterColumnCountDraft.value = props.posterColumnCount
+      posterTextColumnCountDraft.value = props.posterTextColumnCount
     }
   },
   { deep: true },
@@ -88,6 +94,7 @@ function reset(): void {
   displayModeDraft.value = DEFAULT_BROWSE_PREFERENCES.displayMode
   artistSortModeDraft.value = DEFAULT_BROWSE_PREFERENCES.artistSortMode
   posterColumnCountDraft.value = DEFAULT_BROWSE_PREFERENCES.posterColumnCount
+  posterTextColumnCountDraft.value = DEFAULT_BROWSE_PREFERENCES.posterTextColumnCount
 }
 
 function apply(): void {
@@ -96,6 +103,7 @@ function apply(): void {
     cloneFilter(draft),
     displayModeDraft.value,
     posterColumnCountDraft.value,
+    posterTextColumnCountDraft.value,
     artistSortModeDraft.value,
   )
   emit('close')
@@ -165,6 +173,15 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 			</button>
             <button
               class="display-option"
+              :class="{ 'display-option--selected': displayModeDraft === 'poster-text' }"
+              aria-label="海报加演出名称展示"
+              @tap="displayModeDraft = 'poster-text'"
+            >
+              <AppIcon name="image" />
+              <text>海报+演出名称</text>
+            </button>
+            <button
+              class="display-option"
               :class="{ 'display-option--selected': displayModeDraft === 'artist' }"
               aria-label="阵容展示"
               @tap="displayModeDraft = 'artist'"
@@ -193,6 +210,19 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
                 :class="{ 'column-option--selected': posterColumnCountDraft === count }"
                 :aria-label="`每行${count}张海报`"
                 @tap="posterColumnCountDraft = count"
+              >{{ count }}</button>
+            </view>
+          </view>
+          <view v-if="displayModeDraft === 'poster-text'" class="poster-column-setting">
+            <text class="poster-column-setting__label">每行海报</text>
+            <view class="column-options column-options--compact" aria-label="每行海报加名称数量">
+              <button
+                v-for="count in POSTER_TEXT_COLUMN_COUNTS"
+                :key="count"
+                class="column-option"
+                :class="{ 'column-option--selected': posterTextColumnCountDraft === count }"
+                :aria-label="`海报加名称每行${count}张`"
+                @tap="posterTextColumnCountDraft = count"
               >{{ count }}</button>
             </view>
           </view>
@@ -298,6 +328,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 .poster-column-setting { margin-top: 24rpx; }
 .poster-column-setting__label { display: block; margin-bottom: 13rpx; color: var(--color-muted); font-size: 22rpx; }
 .column-options { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 9rpx; }
+.column-options--compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .column-option { height: 58rpx; margin: 0; padding: 0; border: var(--app-border-width) solid var(--color-border); border-radius: 12rpx; background: var(--color-surface); color: var(--color-muted); font-size: 23rpx; line-height: 56rpx; }
 .column-option--selected { border-color: var(--color-accent); background: var(--color-accent); color: var(--color-on-accent); font-weight: 700; }
 .artist-sort-setting { margin-top: 24rpx; }

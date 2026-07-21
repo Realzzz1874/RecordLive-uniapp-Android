@@ -243,6 +243,7 @@ describe('performance browse preferences', () => {
       displayMode: 'poster',
       artistSortMode: 'times',
       posterColumnCount: 4,
+      posterTextColumnCount: 2,
       filter: {
         categoryIds: ['concert'],
         tagIds: ['live'],
@@ -255,6 +256,13 @@ describe('performance browse preferences', () => {
       displayMode: 'poster',
       posterColumnCount: 8,
     }).posterColumnCount).toBe(8)
+    expect(normalizeBrowsePreferences({
+      displayMode: 'poster-text',
+      posterTextColumnCount: 4,
+    })).toMatchObject({ displayMode: 'poster-text', posterTextColumnCount: 4 })
+    expect(normalizeBrowsePreferences({
+      posterTextColumnCount: 5,
+    }).posterTextColumnCount).toBe(2)
     expect(normalizeBrowsePreferences({
       displayMode: 'play',
       artistSortMode: 'date',

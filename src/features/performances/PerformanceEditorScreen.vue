@@ -411,7 +411,7 @@ function pad(value: number): string {
       <view v-if="loading" class="loading-state">正在准备表单…</view>
       <template v-else>
         <view v-if="quickAddAvailable" class="form-section form-section--quick-add">
-          <text class="form-section__title quick-add-title">⚡️快速添加（支持多方式组合使用）</text>
+          <text class="form-section__title quick-add-title">️快速添加⚡（支持多方式组合使用）</text>
           <button
             class="quick-add-row"
             aria-label="打开快速添加"
@@ -708,7 +708,7 @@ function pad(value: number): string {
 .form-section { padding: 42rpx 34rpx; border-bottom: var(--app-border-width) solid var(--color-border); }
 .form-section__title { display: block; margin-bottom: 26rpx; color: var(--color-accent); font-size: 28rpx; font-weight: 650; }
 .form-section--quick-add { padding-top: 28rpx; padding-bottom: 28rpx; }
-.quick-add-title { margin-bottom: 14rpx; font-size: 22rpx; font-weight: 550; }
+.quick-add-title { margin-bottom: 14rpx; }
 .quick-add-row { box-sizing: border-box; display: flex; width: 100%; min-height: 82rpx; margin: 0; padding: 0 18rpx; align-items: center; justify-content: space-between; border: var(--app-border-width) solid var(--color-border); border-radius: 16rpx; background: var(--color-surface); color: var(--color-text); font-size: 27rpx; font-weight: 600; text-align: left; }
 .quick-add-row--pressed { background: var(--color-row-pressed); }
 .quick-add-row__chevron { width: 28rpx; height: 28rpx; flex: none; color: var(--color-muted); }

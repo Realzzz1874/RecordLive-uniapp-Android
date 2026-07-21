@@ -1,6 +1,6 @@
 # RecordLive Android 架构
 
-状态：Milestone 1 已实现；Milestone 2 的 M2.1–M2.4 已完成、M2.5 按用户要求延期；Milestone 3 已通过自动化与 H5 交互验证
+状态：Milestone 1 已实现；Milestone 2 的 M2.1–M2.4 已完成、M2.5 按用户要求延期；Milestone 3、Milestone 4 已通过自动化与 H5 交互验证；当前处于 M1–M4 功能还原校准期，Milestone 5 及之后阶段暂停
 目标平台：Android App  
 iOS 只读产品参照：`/Users/zhangrui/Desktop/realzzz/repos/RecordLive/RecordLive/RecordLive`
 

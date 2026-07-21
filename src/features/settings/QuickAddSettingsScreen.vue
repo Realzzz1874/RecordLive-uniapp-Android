@@ -16,6 +16,7 @@ defineEmits<{
 const quickAddPreferencesStore = useQuickAddPreferencesStore()
 const {
   copyExisting,
+  parseLink,
   chineseMusicalSchedule,
   koreanMusicalSchedule,
 } = storeToRefs(quickAddPreferencesStore)
@@ -27,6 +28,11 @@ onMounted(() => {
 function updateCopyExisting(event: Event): void {
   const detail = (event as unknown as SwitchChangeEvent).detail
   quickAddPreferencesStore.setCopyExisting(Boolean(detail.value))
+}
+
+function updateParseLink(event: Event): void {
+  const detail = (event as unknown as SwitchChangeEvent).detail
+  quickAddPreferencesStore.setParseLink(Boolean(detail.value))
 }
 
 function updateChineseMusicalSchedule(event: Event): void {
@@ -57,6 +63,18 @@ function updateKoreanMusicalSchedule(event: Event): void {
             aria-label="启用复制已有演出"
             color="#a74f17"
             @change="updateCopyExisting"
+          />
+        </view>
+        <view class="settings-row settings-row--separated">
+          <view class="settings-row__copy">
+            <text class="settings-row__label">解析链接</text>
+            <text class="settings-row__supporting">当前支持：大麦</text>
+          </view>
+          <switch
+            :checked="parseLink"
+            aria-label="启用解析链接"
+            color="#a74f17"
+            @change="updateParseLink"
           />
         </view>
         <view class="settings-row settings-row--separated">

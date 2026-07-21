@@ -79,17 +79,20 @@ describe('quick add preferences', () => {
     expect(normalizeQuickAddPreferences(null)).toEqual(DEFAULT_QUICK_ADD_PREFERENCES)
     expect(normalizeQuickAddPreferences({ copyExisting: false })).toEqual({
       copyExisting: false,
+      parseLink: true,
       chineseMusicalSchedule: true,
       koreanMusicalSchedule: true,
       chineseMusicalCity: '上海',
     })
     expect(normalizeQuickAddPreferences({
       copyExisting: 'yes',
+      parseLink: false,
       chineseMusicalSchedule: false,
       koreanMusicalSchedule: false,
       chineseMusicalCity: ' 北京 ',
     })).toEqual({
       copyExisting: true,
+      parseLink: false,
       chineseMusicalSchedule: false,
       koreanMusicalSchedule: false,
       chineseMusicalCity: '北京',

@@ -27,6 +27,7 @@ import CompanyPickerScreen from '@/features/performances/CompanyPickerScreen.vue
 import FriendsPickerScreen from '@/features/performances/FriendsPickerScreen.vue'
 import KoreanMusicalScheduleScreen from '@/features/performances/KoreanMusicalScheduleScreen.vue'
 import LocationPickerScreen from '@/features/performances/LocationPickerScreen.vue'
+import ParseLinkScreen from '@/features/performances/ParseLinkScreen.vue'
 import PurchaseChannelPickerScreen from '@/features/performances/PurchaseChannelPickerScreen.vue'
 import PerformanceCopyPickerScreen from '@/features/performances/PerformanceCopyPickerScreen.vue'
 import { formatSelectedLocation } from '@/features/performances/location'
@@ -36,9 +37,14 @@ import {
   type KoreanMusicalScheduleField,
 } from '@/features/performances/korean-musical-schedule'
 import type { PerformanceDraft } from '@/features/performances/repository'
+import {
+  applyParseLinkResult,
+  type ParseLinkField,
+} from '@/features/performances/parse-link'
+import type { ParsePlatformResult } from '@/features/performances/parse-platform/types'
 import { choosePerformanceImage } from '@/platform/media/picker'
 import { createPerformanceMediaStorage } from '@/platform/media/factory'
-import type { PerformanceImageRole } from '@/platform/media/types'
+import type { PerformanceImageRole, SelectedImage } from '@/platform/media/types'
 import { getAppRepositories } from '@/platform/repositories/context'
 import { useQuickAddPreferencesStore } from '@/stores/quick-add-preferences'
 
@@ -70,6 +76,7 @@ const companyPickerVisible = ref(false)
 const friendPickerVisible = ref(false)
 const channelPickerVisible = ref(false)
 const copyPickerVisible = ref(false)
+const parseLinkVisible = ref(false)
 const chineseMusicalScheduleVisible = ref(false)
 const koreanMusicalScheduleVisible = ref(false)
 const service = ref<PerformanceEditorService | null>(null)
@@ -83,6 +90,7 @@ const selectedChannel = ref('')
 const quickAddPreferencesStore = useQuickAddPreferencesStore()
 const {
   copyExisting,
+  parseLink,
   chineseMusicalSchedule,
   koreanMusicalSchedule,
 } = storeToRefs(quickAddPreferencesStore)
@@ -98,6 +106,9 @@ const quickAddActions = computed(() => [
   ...(copyExisting.value
     ? [{ label: '复制已有演出内容', kind: 'copy' as const }]
     : []),
+  ...(parseLink.value
+    ? [{ label: '解析链接', kind: 'parse-link' as const }]
+    : []),
   ...(chineseMusicalSchedule.value
     ? [{ label: '中文音乐剧排期', kind: 'chinese-musical' as const }]
     : []),
@@ -109,6 +120,7 @@ const quickAddAvailable = computed(() => !props.performanceId && quickAddActions
 const quickAddLabel = computed(() => {
   const labels = [
     ...(copyExisting.value ? ['复制'] : []),
+    ...(parseLink.value ? ['链接'] : []),
     ...(chineseMusicalSchedule.value || koreanMusicalSchedule.value ? ['排期'] : []),
   ]
   return `${labels.join('/')}...`
@@ -207,10 +219,30 @@ function openQuickAddMenu(): void {
     success: ({ tapIndex }) => {
       const action = actions[tapIndex]
       if (action?.kind === 'copy') copyPickerVisible.value = true
+      if (action?.kind === 'parse-link') parseLinkVisible.value = true
       if (action?.kind === 'chinese-musical') chineseMusicalScheduleVisible.value = true
       if (action?.kind === 'korean-musical') koreanMusicalScheduleVisible.value = true
     },
   })
+}
+
+function applyParsedLink(payload: {
+  result: ParsePlatformResult
+  fields: ParseLinkField[]
+  poster: SelectedImage | null
+}): void {
+  const applied = applyParseLinkResult(
+    { ...draft, facets: collectEditorFacets() },
+    payload.result,
+    payload.fields,
+  )
+  Object.assign(draft, applied)
+  synchronizeFacetEditors(applied.facets)
+  if (payload.fields.includes('poster') && payload.poster) {
+    mediaChanges.poster = payload.poster
+  }
+  parseLinkVisible.value = false
+  uni.showToast({ title: '已填入所选解析字段', icon: 'none' })
 }
 
 function applyCopiedPerformance(payload: {
@@ -705,6 +737,11 @@ function pad(value: number): string {
       :tag-names="tagNames"
       @close="copyPickerVisible = false"
       @apply="applyCopiedPerformance"
+    />
+    <ParseLinkScreen
+      :visible="parseLinkVisible"
+      @close="parseLinkVisible = false"
+      @apply="applyParsedLink"
     />
     <ChineseMusicalScheduleScreen
       :visible="chineseMusicalScheduleVisible"

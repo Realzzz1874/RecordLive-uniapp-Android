@@ -15,6 +15,7 @@ export const useQuickAddPreferencesStore = defineStore('quick-add-preferences', 
   let initialization: Promise<void> | null = null
 
   const copyExisting = computed(() => preferences.value.copyExisting)
+  const parseLink = computed(() => preferences.value.parseLink)
   const chineseMusicalSchedule = computed(() => preferences.value.chineseMusicalSchedule)
   const koreanMusicalSchedule = computed(() => preferences.value.koreanMusicalSchedule)
   const chineseMusicalCity = computed(() => preferences.value.chineseMusicalCity)
@@ -36,6 +37,11 @@ export const useQuickAddPreferencesStore = defineStore('quick-add-preferences', 
 
   function setCopyExisting(value: boolean): void {
     preferences.value = { ...preferences.value, copyExisting: value }
+    void persist()
+  }
+
+  function setParseLink(value: boolean): void {
+    preferences.value = { ...preferences.value, parseLink: value }
     void persist()
   }
 
@@ -67,12 +73,14 @@ export const useQuickAddPreferencesStore = defineStore('quick-add-preferences', 
 
   return {
     copyExisting,
+    parseLink,
     chineseMusicalSchedule,
     koreanMusicalSchedule,
     chineseMusicalCity,
     initialized,
     initialize,
     setCopyExisting,
+    setParseLink,
     setChineseMusicalSchedule,
     setKoreanMusicalSchedule,
     setChineseMusicalCity,

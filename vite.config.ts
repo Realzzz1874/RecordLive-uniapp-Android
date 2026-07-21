@@ -17,6 +17,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/myukit-proxy/, ''),
       },
+      '/damai-proxy': {
+        target: 'https://detail.damai.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/damai-proxy/, ''),
+      },
+      '/damai-image-proxy': {
+        target: 'https://img.alicdn.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/damai-image-proxy/, ''),
+      },
     },
   },
 })

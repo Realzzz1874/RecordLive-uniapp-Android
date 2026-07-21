@@ -18,7 +18,7 @@ const source: Performance = {
   city: '上海',
   venue: '上海大剧院',
   remark: '原备注',
-  ticketPrice: { amount: '680', currency: 'CNY' },
+  ticketPrice: { amount: '680', currency: 'USD' },
   paidPrice: { amount: '600', currency: 'CNY' },
   otherCost: { amount: '88', currency: 'CNY' },
   seat: 'A1',

@@ -13,6 +13,7 @@ import type {
 } from '@/platform/media/types'
 
 export const NEARBY_PERFORMANCE_WINDOW_MS = 2 * 60 * 60 * 1000
+export const PERFORMANCE_CURRENCY = 'CNY'
 
 export const PERFORMANCE_COPY_FIELDS = [
   'poster',
@@ -111,9 +112,9 @@ export function createEmptyPerformanceDraft(now = Date.now()): PerformanceDraft 
     city: '',
     venue: '',
     remark: '',
-    ticketPrice: { amount: '0', currency: 'CNY' },
-    paidPrice: { amount: '0', currency: 'CNY' },
-    otherCost: { amount: '0', currency: 'CNY' },
+    ticketPrice: { amount: '0', currency: PERFORMANCE_CURRENCY },
+    paidPrice: { amount: '0', currency: PERFORMANCE_CURRENCY },
+    otherCost: { amount: '0', currency: PERFORMANCE_CURRENCY },
     seat: '',
     rating: 0,
     status: PerformanceStatus.Normal,
@@ -154,10 +155,10 @@ export function copyPerformanceFields(
   }
   if (selected.has('remark') && source.remark.trim()) next.remark = source.remark
   if (selected.has('ticketPrice') && isPositiveAmount(source.ticketPrice.amount)) {
-    next.ticketPrice = { ...source.ticketPrice }
+    next.ticketPrice = { amount: source.ticketPrice.amount, currency: PERFORMANCE_CURRENCY }
   }
   if (selected.has('paidPrice') && isPositiveAmount(source.paidPrice.amount)) {
-    next.paidPrice = { ...source.paidPrice }
+    next.paidPrice = { amount: source.paidPrice.amount, currency: PERFORMANCE_CURRENCY }
   }
   if (selected.has('seat') && source.seat.trim()) next.seat = source.seat
   if (selected.has('rating') && source.rating > 0) next.rating = source.rating
@@ -207,9 +208,9 @@ export function normalizePerformanceDraft(draft: PerformanceDraft): PerformanceD
     venue,
     remark: draft.remark.trim(),
     seat: draft.seat.trim(),
-    ticketPrice: normalizeCurrencyAmount(draft.ticketPrice.amount, draft.ticketPrice.currency),
-    paidPrice: normalizeCurrencyAmount(draft.paidPrice.amount, draft.paidPrice.currency),
-    otherCost: normalizeCurrencyAmount(draft.otherCost.amount, draft.otherCost.currency),
+    ticketPrice: normalizeCurrencyAmount(draft.ticketPrice.amount),
+    paidPrice: normalizeCurrencyAmount(draft.paidPrice.amount),
+    otherCost: normalizeCurrencyAmount(draft.otherCost.amount),
     tagIds: uniqueValues(draft.tagIds),
     facets: Object.fromEntries(
       Object.entries(draft.facets)
@@ -243,18 +244,14 @@ export function moveSelectedName(names: readonly string[], from: number, to: num
   return next
 }
 
-function normalizeCurrencyAmount(amount: string, currency: string): Performance['ticketPrice'] {
-  const normalizedCurrency = currency.trim().toLocaleUpperCase()
-  if (!/^[A-Z]{3}$/.test(normalizedCurrency)) {
-    throw new DomainValidationError('币种必须是三位代码')
-  }
+function normalizeCurrencyAmount(amount: string): Performance['ticketPrice'] {
   const normalizedAmount = amount.trim() || '0'
   if (!/^\d+(?:\.\d{1,2})?$/.test(normalizedAmount)) {
     throw new DomainValidationError('花费金额最多保留两位小数')
   }
   return {
     amount: normalizedAmount.replace(/^0+(?=\d)/, ''),
-    currency: normalizedCurrency,
+    currency: PERFORMANCE_CURRENCY,
   }
 }
 

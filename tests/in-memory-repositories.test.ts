@@ -418,7 +418,7 @@ describe('performance editor service', () => {
       name: '  演唱会 ',
       city: ' 上海 ',
       venue: ' 上海文化广场 ',
-      ticketPrice: { amount: '0680.5', currency: 'cny' },
+      ticketPrice: { amount: '0680.5', currency: 'USD' },
     })).toMatchObject({
       name: '演唱会',
       city: '上海',

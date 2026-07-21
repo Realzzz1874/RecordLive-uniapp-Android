@@ -11,6 +11,7 @@ import {
   copyPerformanceFields,
   createEmptyPerformanceDraft,
   performancePosterAsSelectedImage,
+  PERFORMANCE_CURRENCY,
   PerformanceEditorService,
   type PerformanceCopyField,
   type PerformanceMediaChanges,
@@ -92,8 +93,6 @@ const statusOptions = [
   { label: '已取消', value: PerformanceStatus.Cancelled },
   { label: '未赴约', value: PerformanceStatus.Missed },
 ] as const
-const currencies = ['CNY', 'USD', 'HKD', 'JPY', 'EUR'] as const
-
 const title = computed(() => props.performanceId ? '编辑演出' : '添加演出')
 const quickAddActions = computed(() => [
   ...(copyExisting.value
@@ -186,9 +185,9 @@ onMounted(async () => {
 function assignPerformance(performance: Performance): void {
   Object.assign(draft, {
     ...performance,
-    ticketPrice: { ...performance.ticketPrice },
-    paidPrice: { ...performance.paidPrice },
-    otherCost: { ...performance.otherCost },
+    ticketPrice: { amount: performance.ticketPrice.amount, currency: PERFORMANCE_CURRENCY },
+    paidPrice: { amount: performance.paidPrice.amount, currency: PERFORMANCE_CURRENCY },
+    otherCost: { amount: performance.otherCost.amount, currency: PERFORMANCE_CURRENCY },
     coordinate: performance.coordinate ? { ...performance.coordinate } : null,
     tagIds: [...performance.tagIds],
     facets: Object.fromEntries(
@@ -388,18 +387,6 @@ function showNearbyConfirmation(nearby: Performance[]): void {
       if (confirm) await save(true)
     },
   })
-}
-
-function updateCurrency(
-  target: 'ticketPrice' | 'paidPrice' | 'otherCost',
-  event: PickerChangeEvent,
-): void {
-  const currency = currencies[Number(event.detail.value)]
-  if (currency) draft[target].currency = currency
-}
-
-function currencyIndex(currency: string): number {
-  return Math.max(0, currencies.indexOf(currency as typeof currencies[number]))
 }
 
 function showError(error: unknown, fallback: string): void {
@@ -655,10 +642,7 @@ function pad(value: number): string {
             ['paidPrice', '实付价'],
             ['otherCost', '其他花费'],
           ] as const)" :key="cost[0]" class="money-row">
-            <text class="money-row__label">{{ cost[1] }}</text>
-            <picker :range="currencies" :value="currencyIndex(draft[cost[0]].currency)" @change="updateCurrency(cost[0], $event)">
-              <view class="currency-picker">{{ draft[cost[0]].currency }}</view>
-            </picker>
+            <text class="money-row__label">{{ cost[1] }}({{ PERFORMANCE_CURRENCY }})</text>
             <input v-model="draft[cost[0]].amount" class="money-input" type="digit" placeholder="0.00">
           </view>
         </view>
@@ -771,10 +755,9 @@ function pad(value: number): string {
 .rating-row { display: flex; gap: 8rpx; }
 .rating-button { width: 62rpx; height: 62rpx; margin: 0; padding: 0; border: 0; background: transparent; color: var(--color-border); font-size: 45rpx; line-height: 62rpx; }
 .rating-button--active { color: var(--color-accent); }
-.money-row { display: grid; grid-template-columns: 150rpx 112rpx minmax(0, 1fr); min-height: 94rpx; align-items: center; border-bottom: var(--app-border-width) solid var(--color-border-subtle); }
+.money-row { display: grid; grid-template-columns: minmax(220rpx, 1fr) minmax(180rpx, 1fr); min-height: 94rpx; align-items: center; border-bottom: var(--app-border-width) solid var(--color-border-subtle); }
 .money-row:last-child { border-bottom: 0; }
-.money-row__label { color: var(--color-text); font-size: 28rpx; }
-.currency-picker { color: var(--color-accent); font-size: 25rpx; text-align: center; }
+.money-row__label { overflow: hidden; color: var(--color-text); font-size: 28rpx; text-overflow: ellipsis; white-space: nowrap; }
 .money-input { height: 72rpx; color: var(--color-text); font-size: 29rpx; text-align: right; }
 .primary-save { height: 92rpx; margin: 44rpx 34rpx 20rpx; border: 0; border-radius: 20rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 30rpx; font-weight: 650; line-height: 92rpx; }
 .primary-save--pressed { background: var(--color-accent-pressed); }

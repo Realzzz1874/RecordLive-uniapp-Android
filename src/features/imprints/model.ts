@@ -226,7 +226,7 @@ function rankValues(groups: readonly (readonly string[])[]): ImprintRankEntry[] 
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name, 'zh-CN'))
 }
 
-function summarizeExpenses(performances: readonly Performance[]): ImprintExpenseSummary[] {
+export function summarizeExpenses(performances: readonly Performance[]): ImprintExpenseSummary[] {
   const currencies = new Map<string, {
     ticketPrice: string[]
     paidPrice: string[]

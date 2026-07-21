@@ -5,6 +5,7 @@ import {
   cloneBrowsePreferences,
   DEFAULT_BROWSE_PREFERENCES,
   normalizeBrowsePreferences,
+  type ArtistSortMode,
   type PerformanceDisplayMode,
   type PerformanceFilter,
 } from '@/features/preferences/model'
@@ -18,6 +19,7 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
   let initialization: Promise<void> | null = null
 
   const displayMode = computed(() => preferences.value.displayMode)
+  const artistSortMode = computed(() => preferences.value.artistSortMode)
   const posterColumnCount = computed(() => preferences.value.posterColumnCount)
   const filter = computed(() => preferences.value.filter)
 
@@ -56,6 +58,14 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
     void persist()
   }
 
+  function setArtistSortMode(value: ArtistSortMode): void {
+    preferences.value = {
+      ...preferences.value,
+      artistSortMode: value,
+    }
+    void persist()
+  }
+
   function setPosterColumnCount(value: number): void {
     preferences.value = normalizeBrowsePreferences({
       ...preferences.value,
@@ -78,12 +88,14 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
 
   return {
     displayMode,
+    artistSortMode,
     posterColumnCount,
     filter,
     initialized,
     initialize,
     resetFilter,
     setDisplayMode,
+    setArtistSortMode,
     setPosterColumnCount,
     setFilter,
   }

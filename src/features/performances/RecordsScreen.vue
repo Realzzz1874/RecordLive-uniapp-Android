@@ -7,11 +7,14 @@ import AppIcon from '@/components/AppIcon.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import type { Performance } from '@/domain/performance'
 import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
+import ArtistSummary from '@/features/performances/ArtistSummary.vue'
 import PerformanceCard from '@/features/performances/PerformanceCard.vue'
 import PerformanceFilterSheet from '@/features/performances/PerformanceFilterSheet.vue'
+import PlaySummary from '@/features/performances/PlaySummary.vue'
 import {
   ALL_PERFORMANCE_LIFECYCLES,
   yearRange,
+  type ArtistSortMode,
   type PerformanceDisplayMode,
   type PerformanceFilter,
 } from '@/features/preferences/model'
@@ -26,10 +29,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: []
   open: [id: string]
+  openArtist: [name: string]
+  openPlay: [name: string]
 }>()
 
 const browseStore = useBrowsePreferencesStore()
-const { displayMode, posterColumnCount, filter } = storeToRefs(browseStore)
+const { displayMode, artistSortMode, posterColumnCount, filter } = storeToRefs(browseStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const hasMore = ref(false)
@@ -74,7 +79,7 @@ async function load(reset: boolean): Promise<void> {
     const repositories = await getAppRepositories()
     const offset = reset ? 0 : items.value.length
     const range = yearRange(filter.value.year)
-    const page = await repositories.performances.list({
+    const listPage = (pageOffset: number, limit: number) => repositories.performances.list({
       search: searchQuery.value,
       categoryIds: filter.value.categoryIds.length ? filter.value.categoryIds : undefined,
       tagIdsAny: filter.value.tagIds.length ? filter.value.tagIds : undefined,
@@ -84,9 +89,27 @@ async function load(reset: boolean): Promise<void> {
       referenceTimeMs: Date.now(),
       ...range,
       sortDirection: 'descending',
-      offset,
-      limit: 30,
+      offset: pageOffset,
+      limit,
     })
+
+    if (reset && (displayMode.value === 'artist' || displayMode.value === 'play')) {
+      const allItems: Performance[] = []
+      let artistPage = await listPage(0, 300)
+      allItems.push(...artistPage.items)
+      while (artistPage.hasMore) {
+        if (sequence !== requestSequence) return
+        artistPage = await listPage(allItems.length, 300)
+        allItems.push(...artistPage.items)
+      }
+      if (sequence !== requestSequence) return
+      items.value = allItems
+      total.value = artistPage.total
+      hasMore.value = false
+      return
+    }
+
+    const page = await listPage(offset, 30)
     if (sequence !== requestSequence) return
     items.value = reset ? page.items : [...items.value, ...page.items]
     total.value = page.total
@@ -163,10 +186,16 @@ function clearSearch(): void {
   searchInputFocused.value = true
 }
 
-function applyFilter(value: PerformanceFilter, mode: PerformanceDisplayMode, columns: number): void {
+function applyFilter(
+  value: PerformanceFilter,
+  mode: PerformanceDisplayMode,
+  columns: number,
+  artistSort: ArtistSortMode,
+): void {
   browseStore.setFilter(value)
   browseStore.setDisplayMode(mode)
   browseStore.setPosterColumnCount(columns)
+  browseStore.setArtistSortMode(artistSort)
   void load(true)
 }
 
@@ -224,6 +253,7 @@ function clearFilters(): void {
     </view>
     <scroll-view v-else class="records-list" scroll-y lower-threshold="120" @scrolltolower="load(false)">
       <view
+        v-if="displayMode !== 'artist' && displayMode !== 'play'"
         class="performance-collection"
         :class="{ 'performance-collection--poster': displayMode === 'poster' }"
         :style="displayMode === 'poster' ? { gridTemplateColumns: `repeat(${posterColumnCount}, minmax(0, 1fr))` } : undefined"
@@ -236,6 +266,18 @@ function clearFilters(): void {
           @open="$emit('open', $event)"
         />
       </view>
+      <ArtistSummary
+        v-else-if="displayMode === 'artist'"
+        :performances="items"
+        :sort-mode="artistSortMode"
+        @select="$emit('openArtist', $event)"
+      />
+      <PlaySummary
+        v-else
+        :performances="items"
+        :sort-mode="artistSortMode"
+        @select="$emit('openPlay', $event)"
+      />
       <text v-if="loadingMore" class="list-footer">正在加载…</text>
       <text v-else-if="!hasMore" class="list-footer">共 {{ total }} 场演出</text>
     </scroll-view>
@@ -244,6 +286,7 @@ function clearFilters(): void {
       :visible="filterVisible"
       :filter="filter"
       :display-mode="displayMode"
+      :artist-sort-mode="artistSortMode"
       :poster-column-count="posterColumnCount"
       :categories="categories"
       :tags="tags"

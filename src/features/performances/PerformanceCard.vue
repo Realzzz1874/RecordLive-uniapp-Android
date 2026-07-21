@@ -111,7 +111,7 @@ function pad(value: number): string {
   </button>
 
   <button
-    v-else
+    v-else-if="mode === 'poster'"
     class="poster-card"
     :aria-label="`查看${performance.name}`"
     hover-class="poster-card--pressed"

@@ -7,9 +7,15 @@ import AppIcon from '@/components/AppIcon.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import type { Performance } from '@/domain/performance'
 import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
+import ArtistSummary from '@/features/performances/ArtistSummary.vue'
 import PerformanceCard from '@/features/performances/PerformanceCard.vue'
 import PerformanceFilterSheet from '@/features/performances/PerformanceFilterSheet.vue'
-import { yearRange, type PerformanceDisplayMode, type PerformanceFilter } from '@/features/preferences/model'
+import {
+  yearRange,
+  type ArtistSortMode,
+  type PerformanceDisplayMode,
+  type PerformanceFilter,
+} from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
 import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
 
@@ -24,7 +30,7 @@ const emit = defineEmits<{
 }>()
 
 const browseStore = useBrowsePreferencesStore()
-const { displayMode, posterColumnCount, filter } = storeToRefs(browseStore)
+const { displayMode, artistSortMode, posterColumnCount, filter } = storeToRefs(browseStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const loading = ref(true)
@@ -63,7 +69,7 @@ async function load(): Promise<void> {
   loading.value = true
   try {
     const repositories = await getAppRepositories()
-    const page = await repositories.performances.list({
+    const listPage = (offset: number, limit: number) => repositories.performances.list({
       search: searchQuery.value,
       categoryIds: filter.value.categoryIds.length ? filter.value.categoryIds : undefined,
       tagIdsAny: filter.value.tagIds.length ? filter.value.tagIds : undefined,
@@ -71,10 +77,19 @@ async function load(): Promise<void> {
       referenceTimeMs: Date.now(),
       ...yearRange(filter.value.year),
       sortDirection: 'ascending',
-      limit: 200,
+      offset,
+      limit,
     })
+    const allItems: Performance[] = []
+    let page = await listPage(0, 300)
+    allItems.push(...page.items)
+    while (page.hasMore) {
+      if (sequence !== requestSequence) return
+      page = await listPage(allItems.length, 300)
+      allItems.push(...page.items)
+    }
     if (sequence !== requestSequence) return
-    items.value = page.items
+    items.value = allItems
     total.value = page.total
   } catch (error) {
     if (sequence !== requestSequence) return
@@ -140,10 +155,16 @@ function closeSearch(): void {
   searchQuery.value = ''
 }
 
-function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMode, columns: number): void {
+function applyBrowseOptions(
+  value: PerformanceFilter,
+  mode: PerformanceDisplayMode,
+  columns: number,
+  artistSort: ArtistSortMode,
+): void {
   browseStore.setFilter(value)
   browseStore.setDisplayMode(mode)
   browseStore.setPosterColumnCount(columns)
+  browseStore.setArtistSortMode(artistSort)
   void load()
 }
 </script>
@@ -195,6 +216,7 @@ function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMo
     </view>
     <scroll-view v-else class="want-see-list" scroll-y>
       <view
+        v-if="displayMode !== 'artist'"
         class="performance-collection"
         :class="{ 'performance-collection--poster': displayMode === 'poster' }"
         :style="displayMode === 'poster' ? { gridTemplateColumns: `repeat(${posterColumnCount}, minmax(0, 1fr))` } : undefined"
@@ -207,6 +229,11 @@ function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMo
           @open="$emit('open', $event)"
         />
       </view>
+      <ArtistSummary
+        v-else
+        :performances="items"
+        :sort-mode="artistSortMode"
+      />
       <text class="list-footer">共 {{ total }} 场待看演出</text>
     </scroll-view>
 
@@ -214,6 +241,7 @@ function applyBrowseOptions(value: PerformanceFilter, mode: PerformanceDisplayMo
       :visible="filterVisible"
       :filter="filter"
       :display-mode="displayMode"
+      :artist-sort-mode="artistSortMode"
       :poster-column-count="posterColumnCount"
       :categories="categories"
       :tags="tags"

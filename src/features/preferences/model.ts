@@ -1,11 +1,14 @@
 import type { PerformanceLifecycle } from '@/domain/performance'
 
-export type PerformanceDisplayMode = 'card' | 'simple' | 'timeline' | 'poster'
+export type PerformanceDisplayMode = 'card' | 'simple' | 'timeline' | 'artist' | 'play' | 'poster'
+export type ArtistSortMode = 'times' | 'date'
 
 export const PERFORMANCE_DISPLAY_MODE_LABELS: Record<PerformanceDisplayMode, string> = {
   card: '演出卡片1',
   simple: '演出卡片2（无海报）',
   timeline: '文字时间线',
+  artist: '阵容',
+  play: '剧目/主题（名称）',
   poster: '仅海报',
 }
 
@@ -18,6 +21,7 @@ export interface PerformanceFilter {
 
 export interface PerformanceBrowsePreferences {
   displayMode: PerformanceDisplayMode
+  artistSortMode: ArtistSortMode
   posterColumnCount: number
   filter: PerformanceFilter
 }
@@ -32,6 +36,7 @@ export const ALL_PERFORMANCE_LIFECYCLES: readonly PerformanceLifecycle[] = [
 
 export const DEFAULT_BROWSE_PREFERENCES: PerformanceBrowsePreferences = {
   displayMode: 'card',
+  artistSortMode: 'times',
   posterColumnCount: 4,
   filter: {
     categoryIds: [],
@@ -45,6 +50,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
   if (!isRecord(value)) return cloneBrowsePreferences(DEFAULT_BROWSE_PREFERENCES)
   const rawFilter = isRecord(value.filter) ? value.filter : {}
   const displayMode = isPerformanceDisplayMode(value.displayMode) ? value.displayMode : 'card'
+  const artistSortMode = value.artistSortMode === 'date' ? 'date' : 'times'
   const posterColumnCount = normalizePosterColumnCount(value.posterColumnCount)
   const year = Number.isSafeInteger(rawFilter.year) && Number(rawFilter.year) >= 1970
     ? Number(rawFilter.year)
@@ -53,6 +59,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
 
   return {
     displayMode,
+    artistSortMode,
     posterColumnCount,
     filter: {
       categoryIds: uniqueStrings(rawFilter.categoryIds),
@@ -70,6 +77,7 @@ export function cloneBrowsePreferences(
 ): PerformanceBrowsePreferences {
   return {
     displayMode: value.displayMode,
+    artistSortMode: value.artistSortMode,
     posterColumnCount: value.posterColumnCount,
     filter: {
       categoryIds: [...value.filter.categoryIds],

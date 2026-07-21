@@ -6,9 +6,11 @@ import { ref, watch } from 'vue'
 import BottomTabBar from '@/components/BottomTabBar.vue'
 import { getBackDestination, type ThemePreference } from '@/features/app-shell/model'
 import ImprintsScreen from '@/features/imprints/ImprintsScreen.vue'
+import ArtistDetailScreen from '@/features/performances/ArtistDetailScreen.vue'
 import PerformanceDetailScreen from '@/features/performances/PerformanceDetailScreen.vue'
 import RecordsScreen from '@/features/performances/RecordsScreen.vue'
 import PerformanceEditorScreen from '@/features/performances/PerformanceEditorScreen.vue'
+import PlayDetailScreen from '@/features/performances/PlayDetailScreen.vue'
 import type { Performance } from '@/domain/performance'
 import ReferenceDataScreen from '@/features/reference-data/ReferenceDataScreen.vue'
 import SettingsScreen from '@/features/settings/SettingsScreen.vue'
@@ -25,9 +27,12 @@ const browsePreferencesStore = useBrowsePreferencesStore()
 const { activeTab, resolvedTheme, themePreference } = storeToRefs(appShellStore)
 const { displayMode } = storeToRefs(browsePreferencesStore)
 const settingsDestination = ref<'root' | 'category' | 'tag'>('root')
-const recordsDestination = ref<'root' | 'detail' | 'editor'>('root')
+const recordsDestination = ref<'root' | 'artist' | 'play' | 'detail' | 'editor'>('root')
 const recordsRefreshKey = ref(0)
 const selectedPerformanceId = ref('')
+const selectedArtistName = ref('')
+const selectedPlayName = ref('')
+const performanceDetailReturnDestination = ref<'root' | 'artist' | 'play'>('root')
 const editorPerformanceId = ref<string | undefined>()
 const editorReturnDestination = ref<'root' | 'detail'>('root')
 const editorInitialStartedAtMs = ref<number | undefined>()
@@ -114,13 +119,40 @@ function closePerformanceEditor(): void {
   recordsDestination.value = editorReturnDestination.value
 }
 
-function openPerformanceDetail(id: string): void {
+function openPerformanceDetail(id: string, returnDestination: 'root' | 'artist' | 'play' = 'root'): void {
   selectedPerformanceId.value = id
+  performanceDetailReturnDestination.value = returnDestination
   recordsDestination.value = 'detail'
 }
 
 function closePerformanceDetail(): void {
+  recordsDestination.value = performanceDetailReturnDestination.value
+}
+
+function openArtistDetail(name: string): void {
+  selectedArtistName.value = name
+  recordsDestination.value = 'artist'
+}
+
+function closeArtistDetail(): void {
   recordsDestination.value = 'root'
+}
+
+function openArtistPerformance(id: string): void {
+  openPerformanceDetail(id, 'artist')
+}
+
+function openPlayDetail(name: string): void {
+  selectedPlayName.value = name
+  recordsDestination.value = 'play'
+}
+
+function closePlayDetail(): void {
+  recordsDestination.value = 'root'
+}
+
+function openPlayPerformance(id: string): void {
+  openPerformanceDetail(id, 'play')
 }
 
 function editPerformance(id: string): void {
@@ -139,7 +171,7 @@ function handlePerformanceSaved(performance: Performance): void {
 
 function handlePerformanceDeleted(): void {
   selectedPerformanceId.value = ''
-  recordsDestination.value = 'root'
+  recordsDestination.value = performanceDetailReturnDestination.value
   recordsRefreshKey.value += 1
 }
 
@@ -161,6 +193,16 @@ onBackPress(() => {
 
   if (isPerformanceTab(activeTab.value) && recordsDestination.value === 'detail') {
     closePerformanceDetail()
+    return true
+  }
+
+  if (activeTab.value === 'records' && recordsDestination.value === 'artist') {
+    closeArtistDetail()
+    return true
+  }
+
+  if (activeTab.value === 'records' && recordsDestination.value === 'play') {
+    closePlayDetail()
     return true
   }
 
@@ -222,12 +264,28 @@ watch(
         @back="closePerformanceEditor"
         @saved="handlePerformanceSaved"
       />
+      <ArtistDetailScreen
+        v-else-if="activeTab === 'records' && recordsDestination === 'artist'"
+        :artist-name="selectedArtistName"
+        :refresh-key="recordsRefreshKey"
+        @back="closeArtistDetail"
+        @open="openArtistPerformance"
+      />
+      <PlayDetailScreen
+        v-else-if="activeTab === 'records' && recordsDestination === 'play'"
+        :play-name="selectedPlayName"
+        :refresh-key="recordsRefreshKey"
+        @back="closePlayDetail"
+        @open="openPlayPerformance"
+      />
       <RecordsScreen
         v-else-if="activeTab === 'records'"
         :theme="resolvedTheme"
         :refresh-key="recordsRefreshKey"
         @add="openPerformanceEditor"
         @open="openPerformanceDetail"
+        @open-artist="openArtistDetail"
+        @open-play="openPlayDetail"
       />
       <WantSeeScreen
         v-else-if="activeTab === 'want-see'"

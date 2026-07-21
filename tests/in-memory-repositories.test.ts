@@ -241,6 +241,7 @@ describe('performance browse preferences', () => {
       },
     })).toEqual({
       displayMode: 'poster',
+      artistSortMode: 'times',
       posterColumnCount: 4,
       filter: {
         categoryIds: ['concert'],
@@ -255,12 +256,19 @@ describe('performance browse preferences', () => {
       posterColumnCount: 8,
     }).posterColumnCount).toBe(8)
     expect(normalizeBrowsePreferences({
+      displayMode: 'play',
+      artistSortMode: 'date',
+    })).toMatchObject({ displayMode: 'play', artistSortMode: 'date' })
+    expect(normalizeBrowsePreferences({
       displayMode: 'poster',
       posterColumnCount: 9,
     }).posterColumnCount).toBe(4)
 
     expect(normalizeBrowsePreferences({ displayMode: 'simple' }).displayMode).toBe('simple')
     expect(normalizeBrowsePreferences({ displayMode: 'timeline' }).displayMode).toBe('timeline')
+    expect(normalizeBrowsePreferences({ displayMode: 'artist' }).displayMode).toBe('artist')
+    expect(normalizeBrowsePreferences({ artistSortMode: 'date' }).artistSortMode).toBe('date')
+    expect(normalizeBrowsePreferences({ artistSortMode: 'unknown' }).artistSortMode).toBe('times')
     expect(normalizeBrowsePreferences({ displayMode: 'unknown' }).displayMode).toBe('card')
   })
 

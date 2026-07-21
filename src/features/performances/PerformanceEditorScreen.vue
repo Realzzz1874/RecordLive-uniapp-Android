@@ -13,7 +13,9 @@ import {
   type PerformanceMediaChanges,
 } from '@/features/performances/editor'
 import ArtistPickerScreen from '@/features/performances/ArtistPickerScreen.vue'
+import FriendsPickerScreen from '@/features/performances/FriendsPickerScreen.vue'
 import LocationPickerScreen from '@/features/performances/LocationPickerScreen.vue'
+import PurchaseChannelPickerScreen from '@/features/performances/PurchaseChannelPickerScreen.vue'
 import { formatSelectedLocation } from '@/features/performances/location'
 import type { PerformanceDraft } from '@/features/performances/repository'
 import { choosePerformanceImage } from '@/platform/media/picker'
@@ -45,15 +47,17 @@ const locationPickerVisible = ref(false)
 const playPickerVisible = ref(false)
 const artistPickerVisible = ref(false)
 const guestPickerVisible = ref(false)
+const friendPickerVisible = ref(false)
+const channelPickerVisible = ref(false)
 const service = ref<PerformanceEditorService | null>(null)
 const mediaChanges = reactive<PerformanceMediaChanges>({})
-type TextFacetKind = Exclude<PerformanceFacetKind, 'artist' | 'guest' | 'play'>
+type TextFacetKind = Exclude<PerformanceFacetKind, 'artist' | 'guest' | 'play' | 'channel' | 'friend'>
 const playNames = ref<string[]>([])
 const artistNames = ref<string[]>([])
 const guestNames = ref<string[]>([])
+const friendNames = ref<string[]>([])
+const selectedChannel = ref('')
 const facetInputs = reactive<Record<TextFacetKind, string>>({
-  channel: '',
-  friend: '',
   company: '',
 })
 
@@ -141,6 +145,8 @@ function assignPerformance(performance: Performance): void {
   playNames.value = [...(performance.facets.play ?? [])]
   artistNames.value = [...(performance.facets.artist ?? [])]
   guestNames.value = [...(performance.facets.guest ?? [])]
+  friendNames.value = [...(performance.facets.friend ?? [])]
+  selectedChannel.value = (performance.facets.channel ?? []).join('、')
   for (const kind of Object.keys(facetInputs) as TextFacetKind[]) {
     facetInputs[kind] = performance.facets[kind]?.join('、') ?? ''
   }
@@ -222,6 +228,8 @@ async function save(skipNearbyCheck = false): Promise<void> {
       ...(playNames.value.length ? { play: [...playNames.value] } : {}),
       ...(artistNames.value.length ? { artist: [...artistNames.value] } : {}),
       ...(guestNames.value.length ? { guest: [...guestNames.value] } : {}),
+      ...(friendNames.value.length ? { friend: [...friendNames.value] } : {}),
+      ...(selectedChannel.value ? { channel: [selectedChannel.value] } : {}),
       ...textFacets,
     }
     const result = await service.value.save({ ...draft }, { ...mediaChanges }, skipNearbyCheck)
@@ -441,13 +449,31 @@ function pad(value: number): string {
             >{{ guestNames.length ? guestNames.join('、') : '添加嘉宾' }}</text>
             <view class="name-selector__chevron"><AppIcon name="chevron" /></view>
           </button>
-          <label v-for="field in ([
-            ['channel', '购票渠道', '例如：大麦'],
-            ['friend', '同行好友', '多项可用顿号分隔'],
-            ['company', '出品方', '多项可用顿号分隔'],
-          ] as const)" :key="field[0]" class="form-field form-field--spaced">
-            <text class="form-field__label">{{ field[1] }}</text>
-            <input v-model="facetInputs[field[0]]" class="form-input" :aria-label="field[1]" :placeholder="field[2]">
+          <view class="friend-selector-row">
+            <text class="name-selector__label">同行好友</text>
+            <button
+              v-if="friendNames.length"
+              class="friend-selector-row__clear"
+              aria-label="清空同行好友"
+              @tap="friendNames = []"
+            ><AppIcon name="close" /></button>
+            <button
+              class="friend-selector-row__value"
+              aria-label="选择同行好友"
+              hover-class="name-selector--pressed"
+              @tap="friendPickerVisible = true"
+            >
+              <text
+                class="name-selector__value"
+                :class="{ 'name-selector__value--placeholder': !friendNames.length }"
+              >{{ friendNames.length ? friendNames.join('、') : '添加同行好友' }}</text>
+              <view class="name-selector__chevron"><AppIcon name="chevron" /></view>
+            </button>
+          </view>
+
+          <label class="form-field form-field--spaced">
+            <text class="form-field__label">出品方</text>
+            <input v-model="facetInputs.company" class="form-input" aria-label="出品方" placeholder="多项可用顿号分隔">
           </label>
 
           <label class="form-field form-field--spaced">
@@ -477,6 +503,19 @@ function pad(value: number): string {
 
         <view class="form-section">
           <text class="form-section__title">花费</text>
+          <button
+            class="name-selector cost-channel-selector"
+            aria-label="选择购票渠道"
+            hover-class="name-selector--pressed"
+            @tap="channelPickerVisible = true"
+          >
+            <text class="name-selector__label">购票渠道</text>
+            <text
+              class="name-selector__value"
+              :class="{ 'name-selector__value--placeholder': !selectedChannel }"
+            >{{ selectedChannel || '选择购票渠道' }}</text>
+            <view class="name-selector__chevron"><AppIcon name="chevron" /></view>
+          </button>
           <view v-for="cost in ([
             ['ticketPrice', '票面价'],
             ['paidPrice', '实付价'],
@@ -524,6 +563,16 @@ function pad(value: number): string {
       :visible="guestPickerVisible"
       :suggestions="performerSuggestions"
       @close="guestPickerVisible = false"
+    />
+    <PurchaseChannelPickerScreen
+      v-model:value="selectedChannel"
+      :visible="channelPickerVisible"
+      @close="channelPickerVisible = false"
+    />
+    <FriendsPickerScreen
+      v-model:values="friendNames"
+      :visible="friendPickerVisible"
+      @close="friendPickerVisible = false"
     />
   </view>
 </template>
@@ -577,8 +626,13 @@ function pad(value: number): string {
 .location-selector__chevron { width: 30rpx; height: 30rpx; flex: none; color: var(--color-muted); }
 .name-selector { box-sizing: border-box; display: flex; width: 100%; min-height: 84rpx; margin: 0; padding: 0; align-items: center; gap: 14rpx; border: 0; border-bottom: var(--app-border-width) solid var(--color-border-subtle); border-radius: 0; background: transparent; color: var(--color-text); text-align: left; }
 .name-selector--pressed { background: var(--color-row-pressed); }
-.name-selector__label { width: 110rpx; flex: none; color: var(--color-text); font-size: 27rpx; }
+.name-selector__label { min-width: 150rpx; flex: none; color: var(--color-text); font-size: 27rpx; line-height: 1.35; white-space: nowrap; }
 .name-selector__value { min-width: 0; flex: 1; overflow: hidden; color: var(--color-accent); font-size: 26rpx; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 .name-selector__value--placeholder { font-weight: 620; }
 .name-selector__chevron { width: 28rpx; height: 28rpx; flex: none; color: var(--color-muted); }
+.friend-selector-row { display: flex; width: 100%; min-height: 84rpx; align-items: center; gap: 10rpx; border-bottom: var(--app-border-width) solid var(--color-border-subtle); }
+.friend-selector-row__clear { width: 38rpx; height: 38rpx; margin: 0; padding: 8rpx; flex: none; border: 0; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); }
+.friend-selector-row__value { display: flex; min-width: 0; min-height: 84rpx; margin: 0; padding: 0; align-items: center; gap: 14rpx; flex: 1; border: 0; border-radius: 0; background: transparent; text-align: right; }
+.friend-selector-row__clear::after, .friend-selector-row__value::after { border: 0; }
+.cost-channel-selector { margin-bottom: 4rpx; }
 </style>

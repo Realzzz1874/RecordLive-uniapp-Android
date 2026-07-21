@@ -31,6 +31,15 @@ import {
   playNameSuggestions,
   PREPARED_PLAY_NAMES,
 } from '@/features/performances/play-names'
+import {
+  DEFAULT_PURCHASE_CHANNELS,
+  normalizePurchaseChannels,
+  purchaseChannelOptions,
+} from '@/features/performances/purchase-channels'
+import {
+  friendOptions,
+  normalizeFriends,
+} from '@/features/performances/friends'
 import type {
   PerformanceImageRole,
   PerformanceMediaStorage,
@@ -175,6 +184,26 @@ describe('artist, guest and play manual selection', () => {
     expect(playNameSuggestions(['自定义剧目'], '剧目')[0]).toBe('自定义剧目')
     expect(playNameSuggestions([], 'YoungCaptain')).toEqual([])
     expect(playNameSuggestions([], '')).toEqual([])
+  })
+})
+
+describe('purchase channel selection', () => {
+  it('uses the iOS preset order and keeps a legacy selected channel available', () => {
+    expect(DEFAULT_PURCHASE_CHANNELS.slice(0, 6)).toEqual([
+      '大麦', '秀动', '猫眼', '纷玩岛', '摩天轮', '票星球',
+    ])
+    expect(normalizePurchaseChannels(undefined)).toEqual(DEFAULT_PURCHASE_CHANNELS)
+    expect(normalizePurchaseChannels([' 大麦 ', '大麦', '', '自定义渠道'])).toEqual(['大麦', '自定义渠道'])
+    expect(purchaseChannelOptions(['大麦', '秀动'], '历史渠道')).toEqual(['历史渠道', '大麦', '秀动'])
+    expect(purchaseChannelOptions(['大麦', '秀动'], '大麦')).toEqual(['大麦', '秀动'])
+  })
+})
+
+describe('friend selection', () => {
+  it('starts without presets, normalizes the local friend library, and preserves existing Android values', () => {
+    expect(normalizeFriends(undefined)).toEqual([])
+    expect(normalizeFriends([' 小林 ', '小林', '', 3, '阿宁'])).toEqual(['小林', '阿宁'])
+    expect(friendOptions(['小林', '阿宁'], ['历史好友', '小林'])).toEqual(['历史好友', '小林', '阿宁'])
   })
 })
 

@@ -57,9 +57,9 @@ defineEmits<{
       <view class="app-header__side app-header__side--left">
         <button
           v-if="showBack"
-          class="icon-button icon-button--plain"
+          class="icon-button icon-button--soft-accent"
           :aria-label="backLabel"
-          hover-class="icon-button--pressed"
+          hover-class="icon-button--soft-accent-pressed"
           @tap="$emit('back')"
         >
           <AppIcon :name="backIcon" />

@@ -378,7 +378,7 @@ function pad(value: number): string {
         </view>
 
         <view class="form-section">
-          <text class="form-section__title">海报与票根</text>
+          <text class="form-section__title">海报/票根</text>
           <view class="media-grid">
             <view v-for="role in (['poster', 'ticket'] as const)" :key="role" class="media-field">
               <text class="form-field__label">{{ role === 'poster' ? '海报' : '票根图片' }}</text>
@@ -397,7 +397,7 @@ function pad(value: number): string {
               <button v-if="mediaPreview(role)" class="media-remove" @tap="removeImage(role)">移除</button>
             </view>
           </view>
-          <text class="form-hint">单张图片不超过 5 MB，保存后写入 Android 应用沙盒</text>
+          <text class="form-hint">单张图片不超过 5 MB</text>
         </view>
 
         <view class="form-section">

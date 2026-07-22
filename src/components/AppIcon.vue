@@ -24,6 +24,7 @@ defineProps<{
     | 'arrow.left.square'
     | 'arrow.right.square'
     | 'dollarsign.circle'
+    | 'sparkles'
     | 'square.on.square.badge.person.crop'
     | 'eye'
     | 'eye.slash'
@@ -85,6 +86,7 @@ defineProps<{
 .app-icon--arrow\.left\.square { -webkit-mask-image: url('/static/icons/arrow.left.square.svg'); mask-image: url('/static/icons/arrow.left.square.svg'); }
 .app-icon--arrow\.right\.square { -webkit-mask-image: url('/static/icons/arrow.right.square.svg'); mask-image: url('/static/icons/arrow.right.square.svg'); }
 .app-icon--dollarsign\.circle { -webkit-mask-image: url('/static/icons/dollarsign.circle.svg'); mask-image: url('/static/icons/dollarsign.circle.svg'); }
+.app-icon--sparkles { -webkit-mask-image: url('/static/icons/sparkles.svg'); mask-image: url('/static/icons/sparkles.svg'); }
 .app-icon--square\.on\.square\.badge\.person\.crop { -webkit-mask-image: url('/static/icons/square.on.square.badge.person.crop.svg'); mask-image: url('/static/icons/square.on.square.badge.person.crop.svg'); }
 .app-icon--eye { -webkit-mask-image: url('/static/icons/eye.svg'); mask-image: url('/static/icons/eye.svg'); }
 .app-icon--eye\.slash { -webkit-mask-image: url('/static/icons/eye.slash.svg'); mask-image: url('/static/icons/eye.slash.svg'); }

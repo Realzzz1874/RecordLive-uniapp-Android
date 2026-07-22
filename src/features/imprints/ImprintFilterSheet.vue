@@ -16,6 +16,7 @@ interface SwitchChangeEvent {
 
 const props = defineProps<{
   visible: boolean
+  showCalendarSettings: boolean
   filter: ImprintFilter
   alwaysShowDate: boolean
   showPerformanceTime: boolean
@@ -79,8 +80,10 @@ function updateShowPerformanceTime(event: Event): void {
 function reset(): void {
   const defaults = cloneImprintPreferences(DEFAULT_IMPRINT_PREFERENCES)
   Object.assign(draft, defaults.filter)
-  alwaysShowDateDraft.value = defaults.alwaysShowDate
-  showPerformanceTimeDraft.value = defaults.showPerformanceTime
+  if (props.showCalendarSettings) {
+    alwaysShowDateDraft.value = defaults.alwaysShowDate
+    showPerformanceTimeDraft.value = defaults.showPerformanceTime
+  }
 }
 
 function apply(): void {
@@ -108,7 +111,7 @@ function cloneFilter(value: ImprintFilter): ImprintFilter {
     <view class="filter-sheet" aria-label="印记筛选面板">
       <view class="filter-header">
         <view>
-          <text class="filter-header__title">筛选与日历显示</text>
+          <text class="filter-header__title">{{ showCalendarSettings ? '筛选与日历显示' : '筛选' }}</text>
           <text class="filter-header__subtitle">仅影响印记页面，不与其它页面的筛选同步</text>
         </view>
         <button class="close-button" aria-label="关闭印记筛选" @tap="$emit('close')">
@@ -167,7 +170,7 @@ function cloneFilter(value: ImprintFilter): ImprintFilter {
           </view>
         </view>
 
-        <view class="filter-section filter-section--calendar">
+        <view v-if="showCalendarSettings" class="filter-section filter-section--calendar">
           <text class="filter-section__title">日历显示设置</text>
           <view class="setting-row">
             <view class="setting-row__copy">

@@ -8,6 +8,7 @@ import type { Performance } from '@/domain/performance'
 import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
 import ImprintFilterSheet from '@/features/imprints/ImprintFilterSheet.vue'
 import ImprintMonthView from '@/features/imprints/ImprintMonthView.vue'
+import ImprintYearView from '@/features/imprints/ImprintYearView.vue'
 import {
   filterImprintPerformances,
   ImprintQueryService,
@@ -117,7 +118,7 @@ function applyPreferences(
   <view class="imprints-screen">
     <AppHeader
       title="印记"
-      :show-filter="activeSection === 'month'"
+      show-filter
       filter-label="筛选印记"
       :filter-count="activeFilterCount"
       @filter="filterVisible = true"
@@ -157,14 +158,20 @@ function applyPreferences(
       @open="$emit('open', $event)"
       @toggle-expense-amounts="imprintPreferencesStore.setShowExpenseAmounts(!showExpenseAmounts)"
     />
+    <ImprintYearView
+      v-else-if="activeSection === 'year'"
+      :performances="filteredPerformances"
+      :show-expense-amounts="showExpenseAmounts"
+    />
     <view v-else class="section-placeholder">
-      <view class="section-placeholder__icon"><AppIcon :name="activeSection === 'year' ? 'calendar' : 'award'" /></view>
-      <text class="section-placeholder__title">{{ activeSection === 'year' ? '年' : '榜榜榜' }}</text>
-      <text class="section-placeholder__description">本轮先完成月视图，这部分将在下一轮按 iOS 页面继续还原</text>
+      <view class="section-placeholder__icon"><AppIcon name="award" /></view>
+      <text class="section-placeholder__title">榜榜榜</text>
+      <text class="section-placeholder__description">排行页面将在后续按 iOS 页面继续还原</text>
     </view>
 
     <ImprintFilterSheet
       :visible="filterVisible"
+      :show-calendar-settings="activeSection === 'month'"
       :filter="filter"
       :always-show-date="alwaysShowDate"
       :show-performance-time="showPerformanceTime"

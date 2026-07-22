@@ -69,6 +69,8 @@ export interface ImprintYearSummary {
   playRanking: ImprintRankEntry[]
 }
 
+export type ImprintPeriodSummary = Omit<ImprintYearSummary, 'year'>
+
 export interface ImprintSnapshot {
   performances: Performance[]
   years: number[]
@@ -217,6 +219,16 @@ export function summarizeImprintYear(
   const yearPerformances = performances.filter(
     ({ startedAtMs }) => new Date(startedAtMs).getFullYear() === year,
   )
+  return {
+    year,
+    ...summarizeImprintPerformances(yearPerformances, referenceTimeMs),
+  }
+}
+
+export function summarizeImprintPerformances(
+  performances: readonly Performance[],
+  referenceTimeMs = Date.now(),
+): ImprintPeriodSummary {
   const lifecycleCounts: Record<PerformanceLifecycle, number> = {
     attended: 0,
     upcoming: 0,
@@ -224,19 +236,18 @@ export function summarizeImprintYear(
     'pending-sale': 0,
     missed: 0,
   }
-  for (const performance of yearPerformances) {
+  for (const performance of performances) {
     lifecycleCounts[derivePerformanceLifecycle(performance, referenceTimeMs)] += 1
   }
 
-  const ratings = yearPerformances.map(({ rating }) => rating).filter((rating) => rating > 0)
-  const cityRanking = rankValues(yearPerformances.map(({ city }) => [city]))
-  const artistRanking = rankValues(yearPerformances.map(({ facets }) => facets.artist ?? []))
-  const playRanking = rankValues(yearPerformances.map(({ facets }) => facets.play ?? []))
+  const ratings = performances.map(({ rating }) => rating).filter((rating) => rating > 0)
+  const cityRanking = rankValues(performances.map(({ city }) => [city]))
+  const artistRanking = rankValues(performances.map(({ facets }) => facets.artist ?? []))
+  const playRanking = rankValues(performances.map(({ facets }) => facets.play ?? []))
 
   return {
-    year,
-    total: yearPerformances.length,
-    uniqueDays: new Set(yearPerformances.map(({ startedAtMs }) => localDateKey(startedAtMs))).size,
+    total: performances.length,
+    uniqueDays: new Set(performances.map(({ startedAtMs }) => localDateKey(startedAtMs))).size,
     lifecycleCounts,
     cityCount: cityRanking.length,
     artistCount: artistRanking.length,
@@ -244,7 +255,7 @@ export function summarizeImprintYear(
     averageRating: ratings.length
       ? ratings.reduce((total, rating) => total + rating, 0) / ratings.length
       : null,
-    expenses: summarizeExpenses(yearPerformances),
+    expenses: summarizeExpenses(performances),
     cityRanking,
     artistRanking,
     playRanking,
@@ -331,7 +342,10 @@ export function summarizeExpenses(performances: readonly Performance[]): Imprint
         ticketPrice,
         paidPrice,
         otherCost,
-        totalCost: sumDecimalStrings([paidPrice, otherCost]),
+        totalCost: sumDecimalStrings([
+          paidPrice === '0' ? ticketPrice : paidPrice,
+          otherCost,
+        ]),
       }
     })
     .filter(({ ticketPrice, paidPrice, otherCost }) =>

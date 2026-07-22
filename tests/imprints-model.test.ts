@@ -12,6 +12,7 @@ import {
   normalizeImprintPreferences,
   seedImprintDateTime,
   shiftImprintMonth,
+  summarizeImprintPerformances,
   summarizeImprintYear,
 } from '@/features/imprints/model'
 import { InMemoryPerformanceRepository } from '@/platform/repositories/in-memory-performance-repository'
@@ -168,6 +169,12 @@ describe('Milestone 4 annual insights', () => {
     })
     expect(summary.cityRanking).toEqual([{ name: '上海', count: 2 }, { name: '杭州', count: 1 }])
     expect(summary.artistRanking[0]).toEqual({ name: '甲乐队', count: 3 })
+    expect(summarizeImprintPerformances(items)).toMatchObject({
+      total: 4,
+      cityCount: 2,
+      artistCount: 2,
+      playCount: 2,
+    })
   })
 
   it('keeps currencies separate and sums decimal amounts exactly', () => {
@@ -187,10 +194,16 @@ describe('Milestone 4 annual insights', () => {
         paidPrice: { amount: '40', currency: 'USD' },
         otherCost: { amount: '5', currency: 'USD' },
       }),
+      performance('jpy-ticket-fallback', new Date(2026, 1, 4).getTime(), {
+        ticketPrice: { amount: '1000', currency: 'JPY' },
+        paidPrice: { amount: '0', currency: 'JPY' },
+        otherCost: { amount: '100', currency: 'JPY' },
+      }),
     ]
 
     expect(summarizeImprintYear(2026, items).expenses).toEqual([
       { currency: 'CNY', ticketPrice: '0.3', paidPrice: '0.3', otherCost: '0.2', totalCost: '0.5' },
+      { currency: 'JPY', ticketPrice: '1000', paidPrice: '0', otherCost: '100', totalCost: '1100' },
       { currency: 'USD', ticketPrice: '50', paidPrice: '40', otherCost: '5', totalCost: '45' },
     ])
     expect(formatAggregatedAmount('0.5')).toBe('0.50')

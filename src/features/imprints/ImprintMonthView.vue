@@ -290,7 +290,10 @@ function startOfLocalDay(timestamp: number): number {
       </section>
 
       <section v-if="todayMemories.length" class="month-summary" aria-label="那年今日">
-        <view class="summary-heading"><text>✦</text><text>那年今日</text></view>
+        <view class="summary-heading">
+          <view class="summary-heading__icon"><AppIcon name="sparkles" /></view>
+          <text>那年今日</text>
+        </view>
         <button
           v-for="performance in todayMemories"
           :key="performance.id"

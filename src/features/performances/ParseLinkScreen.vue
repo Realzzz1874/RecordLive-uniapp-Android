@@ -10,7 +10,10 @@ import {
   type ParseLinkField,
 } from '@/features/performances/parse-link'
 import { downloadParsePlatformImage, platformAssetUrl } from '@/features/performances/parse-platform/networking'
-import { createParsePlatformRouter } from '@/features/performances/parse-platform/registry'
+import {
+  createParsePlatformRouter,
+  SUPPORTED_PARSE_PLATFORM_NAMES,
+} from '@/features/performances/parse-platform/registry'
 import { ParsePlatformError, type ParsePlatformResult } from '@/features/performances/parse-platform/types'
 import type { SelectedImage } from '@/platform/media/types'
 
@@ -185,7 +188,7 @@ function displayPlay(value: string): string {
             aria-label="粘贴演出链接"
             confirm-type="done"
             maxlength="1000"
-            placeholder="粘贴链接"
+            placeholder="粘贴链接或整段分享内容"
             @confirm="startParsing"
           >
         </view>
@@ -201,8 +204,14 @@ function displayPlay(value: string): string {
 
       <view v-if="status === 'idle'" class="support-section">
         <text class="support-title">已支持平台：</text>
-        <view class="support-tags"><text>大麦</text><text>猫眼</text></view>
-        <text class="support-note">可直接粘贴大麦或猫眼 App 分享文案及网页链接。</text>
+        <view class="support-tags app-chip-list">
+          <view
+            v-for="platformName in SUPPORTED_PARSE_PLATFORM_NAMES"
+            :key="platformName"
+            class="app-chip app-chip--level-0"
+          ><text>{{ platformName }}</text></view>
+        </view>
+        <text class="support-note">更多平台需求，欢迎反馈</text>
       </view>
 
       <view v-if="status === 'ready' && parsedResult" class="preview-section">
@@ -299,9 +308,7 @@ function displayPlay(value: string): string {
 .parse-error { display: block; padding: 14rpx 8rpx; color: var(--color-danger); font-size: 22rpx; }
 .support-section { padding: 38rpx 6rpx; }
 .support-title { display: block; margin-bottom: 14rpx; color: var(--color-muted); font-size: 23rpx; }
-.support-tags { display: flex; flex-wrap: wrap; gap: 10rpx; }
-.support-tags text { padding: 8rpx 18rpx; border-radius: 999rpx; background: var(--color-accent-soft); color: var(--color-accent); font-size: 22rpx; font-weight: 650; }
-.support-note, .result-note { display: block; margin-top: 18rpx; color: var(--color-muted); font-size: 21rpx; line-height: 1.55; }
+.support-note, .result-note { display: block; margin-top: 22rpx; color: var(--color-muted); font-size: 21rpx; line-height: 1.55; }
 .preview-section { padding-top: 32rpx; }
 .preview-heading { display: flex; padding: 0 6rpx 14rpx; align-items: center; justify-content: space-between; color: var(--color-accent); font-size: 24rpx; font-weight: 650; }
 .preview-heading text:last-child { color: var(--color-muted); font-size: 21rpx; font-weight: 500; }

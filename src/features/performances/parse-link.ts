@@ -16,9 +16,9 @@ export const PARSE_LINK_FIELDS = [
 export type ParseLinkField = typeof PARSE_LINK_FIELDS[number]
 
 export function extractFirstHttpUrl(value: string): ParsePlatformUrl | null {
-  const match = value.match(/https?:\/\/[^\s<>"'，。！？；：）】)\]]+/i)
+  const match = value.match(/https?:\/\/[^\s<>"'`，。！？；：、（）【】《》「」『』()\[\]{}]+/i)
   if (!match) return null
-  return parseHttpUrl(match[0])
+  return parseHttpUrl(trimTrailingSharePunctuation(match[0]))
 }
 
 export function availableParseLinkFields(result: ParsePlatformResult): ParseLinkField[] {
@@ -85,6 +85,10 @@ function cloneFacets(facets: Performance['facets']): Performance['facets'] {
 
 function uniqueText(values: readonly string[]): string[] {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))]
+}
+
+function trimTrailingSharePunctuation(value: string): string {
+  return value.replace(/[,.!;:]+$/g, '')
 }
 
 function pad(value: number): string {

@@ -37,6 +37,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/maoyan-image-proxy/, ''),
       },
+      '/showstart-proxy': {
+        target: 'https://www.showstart.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/showstart-proxy/, ''),
+      },
+      '/showstart-image-proxy': {
+        target: 'https://s2.showstart.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/showstart-image-proxy/, ''),
+      },
     },
   },
 })

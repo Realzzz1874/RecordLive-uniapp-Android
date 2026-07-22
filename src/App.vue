@@ -7,6 +7,8 @@ onLaunch(() => {
 </script>
 
 <style>
+@import "./styles/chips.css";
+
 page,
 body {
   margin: 0;

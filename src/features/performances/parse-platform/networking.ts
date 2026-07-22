@@ -6,6 +6,8 @@ const DAMAI_DETAIL_HOST = 'detail.damai.cn'
 const DAMAI_IMAGE_HOST = 'img.alicdn.com'
 const MAOYAN_DETAIL_HOST = 'www.gewara.com'
 const MAOYAN_IMAGE_HOST = 'p0.meituan.net'
+const SHOWSTART_DETAIL_HOST = 'www.showstart.com'
+const SHOWSTART_IMAGE_HOST = 's2.showstart.com'
 const PAGE_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 const ANDROID_IMAGE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
 
@@ -20,6 +22,7 @@ export function platformAssetUrl(value: string): string {
   if (!url || isAppPlatform()) return value
   if (url.hostname === DAMAI_IMAGE_HOST) return `/damai-image-proxy${url.pathname}${url.search}`
   if (url.hostname === MAOYAN_IMAGE_HOST) return `/maoyan-image-proxy${url.pathname}${url.search}`
+  if (url.hostname === SHOWSTART_IMAGE_HOST) return `/showstart-image-proxy${url.pathname}${url.search}`
   return value
 }
 
@@ -56,6 +59,9 @@ function platformRequestUrl(url: ParsePlatformUrl): string {
   if (!isAppPlatform() && url.hostname === MAOYAN_DETAIL_HOST) {
     return `/maoyan-proxy${url.pathname}${url.search}`
   }
+  if (!isAppPlatform() && url.hostname === SHOWSTART_DETAIL_HOST) {
+    return `/showstart-proxy${url.pathname}${url.search}`
+  }
   return url.href
 }
 
@@ -87,7 +93,9 @@ function requestText(url: string, sourceName: string): Promise<string> {
 }
 
 function platformName(url: ParsePlatformUrl): string {
-  return url.hostname === MAOYAN_DETAIL_HOST ? '猫眼' : '大麦'
+  if (url.hostname === MAOYAN_DETAIL_HOST) return '猫眼'
+  if (url.hostname === SHOWSTART_DETAIL_HOST) return '秀动'
+  return '大麦'
 }
 
 function isAppPlatform(): boolean {

@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 
 import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import AppSegmentedTabs from '@/components/AppSegmentedTabs.vue'
 import {
   CHINESE_MUSICAL_SCHEDULE_FIELDS,
   ChineseMusicalScheduleService,
@@ -69,6 +70,16 @@ const cityRegion = ref<CityRegion>('default')
 const citySearch = ref('')
 let requestVersion = 0
 
+const modeTabs = [
+  { value: 'default', label: '默认', accessibilityLabel: '默认查询' },
+  { value: 'play', label: '选剧', accessibilityLabel: '按剧目查询' },
+  { value: 'artist', label: '选演员', accessibilityLabel: '按演员查询', flex: 1.6 },
+] as const
+const cityRegionTabs = [
+  { value: 'default', label: '默认地区' },
+  { value: 'other', label: '其它地区' },
+] as const
+
 const cityGroups = computed(() => groupedLocationCities(cityRegion.value, citySearch.value))
 const resultDescription = computed(() => {
   if (status.value === 'loading') return '正在查询排期…'
@@ -129,6 +140,14 @@ async function setMode(value: SearchMode): Promise<void> {
   status.value = 'idle'
   errorMessage.value = ''
   if (value === 'default') await loadDefaultSchedules()
+}
+
+function handleModeUpdate(value: string): void {
+  if (value === 'default' || value === 'play' || value === 'artist') void setMode(value)
+}
+
+function setCityRegion(value: string): void {
+  if (value === 'default' || value === 'other') cityRegion.value = value
 }
 
 async function loadDefaultSchedules(): Promise<void> {
@@ -256,11 +275,12 @@ function weekday(timestamp: number): string {
       @back="$emit('close')"
     />
 
-    <view class="mode-tabs" aria-label="排期查询方式">
-      <button :class="{ active: mode === 'default' }" aria-label="默认查询" @tap="setMode('default')">默认</button>
-      <button :class="{ active: mode === 'play' }" aria-label="按剧目查询" @tap="setMode('play')">选剧</button>
-      <button :class="{ active: mode === 'artist' }" aria-label="按演员查询" @tap="setMode('artist')">选演员</button>
-    </view>
+    <AppSegmentedTabs
+      :model-value="mode"
+      :tabs="modeTabs"
+      accessibility-label="排期查询方式"
+      @update:model-value="handleModeUpdate"
+    />
 
     <scroll-view class="schedule-content" scroll-y>
       <view v-if="mode === 'default'" class="query-section">
@@ -376,10 +396,12 @@ function weekday(timestamp: number): string {
 
     <view v-if="cityPickerVisible" class="city-layer">
       <AppHeader title="选择城市" show-back @back="cityPickerVisible = false" />
-      <view class="city-tabs">
-        <button :class="{ active: cityRegion === 'default' }" @tap="cityRegion = 'default'">默认地区</button>
-        <button :class="{ active: cityRegion === 'other' }" @tap="cityRegion = 'other'">其它地区</button>
-      </view>
+      <AppSegmentedTabs
+        :model-value="cityRegion"
+        :tabs="cityRegionTabs"
+        accessibility-label="排期城市地区"
+        @update:model-value="setCityRegion"
+      />
       <view class="city-search">
         <AppIcon name="search" />
         <input v-model="citySearch" aria-label="搜索排期城市" placeholder="搜索城市或拼音">
@@ -399,12 +421,7 @@ function weekday(timestamp: number): string {
 
 <style scoped>
 .schedule-screen { position: fixed; z-index: 84; inset: 0; width: 100%; max-width: 560px; margin: 0 auto; overflow: hidden; background: var(--color-background); color: var(--color-text); }
-.mode-tabs { display: grid; height: 64rpx; margin: 8rpx 28rpx 16rpx; padding: 4rpx; grid-template-columns: 1fr 1fr 1.6fr; border: var(--app-border-width) solid var(--color-border); border-radius: 16rpx; background: var(--color-surface); }
-.mode-tabs button { height: 54rpx; margin: 0; padding: 0 12rpx; border: 0; border-radius: 12rpx; background: transparent; color: var(--color-muted); font-size: 23rpx; font-weight: 620; line-height: 54rpx; white-space: nowrap; }
-.mode-tabs button.active { background: var(--color-accent); color: var(--color-on-accent); box-shadow: 0 4rpx 10rpx var(--color-tab-shadow); }
-.city-tabs button { height: 58rpx; margin: 0; padding: 0; border: 0; border-radius: 11rpx; background: transparent; color: var(--color-muted); font-size: 23rpx; line-height: 58rpx; }
-.mode-tabs button::after, .query-selector::after, .query-button::after, .search-row button::after, .artist-results button::after, .schedule-row::after, .field-scrim::after, .field-row::after, .field-actions button::after, .city-tabs button::after, .city-list button::after { border: 0; }
-.city-tabs button.active { background: var(--color-surface); color: var(--color-text); font-weight: 700; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, .08); }
+.query-selector::after, .query-button::after, .search-row button::after, .artist-results button::after, .schedule-row::after, .field-scrim::after, .field-row::after, .field-actions button::after, .city-list button::after { border: 0; }
 .schedule-content { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 92rpx); padding: 0 28rpx calc(60rpx + env(safe-area-inset-bottom)); }
 .query-section { padding-top: 10rpx; }
 .query-section__title { display: block; margin: 0 4rpx 15rpx; color: var(--color-accent); font-size: 23rpx; font-weight: 650; }
@@ -453,7 +470,6 @@ function weekday(timestamp: number): string {
 .field-actions button { height: 70rpx; margin: 0; border: 0; border-radius: 14rpx; background: var(--color-row-pressed); color: var(--color-muted); font-size: 25rpx; line-height: 70rpx; }
 .field-actions button:last-child { background: var(--color-accent); color: var(--color-on-accent); }
 .city-layer { position: absolute; z-index: 6; inset: 0; background: var(--color-background); }
-.city-tabs { display: grid; margin: 16rpx 28rpx; padding: 5rpx; grid-template-columns: repeat(2, 1fr); border-radius: 15rpx; background: var(--color-row-pressed); }
 .city-search { display: flex; height: 74rpx; margin: 0 28rpx 15rpx; padding: 0 18rpx; align-items: center; gap: 12rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 16rpx; background: var(--color-surface); }
 .city-search > :first-child { width: 28rpx; height: 28rpx; color: var(--color-muted); }
 .city-search input { min-width: 0; flex: 1; font-size: 24rpx; }

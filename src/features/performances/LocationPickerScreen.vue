@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 
 import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import AppSegmentedTabs from '@/components/AppSegmentedTabs.vue'
 import type { Performance } from '@/domain/performance'
 import {
   formatSelectedLocation,
@@ -35,6 +36,11 @@ const manualVenueVisible = ref(false)
 const manualCity = ref('')
 const manualVenue = ref('')
 
+const cityRegionTabs = [
+  { value: 'default', label: '默认地区' },
+  { value: 'other', label: '其它地区' },
+] as const
+
 const title = computed(() => {
   if (step.value === 'city') return '选择城市'
   if (step.value === 'venue') return '选择场地'
@@ -65,6 +71,10 @@ function handleBack(): void {
     return
   }
   emit('close')
+}
+
+function setCityRegion(value: string): void {
+  if (value === 'default' || value === 'other') cityRegion.value = value
 }
 
 function chooseCity(city: string): void {
@@ -150,20 +160,12 @@ function confirm(): void {
     </scroll-view>
 
     <template v-else-if="step === 'city'">
-      <view class="region-tabs" aria-label="城市地区">
-        <button
-          class="region-tab"
-          :class="{ 'region-tab--active': cityRegion === 'default' }"
-          aria-label="默认地区"
-          @tap="cityRegion = 'default'"
-        >默认地区</button>
-        <button
-          class="region-tab"
-          :class="{ 'region-tab--active': cityRegion === 'other' }"
-          aria-label="其它地区"
-          @tap="cityRegion = 'other'"
-        >其它地区</button>
-      </view>
+      <AppSegmentedTabs
+        :model-value="cityRegion"
+        :tabs="cityRegionTabs"
+        accessibility-label="城市地区"
+        @update:model-value="setCityRegion"
+      />
       <view class="location-search">
         <AppIcon name="search" />
         <input v-model="citySearch" aria-label="搜索城市" placeholder="搜索城市或拼音">
@@ -258,7 +260,7 @@ function confirm(): void {
 .location-form-card { margin-top: 26rpx; overflow: hidden; border: var(--app-border-width) solid var(--color-border); border-radius: 22rpx; background: var(--color-surface); }
 .location-row { display: flex; width: 100%; min-height: 118rpx; margin: 0; padding: 20rpx 24rpx; align-items: center; border: 0; border-top: var(--app-border-width) solid var(--color-border-subtle); border-radius: 0; background: transparent; color: var(--color-text); text-align: left; }
 .location-row:first-child { border-top: 0; }
-.location-row::after, .location-confirm::after, .region-tab::after, .manual-toggle::after, .manual-form button::after, .selection-row::after { border: 0; }
+.location-row::after, .location-confirm::after, .manual-toggle::after, .manual-form button::after, .selection-row::after { border: 0; }
 .location-row__copy { display: flex; min-width: 0; flex: 1; flex-direction: column; }
 .location-row__label { color: var(--color-muted); font-size: 21rpx; }
 .location-row__value { margin-top: 8rpx; overflow: hidden; color: var(--color-text); font-size: 28rpx; font-weight: 620; text-overflow: ellipsis; white-space: nowrap; }
@@ -269,9 +271,6 @@ function confirm(): void {
 .location-preview__value { margin-top: 7rpx; color: var(--color-text); font-size: 27rpx; font-weight: 650; }
 .location-confirm { height: 88rpx; margin: 32rpx 0 0; border: 0; border-radius: 20rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 29rpx; font-weight: 680; line-height: 88rpx; }
 .location-confirm[disabled] { background: var(--color-border); color: var(--color-muted); }
-.region-tabs { display: grid; margin: 22rpx 28rpx 16rpx; padding: 6rpx; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6rpx; border-radius: 18rpx; background: var(--color-row-pressed); }
-.region-tab { height: 62rpx; margin: 0; padding: 0; border: 0; border-radius: 14rpx; background: transparent; color: var(--color-muted); font-size: 24rpx; line-height: 62rpx; }
-.region-tab--active { background: var(--color-surface); color: var(--color-accent); font-weight: 680; box-shadow: 0 4rpx 14rpx var(--color-tab-shadow); }
 .location-search { display: flex; height: 74rpx; margin: 0 28rpx 18rpx; padding: 0 18rpx; align-items: center; gap: 13rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 17rpx; background: var(--color-surface); }
 .location-search > :first-child { width: 32rpx; height: 32rpx; flex: none; color: var(--color-muted); }
 .location-search input { min-width: 0; height: 74rpx; flex: 1; color: var(--color-text); font-size: 25rpx; }

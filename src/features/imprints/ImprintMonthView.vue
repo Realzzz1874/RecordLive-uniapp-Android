@@ -12,17 +12,23 @@ import {
   summarizeImprintYear,
   type ImprintCalendarCell,
 } from '@/features/imprints/model'
+import {
+  artistIntensityLevel,
+  computeArtistSummary,
+} from '@/features/performances/artist-summary'
 import { performanceMediaPath } from '@/features/performances/browser'
 
 const props = defineProps<{
   performances: Performance[]
   alwaysShowDate: boolean
   showPerformanceTime: boolean
+  showExpenseAmounts: boolean
 }>()
 
 const emit = defineEmits<{
   add: [startedAtMs: number]
   open: [id: string]
+  'toggle-expense-amounts': []
 }>()
 
 const now = new Date()
@@ -47,6 +53,12 @@ const calendarCells = computed(() => buildMonthCalendar(
   props.performances,
   selectedDateMs.value,
 ))
+const visibleCalendarCells = computed(() => calendarCells.value.filter(({ inCurrentMonth }) => inCurrentMonth))
+const calendarStartColumn = computed(() => String((new Date(
+  selectedYear.value,
+  selectedMonthIndex.value,
+  1,
+).getDay() + 6) % 7 + 1))
 const monthPerformances = computed(() => calendarCells.value
   .filter(({ inCurrentMonth }) => inCurrentMonth)
   .flatMap(({ performances }) => performances))
@@ -65,7 +77,7 @@ const pickerValue = computed(() => [
 ])
 const monthTitle = computed(() => `${selectedYear.value}-${String(selectedMonthIndex.value + 1).padStart(2, '0')}`)
 const calendarStyle = computed(() => ({ transform: `translateX(${calendarSwipeOffset.value}px)` }))
-const artistRanking = computed(() => monthSummary.value.artistRanking.slice(0, 12))
+const artistRanking = computed(() => computeArtistSummary(monthPerformances.value, 'times'))
 const todayMemories = computed(() => {
   const today = new Date()
   if (selectedYear.value !== today.getFullYear() || selectedMonthIndex.value !== today.getMonth()) return []
@@ -227,18 +239,17 @@ function startOfLocalDay(timestamp: number): number {
             class="calendar-grid"
             :class="{ 'calendar-grid--settling': calendarSwipeTransition }"
             :style="calendarStyle"
-            aria-label="42 格月历"
+            :aria-label="`${visibleCalendarCells.length}天月历`"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"
             @touchcancel="handleTouchEnd"
           >
             <button
-              v-for="cell in calendarCells"
+              v-for="(cell, index) in visibleCalendarCells"
               :key="localDateKey(cell.dateMs)"
               class="calendar-cell"
               :class="{
-                'calendar-cell--blank': !cell.inCurrentMonth,
                 'calendar-cell--today': cell.isToday,
                 'calendar-cell--selected': cell.isSelected,
                 'calendar-cell--event': cell.count > 0,
@@ -246,33 +257,31 @@ function startOfLocalDay(timestamp: number): number {
                 'calendar-cell--date-visible': cell.count > 0 && alwaysShowDate,
                 'calendar-cell--time-visible': cell.count > 0 && showPerformanceTime,
               }"
-              :disabled="!cell.inCurrentMonth"
-              :aria-label="cell.inCurrentMonth ? cellLabel(cell) : undefined"
+              :style="index === 0 ? { gridColumnStart: calendarStartColumn } : undefined"
+              :aria-label="cellLabel(cell)"
               @tap="handleDay(cell)"
             >
-              <template v-if="cell.inCurrentMonth">
-                <view v-if="cell.count" class="calendar-cell__events">
-                  <view
-                    v-for="performance in cell.performances"
-                    :key="performance.id"
-                    class="calendar-cell__event-slice"
-                  >
-                    <image
-                      v-if="performancePoster(performance)"
-                      class="calendar-cell__image"
-                      :src="performancePoster(performance)"
-                      mode="aspectFill"
-                    />
-                    <view v-else class="calendar-cell__fallback">
-                      <text>{{ performance.name }}</text>
-                    </view>
-                    <text v-if="showPerformanceTime" class="calendar-cell__time">{{ formatTime(performance.startedAtMs) }}</text>
+              <view v-if="cell.count" class="calendar-cell__events">
+                <view
+                  v-for="performance in cell.performances"
+                  :key="performance.id"
+                  class="calendar-cell__event-slice"
+                >
+                  <image
+                    v-if="performancePoster(performance)"
+                    class="calendar-cell__image"
+                    :src="performancePoster(performance)"
+                    mode="aspectFill"
+                  />
+                  <view v-else class="calendar-cell__fallback">
+                    <text>{{ performance.name }}</text>
                   </view>
+                  <text v-if="showPerformanceTime" class="calendar-cell__time">{{ formatTime(performance.startedAtMs) }}</text>
                 </view>
-                <text v-else class="calendar-cell__empty-day">{{ cell.isToday ? '今' : cell.day }}</text>
-                <text v-if="cell.count && alwaysShowDate" class="calendar-cell__day-overlay">{{ cell.isToday ? '今' : cell.day }}</text>
-                <text v-if="cell.count > 1" class="calendar-cell__badge">{{ cell.count }}</text>
-              </template>
+              </view>
+              <text v-else class="calendar-cell__empty-day">{{ cell.isToday ? '今' : cell.day }}</text>
+              <text v-if="cell.count && alwaysShowDate" class="calendar-cell__day-overlay">{{ cell.isToday ? '今' : cell.day }}</text>
+              <text v-if="cell.count > 1" class="calendar-cell__badge">{{ cell.count }}</text>
             </button>
           </view>
         </view>
@@ -294,18 +303,54 @@ function startOfLocalDay(timestamp: number): number {
         </button>
       </section>
 
-      <section v-if="monthSummary.expenses.length" class="month-summary" aria-label="月度花费">
-        <view class="summary-heading"><text>¥</text><text>花费</text></view>
-        <view v-for="expense in monthSummary.expenses" :key="expense.currency" class="expense-row">
-          <view><text class="expense-label">{{ expense.currency }}</text><text class="expense-value">{{ formatAggregatedAmount(expense.totalCost) }}</text></view>
-          <text class="expense-detail">实付 {{ formatAggregatedAmount(expense.paidPrice) }} · 其他 {{ formatAggregatedAmount(expense.otherCost) }}</text>
+      <section v-if="monthSummary.expenses.length" class="month-summary month-summary--expense" aria-label="月度花费">
+        <view class="summary-heading summary-heading--with-action">
+          <view class="summary-heading__title">
+            <view class="summary-heading__icon"><AppIcon name="dollarsign.circle" /></view>
+            <text>花费{{ monthSummary.expenses.length === 1 ? `(${monthSummary.expenses[0]?.currency})` : '' }}</text>
+          </view>
+          <button
+            class="summary-heading__action"
+            :aria-label="showExpenseAmounts ? '隐藏花费金额' : '显示花费金额'"
+            @tap="$emit('toggle-expense-amounts')"
+          >
+            <AppIcon :name="showExpenseAmounts ? 'eye' : 'eye.slash'" />
+          </button>
+        </view>
+        <view v-for="expense in monthSummary.expenses" :key="expense.currency" class="expense-group">
+          <text v-if="monthSummary.expenses.length > 1" class="expense-currency">{{ expense.currency }}</text>
+          <view class="expense-columns">
+            <view class="expense-metric">
+              <text class="expense-metric__label">票价</text>
+              <text class="expense-metric__value">{{ showExpenseAmounts ? formatAggregatedAmount(expense.ticketPrice) : '***' }}</text>
+            </view>
+            <view class="expense-metric">
+              <text class="expense-metric__label">实付</text>
+              <text class="expense-metric__value">{{ showExpenseAmounts ? formatAggregatedAmount(expense.paidPrice) : '***' }}</text>
+            </view>
+            <view class="expense-metric">
+              <text class="expense-metric__label">其它</text>
+              <text class="expense-metric__value">{{ showExpenseAmounts ? formatAggregatedAmount(expense.otherCost) : '***' }}</text>
+            </view>
+          </view>
         </view>
       </section>
 
       <section v-if="artistRanking.length" class="month-summary" aria-label="月度阵容">
-        <view class="summary-heading"><text>♫</text><text>阵容</text></view>
-        <view class="artist-chips">
-          <text v-for="artist in artistRanking" :key="artist.name" class="artist-chip">{{ artist.name }} ✗{{ artist.count }}</text>
+        <view class="summary-heading">
+          <view class="summary-heading__icon"><AppIcon name="square.on.square.badge.person.crop" /></view>
+          <text>阵容</text>
+        </view>
+        <view class="artist-chips app-chip-list">
+          <view
+            v-for="artist in artistRanking"
+            :key="artist.name"
+            class="artist-chip app-chip"
+            :class="`app-chip--level-${artistIntensityLevel(artist.times)}`"
+            :aria-label="`${artist.name}，共${artist.times}次`"
+          >
+            <text>{{ artist.name }} ✘{{ artist.times }}</text>
+          </view>
         </view>
       </section>
     </view>
@@ -332,7 +377,6 @@ function startOfLocalDay(timestamp: number): number {
 .calendar-grid { gap: 6rpx; touch-action: pan-y; }
 .calendar-grid--settling { transition: transform 360ms cubic-bezier(.22,.8,.3,1); }
 .calendar-cell { box-sizing: border-box; position: relative; display: flex; min-width: 0; height: auto; aspect-ratio: 3 / 4; margin: 0; padding: 0; align-items: center; justify-content: center; overflow: hidden; border: var(--app-border-width) solid transparent; border-radius: 9rpx; background: var(--color-accent-soft); color: var(--color-on-accent); }
-.calendar-cell--blank { background: transparent; opacity: 0; }
 .calendar-cell--today { background: var(--color-accent); }
 .calendar-cell--selected { border-color: var(--color-accent-border); box-shadow: inset 0 0 0 2rpx var(--color-background); }
 .calendar-cell--event { background: var(--color-accent); }
@@ -353,17 +397,22 @@ function startOfLocalDay(timestamp: number): number {
 .calendar-cell__time { position: absolute; right: 0; bottom: 0; left: 0; padding: 4rpx 1rpx; background: rgba(255,255,255,.84); color: var(--color-accent); font-size: 15rpx; font-weight: 650; line-height: 18rpx; text-align: center; }
 .calendar-cell__badge { position: absolute; top: 4rpx; right: 4rpx; display: flex; min-width: 24rpx; height: 24rpx; padding: 0 4rpx; align-items: center; justify-content: center; border-radius: 6rpx; background: rgba(255,255,255,.88); color: #b5473e; font-size: 15rpx; font-weight: 760; line-height: 24rpx; }
 .month-empty-tip { display: block; padding: 26rpx 0 4rpx; color: var(--color-muted); font-size: 22rpx; text-align: center; }
-.month-summary { padding: 22rpx; border-radius: 20rpx; background: var(--color-surface); box-shadow: 0 8rpx 26rpx var(--color-tab-shadow); }
-.summary-heading { display: flex; margin-bottom: 16rpx; align-items: center; gap: 10rpx; color: var(--color-accent); font-size: 25rpx; font-weight: 700; }
+.month-summary { padding: 16rpx; border-radius: 20rpx; background: var(--color-secondary-surface); }
+.summary-heading { display: flex; min-height: 34rpx; margin-bottom: 20rpx; align-items: center; gap: 8rpx; color: var(--color-accent); font-size: 25rpx; font-weight: 650; }
+.summary-heading--with-action { justify-content: space-between; }
+.summary-heading__title { display: flex; min-width: 0; align-items: center; gap: 8rpx; }
+.summary-heading__icon { width: 28rpx; height: 28rpx; flex: none; }
+.summary-heading__action { display: flex; width: 52rpx; height: 44rpx; margin: -6rpx -6rpx -6rpx 0; padding: 10rpx 14rpx; align-items: center; justify-content: center; border: 0; border-radius: 12rpx; background: transparent; color: var(--color-accent); }
+.summary-heading__action::after { border: 0; }
 .memory-row { display: flex; width: 100%; min-height: 60rpx; margin: 0; padding: 10rpx 0; align-items: center; gap: 14rpx; border: 0; border-top: var(--app-border-width) solid var(--color-border-subtle); background: transparent; text-align: left; }
 .memory-row__date { flex: none; color: var(--color-accent); font-size: 20rpx; font-variant-numeric: tabular-nums; }
 .memory-row__name { min-width: 0; overflow: hidden; color: var(--color-text); font-size: 22rpx; text-overflow: ellipsis; white-space: nowrap; }
-.expense-row { display: flex; padding: 15rpx 0; align-items: center; justify-content: space-between; gap: 20rpx; border-top: var(--app-border-width) solid var(--color-border-subtle); }
-.expense-row > view { display: flex; align-items: baseline; gap: 10rpx; }
-.expense-label { color: var(--color-accent); font-size: 20rpx; font-weight: 720; }
-.expense-value { color: var(--color-text); font-size: 29rpx; font-weight: 750; font-variant-numeric: tabular-nums; }
-.expense-detail { color: var(--color-muted); font-size: 18rpx; }
-.artist-chips { display: flex; flex-wrap: wrap; gap: 9rpx; }
-.artist-chip { padding: 8rpx 13rpx; border-radius: 15rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 20rpx; font-weight: 620; }
+.expense-group + .expense-group { margin-top: 16rpx; padding-top: 16rpx; border-top: var(--app-border-width) solid var(--color-border-subtle); }
+.expense-currency { display: block; margin-bottom: 10rpx; color: var(--color-accent); font-size: 20rpx; font-weight: 650; }
+.expense-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.expense-metric { display: flex; min-width: 0; align-items: center; flex-direction: column; gap: 7rpx; text-align: center; }
+.expense-metric__label { color: var(--color-muted); font-size: 20rpx; }
+.expense-metric__value { max-width: 100%; overflow: hidden; color: var(--color-accent); font-size: 28rpx; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.artist-chips { align-items: flex-start; }
 
 </style>

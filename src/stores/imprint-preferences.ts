@@ -19,6 +19,7 @@ export const useImprintPreferencesStore = defineStore('imprint-preferences', () 
   const filter = computed(() => preferences.value.filter)
   const alwaysShowDate = computed(() => preferences.value.alwaysShowDate)
   const showPerformanceTime = computed(() => preferences.value.showPerformanceTime)
+  const showExpenseAmounts = computed(() => preferences.value.showExpenseAmounts)
 
   function initialize(): Promise<void> {
     initialization ??= load()
@@ -39,18 +40,33 @@ export const useImprintPreferencesStore = defineStore('imprint-preferences', () 
     nextFilter: ImprintFilter,
     nextAlwaysShowDate: boolean,
     nextShowPerformanceTime: boolean,
+    nextShowExpenseAmounts = preferences.value.showExpenseAmounts,
   ): void {
     preferences.value = normalizeImprintPreferences({
       filter: nextFilter,
       alwaysShowDate: nextAlwaysShowDate,
       showPerformanceTime: nextShowPerformanceTime,
+      showExpenseAmounts: nextShowExpenseAmounts,
+    })
+    void persist()
+  }
+
+  function setShowExpenseAmounts(value: boolean): void {
+    preferences.value = normalizeImprintPreferences({
+      ...cloneImprintPreferences(preferences.value),
+      showExpenseAmounts: value,
     })
     void persist()
   }
 
   function reset(): void {
     const defaults = cloneImprintPreferences(DEFAULT_IMPRINT_PREFERENCES)
-    setPreferences(defaults.filter, defaults.alwaysShowDate, defaults.showPerformanceTime)
+    setPreferences(
+      defaults.filter,
+      defaults.alwaysShowDate,
+      defaults.showPerformanceTime,
+      defaults.showExpenseAmounts,
+    )
   }
 
   async function persist(): Promise<void> {
@@ -69,9 +85,11 @@ export const useImprintPreferencesStore = defineStore('imprint-preferences', () 
     filter,
     alwaysShowDate,
     showPerformanceTime,
+    showExpenseAmounts,
     initialized,
     initialize,
     reset,
     setPreferences,
+    setShowExpenseAmounts,
   }
 })

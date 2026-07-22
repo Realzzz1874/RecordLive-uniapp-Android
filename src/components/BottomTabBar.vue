@@ -24,7 +24,10 @@ defineEmits<{
       @tap="$emit('select', tab.id)"
     >
       <view class="tab-bar__indicator" />
-      <view class="tab-bar__icon">
+      <view
+        class="tab-bar__icon"
+        :class="{ 'tab-bar__icon--compact': tab.id === 'want-see' }"
+      >
         <AppIcon :name="tab.icon" />
       </view>
       <text class="tab-bar__label">{{ tab.label }}</text>
@@ -106,6 +109,11 @@ defineEmits<{
 .tab-bar__icon {
   width: 48rpx;
   height: 48rpx;
+}
+
+.tab-bar__icon--compact {
+  box-sizing: border-box;
+  padding: 3rpx;
 }
 
 .tab-bar__label {

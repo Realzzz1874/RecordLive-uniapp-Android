@@ -30,7 +30,7 @@ const emit = defineEmits<{
 }>()
 
 const imprintPreferencesStore = useImprintPreferencesStore()
-const { filter, alwaysShowDate, showPerformanceTime } = storeToRefs(imprintPreferencesStore)
+const { filter, alwaysShowDate, showPerformanceTime, showExpenseAmounts } = storeToRefs(imprintPreferencesStore)
 const activeSection = ref<ImprintSection>('month')
 const performances = ref<Performance[]>([])
 const categories = ref<PerformanceCategory[]>([])
@@ -152,8 +152,10 @@ function applyPreferences(
       :performances="filteredPerformances"
       :always-show-date="alwaysShowDate"
       :show-performance-time="showPerformanceTime"
+      :show-expense-amounts="showExpenseAmounts"
       @add="$emit('add', $event)"
       @open="$emit('open', $event)"
+      @toggle-expense-amounts="imprintPreferencesStore.setShowExpenseAmounts(!showExpenseAmounts)"
     />
     <view v-else class="section-placeholder">
       <view class="section-placeholder__icon"><AppIcon :name="activeSection === 'year' ? 'calendar' : 'award'" /></view>

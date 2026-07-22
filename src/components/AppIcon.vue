@@ -5,6 +5,10 @@ defineProps<{
     | 'bookmark'
     | 'calendar'
     | 'settings'
+    | 'music.note.house.fill'
+    | 'heart.text.square.fill'
+    | 'lasso.badge.sparkles'
+    | 'gear'
     | 'search'
     | 'plus'
     | 'sun'
@@ -19,6 +23,10 @@ defineProps<{
     | 'arrow.counterclockwise.square'
     | 'arrow.left.square'
     | 'arrow.right.square'
+    | 'dollarsign.circle'
+    | 'square.on.square.badge.person.crop'
+    | 'eye'
+    | 'eye.slash'
     | 'edit'
     | 'trash'
     | 'check'
@@ -58,6 +66,10 @@ defineProps<{
 .app-icon--bookmark { -webkit-mask-image: url('/static/icons/bookmark.svg'); mask-image: url('/static/icons/bookmark.svg'); }
 .app-icon--calendar { -webkit-mask-image: url('/static/icons/calendar.svg'); mask-image: url('/static/icons/calendar.svg'); }
 .app-icon--settings { -webkit-mask-image: url('/static/icons/settings.svg'); mask-image: url('/static/icons/settings.svg'); }
+.app-icon--music\.note\.house\.fill { -webkit-mask-image: url('/static/icons/tabbar/music.note.house.fill.svg'); mask-image: url('/static/icons/tabbar/music.note.house.fill.svg'); }
+.app-icon--heart\.text\.square\.fill { -webkit-mask-image: url('/static/icons/tabbar/heart.text.square.fill.svg'); mask-image: url('/static/icons/tabbar/heart.text.square.fill.svg'); }
+.app-icon--lasso\.badge\.sparkles { -webkit-mask-image: url('/static/icons/tabbar/lasso.badge.sparkles.svg'); mask-image: url('/static/icons/tabbar/lasso.badge.sparkles.svg'); }
+.app-icon--gear { -webkit-mask-image: url('/static/icons/tabbar/gear.svg'); mask-image: url('/static/icons/tabbar/gear.svg'); }
 .app-icon--search { -webkit-mask-image: url('/static/icons/search.svg'); mask-image: url('/static/icons/search.svg'); }
 .app-icon--plus { -webkit-mask-image: url('/static/icons/plus.svg'); mask-image: url('/static/icons/plus.svg'); }
 .app-icon--sun { -webkit-mask-image: url('/static/icons/sun.svg'); mask-image: url('/static/icons/sun.svg'); }
@@ -72,6 +84,10 @@ defineProps<{
 .app-icon--arrow\.counterclockwise\.square { -webkit-mask-image: url('/static/icons/arrow.counterclockwise.square.svg'); mask-image: url('/static/icons/arrow.counterclockwise.square.svg'); }
 .app-icon--arrow\.left\.square { -webkit-mask-image: url('/static/icons/arrow.left.square.svg'); mask-image: url('/static/icons/arrow.left.square.svg'); }
 .app-icon--arrow\.right\.square { -webkit-mask-image: url('/static/icons/arrow.right.square.svg'); mask-image: url('/static/icons/arrow.right.square.svg'); }
+.app-icon--dollarsign\.circle { -webkit-mask-image: url('/static/icons/dollarsign.circle.svg'); mask-image: url('/static/icons/dollarsign.circle.svg'); }
+.app-icon--square\.on\.square\.badge\.person\.crop { -webkit-mask-image: url('/static/icons/square.on.square.badge.person.crop.svg'); mask-image: url('/static/icons/square.on.square.badge.person.crop.svg'); }
+.app-icon--eye { -webkit-mask-image: url('/static/icons/eye.svg'); mask-image: url('/static/icons/eye.svg'); }
+.app-icon--eye\.slash { -webkit-mask-image: url('/static/icons/eye.slash.svg'); mask-image: url('/static/icons/eye.slash.svg'); }
 .app-icon--edit { -webkit-mask-image: url('/static/icons/edit.svg'); mask-image: url('/static/icons/edit.svg'); }
 .app-icon--trash { -webkit-mask-image: url('/static/icons/trash.svg'); mask-image: url('/static/icons/trash.svg'); }
 .app-icon--check { -webkit-mask-image: url('/static/icons/check.svg'); mask-image: url('/static/icons/check.svg'); }

@@ -5,14 +5,18 @@ export type ResolvedTheme = Exclude<ThemePreference, 'system'>
 export interface AppTabDefinition {
   id: AppTabId
   label: string
-  icon: 'ticket' | 'bookmark' | 'calendar' | 'settings'
+  icon:
+    | 'music.note.house.fill'
+    | 'heart.text.square.fill'
+    | 'lasso.badge.sparkles'
+    | 'gear'
 }
 
 export const APP_TABS: readonly AppTabDefinition[] = [
-  { id: 'records', label: '记录现场', icon: 'ticket' },
-  { id: 'want-see', label: '待观看', icon: 'bookmark' },
-  { id: 'imprints', label: '印记', icon: 'calendar' },
-  { id: 'settings', label: '设置', icon: 'settings' },
+  { id: 'records', label: '记录现场', icon: 'music.note.house.fill' },
+  { id: 'want-see', label: '待观看', icon: 'heart.text.square.fill' },
+  { id: 'imprints', label: '印记', icon: 'lasso.badge.sparkles' },
+  { id: 'settings', label: '设置', icon: 'gear' },
 ] as const
 
 export const THEME_LABELS: Record<ThemePreference, string> = {

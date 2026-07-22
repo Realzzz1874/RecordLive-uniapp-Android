@@ -119,6 +119,7 @@ describe('Milestone 4 imprint calendar', () => {
       },
       alwaysShowDate: true,
       showPerformanceTime: false,
+      showExpenseAmounts: false,
     })).toEqual({
       filter: {
         categoryIds: ['concert'],
@@ -127,6 +128,7 @@ describe('Milestone 4 imprint calendar', () => {
       },
       alwaysShowDate: true,
       showPerformanceTime: false,
+      showExpenseAmounts: false,
     })
   })
 })

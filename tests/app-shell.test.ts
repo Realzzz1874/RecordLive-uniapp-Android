@@ -10,10 +10,10 @@ import {
 describe('Milestone 1 app shell', () => {
   it('keeps the four Android tabs in the approved order', () => {
     expect(APP_TABS.map(({ id, label, icon }) => ({ id, label, icon }))).toEqual([
-      { id: 'records', label: '记录现场', icon: 'ticket' },
-      { id: 'want-see', label: '待观看', icon: 'bookmark' },
-      { id: 'imprints', label: '印记', icon: 'calendar' },
-      { id: 'settings', label: '设置', icon: 'settings' },
+      { id: 'records', label: '记录现场', icon: 'music.note.house.fill' },
+      { id: 'want-see', label: '待观看', icon: 'heart.text.square.fill' },
+      { id: 'imprints', label: '印记', icon: 'lasso.badge.sparkles' },
+      { id: 'settings', label: '设置', icon: 'gear' },
     ])
     expect(new Set(APP_TABS.map((tab) => tab.id)).size).toBe(APP_TABS.length)
   })

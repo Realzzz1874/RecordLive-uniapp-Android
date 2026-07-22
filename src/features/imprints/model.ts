@@ -16,6 +16,7 @@ export interface ImprintPreferences {
   filter: ImprintFilter
   alwaysShowDate: boolean
   showPerformanceTime: boolean
+  showExpenseAmounts: boolean
 }
 
 export const DEFAULT_IMPRINT_PREFERENCES: ImprintPreferences = {
@@ -26,6 +27,7 @@ export const DEFAULT_IMPRINT_PREFERENCES: ImprintPreferences = {
   },
   alwaysShowDate: false,
   showPerformanceTime: true,
+  showExpenseAmounts: true,
 }
 
 export interface ImprintCalendarCell {
@@ -140,6 +142,9 @@ export function normalizeImprintPreferences(value: unknown): ImprintPreferences 
     showPerformanceTime: typeof value.showPerformanceTime === 'boolean'
       ? value.showPerformanceTime
       : DEFAULT_IMPRINT_PREFERENCES.showPerformanceTime,
+    showExpenseAmounts: typeof value.showExpenseAmounts === 'boolean'
+      ? value.showExpenseAmounts
+      : DEFAULT_IMPRINT_PREFERENCES.showExpenseAmounts,
   }
 }
 
@@ -152,6 +157,7 @@ export function cloneImprintPreferences(value: ImprintPreferences): ImprintPrefe
     },
     alwaysShowDate: value.alwaysShowDate,
     showPerformanceTime: value.showPerformanceTime,
+    showExpenseAmounts: value.showExpenseAmounts,
   }
 }
 

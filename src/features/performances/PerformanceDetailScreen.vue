@@ -9,7 +9,6 @@ import {
   formatPerformanceDate,
   formatPerformanceLocation,
   PerformanceBrowserService,
-  performanceLifecycleLabel,
   performanceMediaPath,
 } from '@/features/performances/browser'
 import { createPerformanceMediaStorage } from '@/platform/media/factory'
@@ -30,6 +29,7 @@ const categories = ref<PerformanceCategory[]>([])
 const tags = ref<PerformanceTag[]>([])
 const loading = ref(true)
 const deleting = ref(false)
+const actionMenuOpen = ref(false)
 const browserService = ref<PerformanceBrowserService | null>(null)
 
 const categoryName = computed(() => categories.value.find(
@@ -43,9 +43,8 @@ const detailRows = computed(() => {
   const item = performance.value
   if (!item) return []
   return [
-    { icon: 'calendar' as const, label: '演出时间', value: formatPerformanceDate(item.startedAtMs, true) },
-    { icon: 'location' as const, label: '城市与场馆', value: formatPerformanceLocation(item) },
-    { icon: 'seat' as const, label: '座位', value: item.seat },
+    { icon: 'calendar' as const, value: formatPerformanceDate(item.startedAtMs, true) },
+    { icon: 'location' as const, value: formatPerformanceLocation(item) },
   ].filter(({ value }) => value)
 })
 const facetSections: readonly { kind: PerformanceFacetKind; label: string }[] = [
@@ -53,7 +52,6 @@ const facetSections: readonly { kind: PerformanceFacetKind; label: string }[] = 
   { kind: 'guest', label: '嘉宾' },
   { kind: 'play', label: '剧目/主题' },
   { kind: 'company', label: '厂牌' },
-  { kind: 'channel', label: '购票渠道' },
   { kind: 'friend', label: '同行好友' },
 ]
 const visibleFacets = computed(() => facetSections.filter(
@@ -63,9 +61,10 @@ const costs = computed(() => {
   const item = performance.value
   if (!item) return []
   return [
-    { label: '票面价', value: formatMoney(item.ticketPrice.amount, item.ticketPrice.currency) },
-    { label: '实付价', value: formatMoney(item.paidPrice.amount, item.paidPrice.currency) },
-    { label: '其他花费', value: formatMoney(item.otherCost.amount, item.otherCost.currency) },
+    { label: '购票渠道', value: item.facets.channel?.join('、') ?? '', monetary: false },
+    { label: '票面价', value: formatMoney(item.ticketPrice.amount, item.ticketPrice.currency), monetary: true },
+    { label: '实付价', value: formatMoney(item.paidPrice.amount, item.paidPrice.currency), monetary: true },
+    { label: '其他花费', value: formatMoney(item.otherCost.amount, item.otherCost.currency), monetary: true },
   ].filter(({ value }) => value)
 })
 
@@ -102,6 +101,7 @@ async function load(): Promise<void> {
 }
 
 function confirmDelete(): void {
+  actionMenuOpen.value = false
   if (!performance.value || deleting.value) return
   uni.showModal({
     title: '删除这场演出？',
@@ -113,6 +113,11 @@ function confirmDelete(): void {
       if (confirm) void removePerformance()
     },
   })
+}
+
+function editPerformance(): void {
+  actionMenuOpen.value = false
+  if (performance.value) emit('edit', performance.value.id)
 }
 
 async function removePerformance(): Promise<void> {
@@ -149,12 +154,40 @@ function formatMoney(amount: string, currency: string): string {
     <AppHeader
       :title="performance?.name ?? '演出详情'"
       show-back
-      show-edit
-      show-delete
       @back="$emit('back')"
-      @edit="performance && $emit('edit', performance.id)"
-      @delete="confirmDelete"
-    />
+    >
+      <template #right>
+        <view class="header-menu">
+          <button
+            class="header-menu__trigger"
+            aria-label="演出操作"
+            aria-haspopup="menu"
+            :aria-expanded="actionMenuOpen"
+            hover-class="header-menu__trigger--pressed"
+            @tap="actionMenuOpen = !actionMenuOpen"
+          >
+            <AppIcon name="filter" />
+          </button>
+          <view v-if="actionMenuOpen" class="header-menu__backdrop" @tap="actionMenuOpen = false" />
+          <view v-if="actionMenuOpen" class="header-menu__dropdown" role="menu">
+            <button class="header-menu__item" role="menuitem" aria-label="编辑演出" @tap="editPerformance">
+              <AppIcon name="edit" />
+              <text>编辑</text>
+            </button>
+            <button
+              class="header-menu__item header-menu__item--danger"
+              role="menuitem"
+              aria-label="删除演出"
+              :disabled="deleting"
+              @tap="confirmDelete"
+            >
+              <AppIcon name="trash" />
+              <text>删除</text>
+            </button>
+          </view>
+        </view>
+      </template>
+    </AppHeader>
 
     <view v-if="loading" class="loading-state">正在读取演出详情…</view>
     <scroll-view v-else-if="performance" class="detail-content" scroll-y>
@@ -162,51 +195,45 @@ function formatMoney(amount: string, currency: string): string {
         <image class="hero__image" :src="performanceMediaPath(performance, 'poster')" mode="widthFix" />
         <view class="hero__shade" />
         <view class="hero__copy">
-          <text class="hero__status">{{ performanceLifecycleLabel(performance) }}</text>
           <text class="hero__title">{{ performance.name }}</text>
           <text class="hero__location">{{ formatPerformanceLocation(performance) }}</text>
         </view>
       </view>
       <view v-else class="title-block">
-        <text class="title-block__status">{{ performanceLifecycleLabel(performance) }}</text>
         <text class="title-block__title">{{ performance.name }}</text>
         <text class="title-block__date">{{ formatPerformanceDate(performance.startedAtMs, true) }}</text>
       </view>
 
       <view class="detail-section detail-section--facts">
-        <view v-for="row in detailRows" :key="row.label" class="fact-row">
+        <view v-for="row in detailRows" :key="row.icon" class="fact-row">
           <view class="fact-row__icon"><AppIcon :name="row.icon" /></view>
           <view class="fact-row__content">
-            <text class="fact-row__label">{{ row.label }}</text>
             <text class="fact-row__value">{{ row.value }}</text>
           </view>
         </view>
-        <view v-if="categoryName" class="fact-row">
-          <view class="fact-row__icon"><AppIcon name="folder" /></view>
-          <view class="fact-row__content">
-            <text class="fact-row__label">分类</text>
-            <text class="fact-row__value">{{ categoryName }}</text>
-          </view>
-        </view>
-        <view v-if="performance.rating > 0" class="fact-row">
-          <view class="fact-row__icon"><AppIcon name="award" /></view>
-          <view class="fact-row__content">
-            <text class="fact-row__label">我的评分</text>
-            <text class="rating">{{ '★'.repeat(Math.round(performance.rating)) }}<text class="rating__value"> {{ performance.rating }}/5</text></text>
-          </view>
+      </view>
+
+      <view v-if="categoryName || tagNames.length" class="detail-section">
+        <text class="section-title">分类/标签</text>
+        <view class="tag-list">
+          <text v-if="categoryName" class="tag-pill">{{ categoryName }}</text>
+          <text v-for="tag in tagNames" :key="tag" class="tag-pill">#{{ tag }}</text>
         </view>
       </view>
 
-      <view v-if="tagNames.length" class="detail-section">
-        <text class="section-title">标签</text>
-        <view class="tag-list"><text v-for="tag in tagNames" :key="tag" class="tag-pill"># {{ tag }}</text></view>
-      </view>
-
-      <view v-if="visibleFacets.length" class="detail-section">
+      <view v-if="visibleFacets.length || performance.seat || performance.rating > 0" class="detail-section">
         <text class="section-title">演出内容</text>
         <view v-for="facet in visibleFacets" :key="facet.kind" class="text-row">
           <text class="text-row__label">{{ facet.label }}</text>
           <text class="text-row__value">{{ performance.facets[facet.kind]?.join('、') }}</text>
+        </view>
+        <view v-if="performance.seat" class="text-row">
+          <text class="text-row__label">座位</text>
+          <text class="text-row__value">{{ performance.seat }}</text>
+        </view>
+        <view v-if="performance.rating > 0" class="text-row">
+          <text class="text-row__label">评分</text>
+          <text class="rating">{{ '★'.repeat(Math.round(performance.rating)) }}</text>
         </view>
       </view>
 
@@ -214,7 +241,7 @@ function formatMoney(amount: string, currency: string): string {
         <text class="section-title">花费</text>
         <view v-for="cost in costs" :key="cost.label" class="text-row">
           <text class="text-row__label">{{ cost.label }}</text>
-          <text class="text-row__value text-row__value--money">{{ cost.value }}</text>
+          <text class="text-row__value" :class="{ 'text-row__value--money': cost.monetary }">{{ cost.value }}</text>
         </view>
       </view>
 
@@ -244,21 +271,19 @@ function formatMoney(amount: string, currency: string): string {
 .hero__image { display: block; width: 100%; height: auto; }
 .hero__shade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 38%, rgba(20, 14, 11, 0.88)); }
 .hero__copy { position: absolute; right: 36rpx; bottom: 38rpx; left: 36rpx; display: flex; flex-direction: column; align-items: flex-start; }
-.hero__status, .title-block__status { padding: 7rpx 16rpx; border-radius: 20rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 21rpx; }
-.hero__title { margin-top: 18rpx; color: #fff; font-size: 42rpx; font-weight: 750; line-height: 1.25; }
+.hero__title { color: #fff; font-size: 42rpx; font-weight: 750; line-height: 1.25; }
 .hero__location { margin-top: 10rpx; color: rgba(255,255,255,.78); font-size: 25rpx; }
 .title-block { display: flex; padding: 48rpx 36rpx 42rpx; flex-direction: column; align-items: flex-start; border-bottom: var(--app-border-width) solid var(--color-border); }
-.title-block__title { margin-top: 20rpx; color: var(--color-text); font-size: 42rpx; font-weight: 750; line-height: 1.3; }
+.title-block__title { color: var(--color-text); font-size: 42rpx; font-weight: 750; line-height: 1.3; }
 .title-block__date { margin-top: 13rpx; color: var(--color-muted); font-size: 26rpx; }
 .detail-section { padding: 36rpx; border-bottom: var(--app-border-width) solid var(--color-border); }
 .detail-section--facts { padding-top: 20rpx; padding-bottom: 20rpx; }
 .fact-row { display: flex; min-height: 104rpx; align-items: center; gap: 22rpx; }
 .fact-row__icon { width: 42rpx; height: 42rpx; flex: none; color: var(--color-accent); }
 .fact-row__content { display: flex; min-width: 0; flex-direction: column; gap: 6rpx; }
-.fact-row__label, .text-row__label { color: var(--color-muted); font-size: 22rpx; }
+.text-row__label { color: var(--color-muted); font-size: 22rpx; }
 .fact-row__value { color: var(--color-text); font-size: 28rpx; line-height: 1.4; }
 .rating { color: var(--color-accent); font-size: 28rpx; letter-spacing: 2rpx; }
-.rating__value { color: var(--color-muted); font-size: 22rpx; letter-spacing: 0; }
 .section-title { display: block; margin-bottom: 24rpx; color: var(--color-accent); font-size: 27rpx; font-weight: 680; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 12rpx; }
 .tag-pill { padding: 9rpx 18rpx; border-radius: 24rpx; background: var(--color-accent-soft); color: var(--color-accent); font-size: 23rpx; }
@@ -272,4 +297,14 @@ function formatMoney(amount: string, currency: string): string {
 .edit-button::after { border: 0; }
 .edit-button > :first-child { width: 34rpx; height: 34rpx; }
 .edit-button--pressed { background: var(--color-row-pressed); }
+.header-menu { position: relative; z-index: 1; }
+.header-menu__trigger { box-sizing: border-box; display: flex; width: 64rpx; height: 64rpx; margin: 0; padding: 18rpx; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); font-size: 0; line-height: 1; transition: color 160ms ease, background-color 160ms ease, transform 160ms ease; }
+.header-menu__trigger::after, .header-menu__item::after { border: 0; }
+.header-menu__trigger--pressed { background: var(--color-row-pressed); color: var(--color-accent); transform: scale(.94); }
+.header-menu__backdrop { position: fixed; z-index: 1; inset: 0; }
+.header-menu__dropdown { position: absolute; z-index: 2; top: 76rpx; right: 0; width: 224rpx; overflow: hidden; padding: 8rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 18rpx; background: var(--color-surface); box-shadow: 0 14rpx 42rpx rgba(20, 14, 11, .18); }
+.header-menu__item { box-sizing: border-box; display: flex; width: 100%; height: 76rpx; margin: 0; padding: 0 22rpx; align-items: center; gap: 18rpx; border: 0; border-radius: 12rpx; background: transparent; color: var(--color-text); font-size: 26rpx; line-height: 76rpx; text-align: left; }
+.header-menu__item > :first-child { width: 31rpx; height: 31rpx; flex: none; }
+.header-menu__item--danger { color: #b5473e; }
+.header-menu__item:active { background: var(--color-row-pressed); }
 </style>

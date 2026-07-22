@@ -86,62 +86,64 @@ defineEmits<{
       </slot>
 
       <view class="app-header__side app-header__side--right">
-        <button
-          v-if="showEdit"
-          class="icon-button icon-button--plain"
-          aria-label="编辑演出"
-          hover-class="icon-button--pressed"
-          @tap="$emit('edit')"
-        >
-          <AppIcon name="edit" />
-        </button>
-        <button
-          v-if="showDelete"
-          class="icon-button icon-button--plain icon-button--danger"
-          aria-label="删除演出"
-          hover-class="icon-button--pressed"
-          @tap="$emit('delete')"
-        >
-          <AppIcon name="trash" />
-        </button>
-        <button
-          v-if="showSearch"
-          class="icon-button icon-button--soft-accent"
-          aria-label="搜索演出"
-          hover-class="icon-button--soft-accent-pressed"
-          @tap="$emit('search')"
-        >
-          <AppIcon name="search" />
-        </button>
-        <button
-          v-if="showSave"
-          class="save-button"
-          :class="{ 'save-button--disabled': saveDisabled }"
-          :disabled="saveDisabled"
-          :aria-label="saveLabel"
-          hover-class="save-button--pressed"
-          @tap="$emit('save')"
-        >
-          {{ saving ? '保存中' : saveLabel }}
-        </button>
-        <button
-          v-if="showCalendar"
-          class="icon-button icon-button--plain"
-          aria-label="切换日历视图"
-          hover-class="icon-button--pressed"
-          @tap="$emit('calendar')"
-        >
-          <AppIcon name="calendar" />
-        </button>
-        <button
-          v-if="showAdd"
-          class="icon-button icon-button--accent"
-          aria-label="添加演出"
-          hover-class="icon-button--accent-pressed"
-          @tap="$emit('add')"
-        >
-          <AppIcon name="plus" />
-        </button>
+        <slot name="right">
+          <button
+            v-if="showEdit"
+            class="icon-button icon-button--plain"
+            aria-label="编辑演出"
+            hover-class="icon-button--pressed"
+            @tap="$emit('edit')"
+          >
+            <AppIcon name="edit" />
+          </button>
+          <button
+            v-if="showDelete"
+            class="icon-button icon-button--plain icon-button--danger"
+            aria-label="删除演出"
+            hover-class="icon-button--pressed"
+            @tap="$emit('delete')"
+          >
+            <AppIcon name="trash" />
+          </button>
+          <button
+            v-if="showSearch"
+            class="icon-button icon-button--soft-accent"
+            aria-label="搜索演出"
+            hover-class="icon-button--soft-accent-pressed"
+            @tap="$emit('search')"
+          >
+            <AppIcon name="search" />
+          </button>
+          <button
+            v-if="showSave"
+            class="save-button"
+            :class="{ 'save-button--disabled': saveDisabled }"
+            :disabled="saveDisabled"
+            :aria-label="saveLabel"
+            hover-class="save-button--pressed"
+            @tap="$emit('save')"
+          >
+            {{ saving ? '保存中' : saveLabel }}
+          </button>
+          <button
+            v-if="showCalendar"
+            class="icon-button icon-button--plain"
+            aria-label="切换日历视图"
+            hover-class="icon-button--pressed"
+            @tap="$emit('calendar')"
+          >
+            <AppIcon name="calendar" />
+          </button>
+          <button
+            v-if="showAdd"
+            class="icon-button icon-button--accent"
+            aria-label="添加演出"
+            hover-class="icon-button--accent-pressed"
+            @tap="$emit('add')"
+          >
+            <AppIcon name="plus" />
+          </button>
+        </slot>
       </view>
     </view>
   </view>
@@ -149,6 +151,8 @@ defineEmits<{
 
 <style scoped>
 .app-header {
+  position: relative;
+  z-index: 30;
   box-sizing: border-box;
   height: var(--app-header-height, 96rpx);
   padding-top: var(--app-status-bar-height, 0px);

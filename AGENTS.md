@@ -18,6 +18,9 @@
 ## 2. 固定项目边界
 
 - 本仓库只实现 Android 版 RecordLive，技术栈为 uni-app、Vue 3 和 TypeScript。
+- 最终构建、交付和运行目标固定为 Android App。除纯文档外，所有功能、页面、组件、资源、网络请求、数据访问和媒体处理都必须存在可用的 Android App 运行路径，不得交付只能在 H5 正常工作的实现。
+- H5 只用于界面开发、自动化和 smoke，不是产品发布目标。H5 专用代理、浏览器 API、DOM 能力或内存实现必须有对应的 Android App 实现；功能完成状态以 Android App 能够编译且其平台路径完整为前提。
+- 设计和实现时优先检查 uni-app App 端兼容性，不得依赖 `window`、浏览器 `localStorage`、仅 H5 可用的 CSS/DOM 行为或仅开发服务器存在的代理来完成核心功能。必须存在平台差异时，将差异收敛在 `src/platform/` 或明确的条件编译边界内。
 - iOS 工程只作为产品语义和交互行为参照，路径为 `/Users/zhangrui/Desktop/realzzz/repos/RecordLive/RecordLive/RecordLive`。
 - 禁止修改、格式化、生成、移动或删除 iOS 工程中的任何源码、资源、配置、测试和构建文件；禁止为 Android 适配而改造 iOS 数据结构或功能。
 - 查看 iOS 时只使用只读操作，例如 `rg`、`sed` 和 `git status --short`。不要在 iOS 工程中执行会产生缓存、依赖、构建产物或临时文件的命令。
@@ -86,8 +89,9 @@ platform implementations -> domain
 3. 在现有分层内完成最小闭环；相同触发效果应复用同一 action、use case 或 Repository 方法。
 4. 保持数据、交互和视觉职责分离，禁止为快速完成而让页面直接调用 SQLite、文件 API 或原生插件。
 5. 按变更风险执行验证，并检查没有引入 iOS、iCloud 或跨平台迁移入口。
-6. 只有架构、里程碑范围、状态或完成门发生变化时才同步更新 `docs/architecture.md`；普通样式修复不重复更新阶段文档。
-7. 交付时说明已实现内容、实际验证结果、未执行的真机项和仍存在的风险，不把构建通过等同于 Android 设备可上线。
+6. 对所有运行时代码和资源变更检查 Android App 代码路径；H5 中使用的代理、存储、媒体和交互方案必须确认 App 端存在对应实现，不能用 H5 结果替代 Android 兼容性判断。
+7. 只有架构、里程碑范围、状态或完成门发生变化时才同步更新 `docs/architecture.md`；普通样式修复不重复更新阶段文档。
+8. 交付时说明已实现内容、实际验证结果、未执行的真机项和仍存在的风险，不把 App 构建通过等同于 Android 设备可上线。
 
 ## 7. 验证职责
 
@@ -97,9 +101,11 @@ platform implementations -> domain
 |---|---|
 | Markdown 或纯文档 | `git diff --check`，并人工检查链接、职责重复和规则冲突 |
 | TypeScript、领域或 Repository | `npm run type-check`、`npm test`、`git diff --check` |
-| Vue 页面、组件或样式 | 上述检查，加 `npm run build:h5`、目标交互的 H5 浏览器验证和控制台检查 |
-| Android 平台适配或 App 资源 | 上述适用检查，加 `npm run build:app` |
+| Vue 页面、组件或样式 | 上述检查，加 `npm run build:h5`、`npm run build:app`、目标交互的 H5 浏览器验证和控制台检查 |
+| 任意运行时代码或 App 资源 | 上述适用检查，加 `npm run build:app`，并人工确认没有 H5-only 核心路径 |
 | SQLite、文件、Photo Picker、返回键等原生行为 | 先完成自动化和 App 构建；只有用户授权后再执行 Android 自定义基座或真机验收 |
+
+`npm run build:app` 通过只代表 Android App 资源编译通过，不代表真机运行已经验收。真机验收延期期间，交付必须明确列出仍待设备验证的原生、网络、存储和媒体行为。
 
 构建时已有且与本次改动无关的警告可以如实记录，但不得隐藏新错误。不要为了让检查通过而修改无关文件。
 

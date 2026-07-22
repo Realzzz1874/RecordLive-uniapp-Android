@@ -7,6 +7,8 @@ import {
   availableParseLinkFields,
   extractFirstHttpUrl,
   formatParsedDate,
+  parseLinkErrorText,
+  UNSUPPORTED_PARSE_LINK_MESSAGE,
   type ParseLinkField,
 } from '@/features/performances/parse-link'
 import { downloadParsePlatformImage, platformAssetUrl } from '@/features/performances/parse-platform/networking'
@@ -14,7 +16,7 @@ import {
   createParsePlatformRouter,
   SUPPORTED_PARSE_PLATFORM_NAMES,
 } from '@/features/performances/parse-platform/registry'
-import { ParsePlatformError, type ParsePlatformResult } from '@/features/performances/parse-platform/types'
+import type { ParsePlatformResult } from '@/features/performances/parse-platform/types'
 import type { SelectedImage } from '@/platform/media/types'
 
 type ParseStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -92,7 +94,7 @@ async function startParsing(): Promise<void> {
   const url = extractFirstHttpUrl(input.value)
   if (!url) {
     status.value = 'error'
-    errorMessage.value = '链接格式错误'
+    errorMessage.value = UNSUPPORTED_PARSE_LINK_MESSAGE
     parsedResult.value = null
     return
   }
@@ -111,7 +113,7 @@ async function startParsing(): Promise<void> {
   } catch (error) {
     if (version !== requestVersion) return
     status.value = 'error'
-    errorMessage.value = parseErrorText(error)
+    errorMessage.value = parseLinkErrorText(error)
   }
 }
 
@@ -152,16 +154,6 @@ function confirmSelection(): void {
     poster: selectedFields.value.includes('poster') ? downloadedPoster.value : null,
   })
   closeSelection()
-}
-
-function parseErrorText(error: unknown): string {
-  if (error instanceof ParsePlatformError) {
-    if (error.code === 'unsupported-url' || error.code === 'invalid-url') {
-      return '链接格式错误或暂不支持'
-    }
-    return error.message
-  }
-  return '解析失败，请稍后重试'
 }
 
 function displayPlay(value: string): string {

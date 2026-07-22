@@ -10,7 +10,7 @@ export class ParsePlatformRouter {
 
   parserFor(url: ParsePlatformUrl): ParsePlatformParser {
     const parser = this.parsers.find((item) => item.canParse(url))
-    if (!parser) throw new ParsePlatformError('unsupported-url', '暂不支持这个链接')
+    if (!parser) throw new ParsePlatformError('unsupported-url', '暂不支持该链接')
     return parser
   }
 

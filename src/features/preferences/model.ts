@@ -2,6 +2,7 @@ import type { PerformanceLifecycle } from '@/domain/performance'
 
 export type PerformanceDisplayMode = 'card' | 'simple' | 'timeline' | 'artist' | 'play' | 'poster' | 'poster-text'
 export type ArtistSortMode = 'times' | 'date'
+export type PerformanceTimeSortDirection = 'ascending' | 'descending'
 
 export const PERFORMANCE_DISPLAY_MODE_LABELS: Record<PerformanceDisplayMode, string> = {
   card: '演出卡片1',
@@ -22,6 +23,7 @@ export interface PerformanceFilter {
 
 export interface PerformanceBrowsePreferences {
   displayMode: PerformanceDisplayMode
+  sortDirection: PerformanceTimeSortDirection
   artistSortMode: ArtistSortMode
   posterColumnCount: number
   posterTextColumnCount: number
@@ -38,6 +40,7 @@ export const ALL_PERFORMANCE_LIFECYCLES: readonly PerformanceLifecycle[] = [
 
 export const DEFAULT_BROWSE_PREFERENCES: PerformanceBrowsePreferences = {
   displayMode: 'card',
+  sortDirection: 'descending',
   artistSortMode: 'times',
   posterColumnCount: 4,
   posterTextColumnCount: 2,
@@ -53,6 +56,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
   if (!isRecord(value)) return cloneBrowsePreferences(DEFAULT_BROWSE_PREFERENCES)
   const rawFilter = isRecord(value.filter) ? value.filter : {}
   const displayMode = isPerformanceDisplayMode(value.displayMode) ? value.displayMode : 'card'
+  const sortDirection = value.sortDirection === 'ascending' ? 'ascending' : 'descending'
   const artistSortMode = value.artistSortMode === 'date' ? 'date' : 'times'
   const posterColumnCount = normalizePosterColumnCount(value.posterColumnCount)
   const posterTextColumnCount = normalizePosterTextColumnCount(value.posterTextColumnCount)
@@ -63,6 +67,7 @@ export function normalizeBrowsePreferences(value: unknown): PerformanceBrowsePre
 
   return {
     displayMode,
+    sortDirection,
     artistSortMode,
     posterColumnCount,
     posterTextColumnCount,
@@ -82,6 +87,7 @@ export function cloneBrowsePreferences(
 ): PerformanceBrowsePreferences {
   return {
     displayMode: value.displayMode,
+    sortDirection: value.sortDirection,
     artistSortMode: value.artistSortMode,
     posterColumnCount: value.posterColumnCount,
     posterTextColumnCount: value.posterTextColumnCount,

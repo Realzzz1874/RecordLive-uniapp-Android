@@ -8,6 +8,7 @@ import {
   type ArtistSortMode,
   type PerformanceDisplayMode,
   type PerformanceFilter,
+  type PerformanceTimeSortDirection,
 } from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
 
@@ -19,6 +20,7 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
   let initialization: Promise<void> | null = null
 
   const displayMode = computed(() => preferences.value.displayMode)
+  const sortDirection = computed(() => preferences.value.sortDirection)
   const artistSortMode = computed(() => preferences.value.artistSortMode)
   const posterColumnCount = computed(() => preferences.value.posterColumnCount)
   const posterTextColumnCount = computed(() => preferences.value.posterTextColumnCount)
@@ -56,6 +58,14 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
       ...preferences.value,
       displayMode: value,
     }
+    void persist()
+  }
+
+  function setSortDirection(value: PerformanceTimeSortDirection): void {
+    preferences.value = normalizeBrowsePreferences({
+      ...preferences.value,
+      sortDirection: value,
+    })
     void persist()
   }
 
@@ -97,6 +107,7 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
 
   return {
     displayMode,
+    sortDirection,
     artistSortMode,
     posterColumnCount,
     posterTextColumnCount,
@@ -105,6 +116,7 @@ export const useBrowsePreferencesStore = defineStore('browse-preferences', () =>
     initialize,
     resetFilter,
     setDisplayMode,
+    setSortDirection,
     setArtistSortMode,
     setPosterColumnCount,
     setPosterTextColumnCount,

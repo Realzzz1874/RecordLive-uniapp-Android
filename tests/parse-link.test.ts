@@ -5,6 +5,7 @@ import {
   applyParseLinkResult,
   availableParseLinkFields,
   extractFirstHttpUrl,
+  parseLinkErrorText,
 } from '@/features/performances/parse-link'
 import {
   DamaiParser,
@@ -669,6 +670,19 @@ describe('parsed-link field application', () => {
       '先看 https://www.showstart.com/event/304705, 备用 https://www.showstart.com/event/299543',
     )).toEqual(url('https://www.showstart.com/event/304705'))
     expect(extractFirstHttpUrl('没有链接的分享文案')).toBeNull()
+  })
+
+  it('exposes only the two concise user-facing parse errors', () => {
+    expect(parseLinkErrorText(
+      new ParsePlatformError('unsupported-url', '包含平台和路径的详细错误'),
+    )).toBe('暂不支持该链接')
+    expect(parseLinkErrorText(
+      new ParsePlatformError('invalid-url', '链接缺少演出 ID'),
+    )).toBe('暂不支持该链接')
+    expect(parseLinkErrorText(
+      new ParsePlatformError('request-failed', '某平台接口请求失败（403）'),
+    )).toBe('解析失败')
+    expect(parseLinkErrorText(new Error('网络错误详情'))).toBe('解析失败')
   })
 
   it('extracts a link from shared text and exposes only fields that have values', () => {

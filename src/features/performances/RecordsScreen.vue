@@ -17,6 +17,7 @@ import {
   type ArtistSortMode,
   type PerformanceDisplayMode,
   type PerformanceFilter,
+  type PerformanceTimeSortDirection,
 } from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
 import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
@@ -34,7 +35,7 @@ const emit = defineEmits<{
 }>()
 
 const browseStore = useBrowsePreferencesStore()
-const { displayMode, artistSortMode, posterColumnCount, posterTextColumnCount, filter } = storeToRefs(browseStore)
+const { displayMode, sortDirection, artistSortMode, posterColumnCount, posterTextColumnCount, filter } = storeToRefs(browseStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const hasMore = ref(false)
@@ -88,7 +89,7 @@ async function load(reset: boolean): Promise<void> {
         : filter.value.lifecycles,
       referenceTimeMs: Date.now(),
       ...range,
-      sortDirection: 'descending',
+      sortDirection: sortDirection.value,
       offset: pageOffset,
       limit,
     })
@@ -189,12 +190,14 @@ function clearSearch(): void {
 function applyFilter(
   value: PerformanceFilter,
   mode: PerformanceDisplayMode,
+  timeSortDirection: PerformanceTimeSortDirection,
   columns: number,
   posterTextColumns: number,
   artistSort: ArtistSortMode,
 ): void {
   browseStore.setFilter(value)
   browseStore.setDisplayMode(mode)
+  browseStore.setSortDirection(timeSortDirection)
   browseStore.setPosterColumnCount(columns)
   browseStore.setPosterTextColumnCount(posterTextColumns)
   browseStore.setArtistSortMode(artistSort)
@@ -292,6 +295,7 @@ function clearFilters(): void {
       :visible="filterVisible"
       :filter="filter"
       :display-mode="displayMode"
+      :sort-direction="sortDirection"
       :artist-sort-mode="artistSortMode"
       :poster-column-count="posterColumnCount"
       :poster-text-column-count="posterTextColumnCount"

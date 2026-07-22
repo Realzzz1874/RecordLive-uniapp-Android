@@ -12,12 +12,14 @@ import {
   type ArtistSortMode,
   type PerformanceDisplayMode,
   type PerformanceFilter,
+  type PerformanceTimeSortDirection,
 } from '@/features/preferences/model'
 
 const props = withDefaults(defineProps<{
   visible: boolean
   filter: PerformanceFilter
   displayMode: PerformanceDisplayMode
+  sortDirection: PerformanceTimeSortDirection
   artistSortMode: ArtistSortMode
   posterColumnCount: number
   posterTextColumnCount: number
@@ -25,8 +27,10 @@ const props = withDefaults(defineProps<{
   tags: PerformanceTag[]
   years: number[]
   showLifecycle?: boolean
+  showTimeSort?: boolean
 }>(), {
   showLifecycle: true,
+  showTimeSort: true,
 })
 
 const emit = defineEmits<{
@@ -34,6 +38,7 @@ const emit = defineEmits<{
   apply: [
     filter: PerformanceFilter,
     displayMode: PerformanceDisplayMode,
+    sortDirection: PerformanceTimeSortDirection,
     posterColumnCount: number,
     posterTextColumnCount: number,
     artistSortMode: ArtistSortMode,
@@ -42,6 +47,7 @@ const emit = defineEmits<{
 
 const draft = reactive<PerformanceFilter>(cloneFilter(props.filter))
 const displayModeDraft = ref<PerformanceDisplayMode>(props.displayMode)
+const sortDirectionDraft = ref<PerformanceTimeSortDirection>(props.sortDirection)
 const artistSortModeDraft = ref<ArtistSortMode>(props.artistSortMode)
 const posterColumnCountDraft = ref(props.posterColumnCount)
 const posterTextColumnCountDraft = ref(props.posterTextColumnCount)
@@ -58,6 +64,7 @@ watch(
     props.visible,
     props.filter,
     props.displayMode,
+    props.sortDirection,
     props.posterColumnCount,
     props.posterTextColumnCount,
     props.artistSortMode,
@@ -66,6 +73,7 @@ watch(
     if (visible) {
       Object.assign(draft, cloneFilter(props.filter))
       displayModeDraft.value = props.displayMode
+      sortDirectionDraft.value = props.sortDirection
       artistSortModeDraft.value = props.artistSortMode
       posterColumnCountDraft.value = props.posterColumnCount
       posterTextColumnCountDraft.value = props.posterTextColumnCount
@@ -92,6 +100,7 @@ function reset(): void {
   if (!props.showLifecycle) resetFilter.lifecycles = [...props.filter.lifecycles]
   Object.assign(draft, resetFilter)
   displayModeDraft.value = DEFAULT_BROWSE_PREFERENCES.displayMode
+  sortDirectionDraft.value = DEFAULT_BROWSE_PREFERENCES.sortDirection
   artistSortModeDraft.value = DEFAULT_BROWSE_PREFERENCES.artistSortMode
   posterColumnCountDraft.value = DEFAULT_BROWSE_PREFERENCES.posterColumnCount
   posterTextColumnCountDraft.value = DEFAULT_BROWSE_PREFERENCES.posterTextColumnCount
@@ -102,6 +111,7 @@ function apply(): void {
     'apply',
     cloneFilter(draft),
     displayModeDraft.value,
+    sortDirectionDraft.value,
     posterColumnCountDraft.value,
     posterTextColumnCountDraft.value,
     artistSortModeDraft.value,
@@ -245,6 +255,24 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
           </view>
         </view>
 
+        <view v-if="showTimeSort" class="filter-section">
+          <text class="filter-section__title">时间顺序</text>
+          <view class="sort-direction-options" aria-label="时间顺序">
+            <button
+              class="sort-direction-option"
+              :class="{ 'sort-direction-option--selected': sortDirectionDraft === 'descending' }"
+              aria-label="时间倒序"
+              @tap="sortDirectionDraft = 'descending'"
+            >倒序</button>
+            <button
+              class="sort-direction-option"
+              :class="{ 'sort-direction-option--selected': sortDirectionDraft === 'ascending' }"
+              aria-label="时间正序"
+              @tap="sortDirectionDraft = 'ascending'"
+            >正序</button>
+          </view>
+        </view>
+
         <view v-if="showLifecycle" class="filter-section">
           <text class="filter-section__title">状态</text>
           <view class="chip-list">
@@ -311,7 +339,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 <style scoped>
 .filter-layer { position: fixed; z-index: 30; inset: 0; display: flex; align-items: flex-end; }
 .filter-scrim { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: rgba(15,10,8,.5); }
-.filter-scrim::after, .close-button::after, .filter-chip::after, .display-option::after, .column-option::after, .artist-sort-option::after, .reset-button::after, .apply-button::after { border: 0; }
+.filter-scrim::after, .close-button::after, .filter-chip::after, .display-option::after, .column-option::after, .artist-sort-option::after, .sort-direction-option::after, .reset-button::after, .apply-button::after { border: 0; }
 .filter-sheet { position: relative; z-index: 1; box-sizing: border-box; width: 100%; max-height: 82vh; overflow: hidden; border-radius: 30rpx 30rpx 0 0; background: var(--color-background); box-shadow: 0 -18rpx 60rpx rgba(0,0,0,.2); }
 .filter-header { display: flex; min-height: 122rpx; padding: 28rpx 30rpx 22rpx 36rpx; align-items: center; justify-content: space-between; border-bottom: var(--app-border-width) solid var(--color-border); }
 .filter-header__title { display: block; color: var(--color-text); font-size: 34rpx; font-weight: 720; }
@@ -335,6 +363,9 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
 .artist-sort-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12rpx; }
 .artist-sort-option { height: 62rpx; margin: 0; padding: 0; border: var(--app-border-width) solid var(--color-border); border-radius: 14rpx; background: var(--color-surface); color: var(--color-muted); font-size: 23rpx; line-height: 60rpx; }
 .artist-sort-option--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); font-weight: 650; }
+.sort-direction-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12rpx; }
+.sort-direction-option { height: 66rpx; margin: 0; padding: 0; border: var(--app-border-width) solid var(--color-border); border-radius: 16rpx; background: var(--color-surface); color: var(--color-muted); font-size: 24rpx; line-height: 64rpx; }
+.sort-direction-option--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); font-weight: 650; }
 .chip-list { display: flex; flex-wrap: wrap; gap: 13rpx; }
 .filter-chip { min-height: 62rpx; margin: 0; padding: 0 22rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 31rpx; background: var(--color-surface); color: var(--color-muted); font-size: 24rpx; line-height: 60rpx; }
 .filter-chip--selected { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); font-weight: 620; }

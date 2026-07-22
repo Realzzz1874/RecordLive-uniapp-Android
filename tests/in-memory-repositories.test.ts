@@ -241,6 +241,7 @@ describe('performance browse preferences', () => {
       },
     })).toEqual({
       displayMode: 'poster',
+      sortDirection: 'descending',
       artistSortMode: 'times',
       posterColumnCount: 4,
       posterTextColumnCount: 2,
@@ -277,6 +278,8 @@ describe('performance browse preferences', () => {
     expect(normalizeBrowsePreferences({ displayMode: 'artist' }).displayMode).toBe('artist')
     expect(normalizeBrowsePreferences({ artistSortMode: 'date' }).artistSortMode).toBe('date')
     expect(normalizeBrowsePreferences({ artistSortMode: 'unknown' }).artistSortMode).toBe('times')
+    expect(normalizeBrowsePreferences({ sortDirection: 'ascending' }).sortDirection).toBe('ascending')
+    expect(normalizeBrowsePreferences({ sortDirection: 'unknown' }).sortDirection).toBe('descending')
     expect(normalizeBrowsePreferences({ displayMode: 'unknown' }).displayMode).toBe('card')
   })
 

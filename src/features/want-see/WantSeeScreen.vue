@@ -15,6 +15,7 @@ import {
   type ArtistSortMode,
   type PerformanceDisplayMode,
   type PerformanceFilter,
+  type PerformanceTimeSortDirection,
 } from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
 import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
@@ -158,6 +159,7 @@ function closeSearch(): void {
 function applyBrowseOptions(
   value: PerformanceFilter,
   mode: PerformanceDisplayMode,
+  _timeSortDirection: PerformanceTimeSortDirection,
   columns: number,
   posterTextColumns: number,
   artistSort: ArtistSortMode,
@@ -247,6 +249,7 @@ function applyBrowseOptions(
       :visible="filterVisible"
       :filter="filter"
       :display-mode="displayMode"
+      sort-direction="ascending"
       :artist-sort-mode="artistSortMode"
       :poster-column-count="posterColumnCount"
       :poster-text-column-count="posterTextColumnCount"
@@ -254,6 +257,7 @@ function applyBrowseOptions(
       :tags="tags"
       :years="years"
       :show-lifecycle="false"
+      :show-time-sort="false"
       @close="filterVisible = false"
       @apply="applyBrowseOptions"
     />

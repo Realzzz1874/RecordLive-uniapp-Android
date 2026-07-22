@@ -1,6 +1,6 @@
 import type { Performance } from '@/domain/performance'
 import type { PerformanceDraft } from '@/features/performances/repository'
-import type { ParsePlatformResult } from './parse-platform/types'
+import { ParsePlatformError, type ParsePlatformResult } from './parse-platform/types'
 import { parseHttpUrl, type ParsePlatformUrl } from './parse-platform/url'
 
 export const PARSE_LINK_FIELDS = [
@@ -15,10 +15,21 @@ export const PARSE_LINK_FIELDS = [
 
 export type ParseLinkField = typeof PARSE_LINK_FIELDS[number]
 
+export const UNSUPPORTED_PARSE_LINK_MESSAGE = '暂不支持该链接'
+export const PARSE_LINK_FAILED_MESSAGE = '解析失败'
+
 export function extractFirstHttpUrl(value: string): ParsePlatformUrl | null {
   const match = value.match(/https?:\/\/[^\s<>"'`，。！？；：、（）【】《》「」『』()\[\]{}]+/i)
   if (!match) return null
   return parseHttpUrl(trimTrailingSharePunctuation(match[0]))
+}
+
+export function parseLinkErrorText(error: unknown): string {
+  if (
+    error instanceof ParsePlatformError
+    && (error.code === 'unsupported-url' || error.code === 'invalid-url')
+  ) return UNSUPPORTED_PARSE_LINK_MESSAGE
+  return PARSE_LINK_FAILED_MESSAGE
 }
 
 export function availableParseLinkFields(result: ParsePlatformResult): ParseLinkField[] {

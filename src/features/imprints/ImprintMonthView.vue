@@ -366,7 +366,7 @@ function startOfLocalDay(timestamp: number): number {
 .month-toolbar__summary { min-width: 0; gap: 12rpx; }
 .month-picker { gap: 6rpx; color: var(--color-accent); font-size: 27rpx; font-weight: 720; font-variant-numeric: tabular-nums; }
 .month-picker__chevron { width: 22rpx; height: 22rpx; transform: rotate(90deg); }
-.month-count { flex: none; color: var(--color-accent); font-size: 21rpx; }
+.month-count { flex: none; color: var(--color-accent); font-size: 27rpx; }
 .month-toolbar__actions { flex: none; gap: 2rpx; }
 .month-action { display: flex; width: 54rpx; height: 54rpx; margin: 0; padding: 14rpx; align-items: center; justify-content: center; border: 0; border-radius: 13rpx; background: transparent; color: var(--color-accent); }
 .month-action::after, .calendar-cell::after, .memory-row::after { border: 0; }

@@ -116,7 +116,7 @@ const quickAddActions = computed(() => [
     ? [{ label: '韩国音乐剧排期', kind: 'korean-musical' as const }]
     : []),
 ])
-const quickAddAvailable = computed(() => !props.performanceId && quickAddActions.value.length > 0)
+const quickAddAvailable = computed(() => quickAddActions.value.length > 0)
 const quickAddLabel = computed(() => {
   const labels = [
     ...(copyExisting.value ? ['复制'] : []),

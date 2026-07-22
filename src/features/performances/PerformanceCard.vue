@@ -180,7 +180,7 @@ function pad(value: number): string {
 .performance-card__poster--empty { display: flex; align-items: center; justify-content: center; color: var(--color-accent); }
 .performance-card__poster--empty > :first-child { width: 48rpx; height: 48rpx; }
 .performance-card__content { display: flex; min-width: 0; flex: 1; flex-direction: column; align-items: flex-start; gap: 11rpx; }
-.performance-card__title { display: -webkit-box; width: 100%; overflow: hidden; color: var(--color-text); font-size: 29rpx; font-weight: 650; line-height: 1.35; text-overflow: ellipsis; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.performance-card__title { display: -webkit-box; width: 100%; overflow: hidden; color: var(--color-text); font-size: 29rpx; font-weight: 500; line-height: 1.35; text-overflow: ellipsis; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .performance-card__meta-row { display: flex; width: 100%; min-width: 0; align-items: center; gap: 9rpx; }
 .performance-card__meta-icon { width: 27rpx; height: 27rpx; flex: none; color: var(--color-accent); }
 .performance-card__meta { min-width: 0; overflow: hidden; color: var(--color-text); font-size: 22rpx; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }

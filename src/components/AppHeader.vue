@@ -200,9 +200,9 @@ defineEmits<{
 
 .app-header__separator,
 .app-header__count {
-  color: var(--color-muted);
-  font-size: 25rpx;
-  font-weight: 400;
+  color: var(--color-text);
+  font-size: 32rpx;
+  font-weight: 650;
 }
 
 .app-header__separator {

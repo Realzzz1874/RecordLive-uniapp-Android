@@ -301,9 +301,14 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
           </view>
         </view>
 
-        <view v-if="categories.length" class="filter-section">
+        <view class="filter-section">
           <text class="filter-section__title">分类</text>
           <view class="chip-list">
+            <button
+              class="filter-chip"
+              :class="{ 'filter-chip--selected': !draft.categoryIds.length }"
+              @tap="draft.categoryIds = []"
+            >全部分类</button>
             <button
               v-for="category in categories"
               :key="category.id"
@@ -314,9 +319,14 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
           </view>
         </view>
 
-        <view v-if="tags.length" class="filter-section">
+        <view class="filter-section">
           <text class="filter-section__title">标签</text>
           <view class="chip-list">
+            <button
+              class="filter-chip"
+              :class="{ 'filter-chip--selected': !draft.tagIds.length }"
+              @tap="draft.tagIds = []"
+            >全部标签</button>
             <button
               v-for="tag in tags"
               :key="tag.id"

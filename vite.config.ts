@@ -47,6 +47,26 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/showstart-image-proxy/, ''),
       },
+      '/shcstheatre-proxy': {
+        target: 'https://m.shcstheatre.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/shcstheatre-proxy/, ''),
+      },
+      '/shcstheatre-image-proxy': {
+        target: 'https://pic.shcstheatre.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/shcstheatre-image-proxy/, ''),
+      },
+      '/poly-proxy': {
+        target: 'https://weixin.polyt.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/poly-proxy/, ''),
+      },
+      '/poly-image-proxy': {
+        target: 'https://cdn.polyt.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/poly-image-proxy/, ''),
+      },
     },
   },
 })

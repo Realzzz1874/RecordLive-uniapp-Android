@@ -22,7 +22,18 @@ import {
   parseShowstartHtml,
 } from '@/features/performances/parse-platform/showstart'
 import {
+  ShcstheatreParser,
+  normalizeShcstheatreUrl,
+  parseShcstheatreHtml,
+} from '@/features/performances/parse-platform/shcstheatre'
+import {
+  normalizePolyUrl,
+  parsePolyResponse,
+  PolyParser,
+} from '@/features/performances/parse-platform/poly'
+import {
   defaultParsePlatformHttpClient,
+  defaultParsePlatformJsonClient,
   platformAssetUrl,
 } from '@/features/performances/parse-platform/networking'
 import {
@@ -85,6 +96,32 @@ const showstartFixture = `
   </body></html>
 `
 
+const shcstheatreFixture = `
+  <html><body>
+    <script>const selector = "#SCS_WEB_BRIEFNAME";</script>
+    <script>
+      const response = {"data":{"tblprogram":[{
+        "SCS_WEB_BRIEFNAME": "音乐剧《粉丝来信》中文版",
+        "VC_VENUE_IDNAME": "主剧场",
+        "I_GROUND_ID_NAME": "上海文化广场",
+        "SCS_MOBILE_YMXQ_PIC": "/upload/program/cover.jpg;/upload/program/second.jpg"
+      }]}};
+    </script>
+  </body></html>
+`
+
+const polyFixture = {
+  code: '200',
+  success: true,
+  data: {
+    productName: '圣彼得堡国立模范芭蕾舞团舞剧《天鹅湖》',
+    img: 'https://cdn.polyt.cn/jpg/2026-02-09/poster.jpg',
+    cityName: '长沙市',
+    showPlaceName: '长沙梅溪湖国际文化艺术中心大剧院',
+    showStartToEndTime: '2026.04.01 星期三',
+  },
+}
+
 describe('parse platform routing', () => {
   it('accepts only exact Damai hosts and paths and normalizes mobile links', () => {
     const parser = new DamaiParser({ getText: vi.fn() })
@@ -138,9 +175,10 @@ describe('parse platform routing', () => {
     }
   })
 
-  it('registers Maoyan and Showstart without adding platform branches to the router', () => {
+  it('registers every parser without adding platform branches to the router', () => {
     const router = createParsePlatformRouter()
-    expect(SUPPORTED_PARSE_PLATFORM_NAMES).toEqual(['大麦', '猫眼', '秀动'])
+    expect(SUPPORTED_PARSE_PLATFORM_NAMES)
+      .toEqual(['大麦', '猫眼', '秀动', '上海文化广场', '保利票务'])
     expect(router.parserFor(url('https://www.gewara.com/detail/387805')).platformName)
       .toBe('猫眼')
     expect(router.parserFor(url('https://show.maoyan.com/qqw#/detail/387805')).platformName)
@@ -150,6 +188,12 @@ describe('parse platform routing', () => {
     expect(router.parserFor(url(
       'https://wap.showstart.com/pages/activity/detail/detail?activityId=299543',
     )).platformName).toBe('秀动')
+    expect(router.parserFor(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892&ARTICLE_ID=41892',
+    )).platformName).toBe('上海文化广场')
+    expect(router.parserFor(url(
+      'https://weixin.polyt.cn/thh5/#/projectdetail/9104700/null?theaterId=760',
+    )).platformName).toBe('保利票务')
   })
 })
 
@@ -179,6 +223,9 @@ describe('parse platform networking', () => {
       await expect(defaultParsePlatformHttpClient.getText(
         url('https://www.showstart.com/event/299543'),
       )).resolves.toBe(fixture)
+      await expect(defaultParsePlatformHttpClient.getText(url(
+        'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892',
+      ))).resolves.toBe(fixture)
 
       const damaiOptions = request.mock.calls[0]?.[0]
       expect(damaiOptions?.url).toBe('https://detail.damai.cn/item.htm?id=1061626307208')
@@ -186,6 +233,8 @@ describe('parse platform networking', () => {
       expect(damaiOptions?.header['User-Agent']).not.toContain('Mobile')
       expect(request.mock.calls[1]?.[0].url).toBe('https://www.gewara.com/detail/387805')
       expect(request.mock.calls[2]?.[0].url).toBe('https://www.showstart.com/event/299543')
+      expect(request.mock.calls[3]?.[0].url)
+        .toBe('https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892')
     } finally {
       vi.unstubAllGlobals()
     }
@@ -215,9 +264,61 @@ describe('parse platform networking', () => {
       expect(request.mock.calls[1]?.[0].url).toBe('/showstart-proxy/event/299543')
       expect(platformAssetUrl('https://s2.showstart.com/img/poster.jpg?imageMogr2/thumbnail/640x'))
         .toBe('/showstart-image-proxy/img/poster.jpg?imageMogr2/thumbnail/640x')
+
+      await defaultParsePlatformHttpClient.getText(url(
+        'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892',
+      ))
+      expect(request.mock.calls[2]?.[0].url)
+        .toBe('/shcstheatre-proxy/Program/ProgramDetailsWeChat.aspx?id=41892')
+      expect(platformAssetUrl('https://pic.shcstheatre.com/upload/program/cover.jpg'))
+        .toBe('/shcstheatre-image-proxy/upload/program/cover.jpg')
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+
+  it('uses the official Poly API directly on App and only proxies H5 development', async () => {
+    interface RequestOptions {
+      url: string
+      header: Record<string, string>
+      success: (result: { statusCode: number; data: unknown }) => void
+    }
+
+    const request = vi.fn((options: RequestOptions) => {
+      options.success({ statusCode: 200, data: polyFixture })
+    })
+    const apiUrl = url(
+      'https://weixin.polyt.cn/platform-backend/good/project/detail/9104700?source=true',
+    )
+
+    vi.stubGlobal('uni', {
+      getSystemInfoSync: () => ({ uniPlatform: 'app' }),
+      request,
+    })
+    await expect(defaultParsePlatformJsonClient.getJson(apiUrl, {
+      Channel: 'plat_h5',
+      Theater: '760',
+    })).resolves.toEqual(polyFixture)
+    expect(request.mock.calls[0]?.[0]).toMatchObject({
+      url: apiUrl.href,
+      header: {
+        Accept: 'application/json',
+        Channel: 'plat_h5',
+        Theater: '760',
+      },
+    })
+
+    vi.stubGlobal('uni', {
+      getSystemInfoSync: () => ({ uniPlatform: 'web' }),
+      request,
+    })
+    await defaultParsePlatformJsonClient.getJson(apiUrl, { Channel: 'plat_h5' })
+    expect(request.mock.calls[1]?.[0].url)
+      .toBe('/poly-proxy/platform-backend/good/project/detail/9104700?source=true')
+    expect(platformAssetUrl('https://cdn.polyt.cn/jpg/poster.jpg'))
+      .toBe('/poly-image-proxy/jpg/poster.jpg')
+
+    vi.unstubAllGlobals()
   })
 })
 
@@ -365,6 +466,171 @@ describe('Showstart parser', () => {
   })
 })
 
+describe('Shanghai Culture Square parser', () => {
+  it('accepts only the exact iOS-supported host and path with a numeric program ID', () => {
+    const parser = new ShcstheatreParser({ getText: vi.fn() })
+    expect(parser.canParse(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892&headtype=YanChu&ARTICLE_ID=41892',
+    ))).toBe(true)
+    expect(parser.canParse(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?ARTICLE_ID=41892',
+    ))).toBe(true)
+    expect(parser.canParse(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892',
+    ))).toBe(true)
+    expect(parser.canParse(url(
+      'http://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://www.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://m.shcstheatre.com.evil.test/Program/ProgramDetailsWeChat.aspx?id=41892',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://m.shcstheatre.com/Program/ProgramDetails.aspx?id=41892',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=bad',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892&ARTICLE_ID=41919',
+    ))).toBe(false)
+  })
+
+  it('normalizes query variants before requesting the mobile detail page', async () => {
+    const source = url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?ARTICLE_ID=41892&from=share',
+    )
+    expect(normalizeShcstheatreUrl(source).href).toBe(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892&headtype=YanChu&ARTICLE_ID=41892',
+    )
+
+    const getText = vi.fn().mockResolvedValue(shcstheatreFixture)
+    const parsed = await new ShcstheatreParser({ getText }).parse(source)
+    expect(getText).toHaveBeenCalledWith(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892&headtype=YanChu&ARTICLE_ID=41892',
+    ))
+    expect(parsed).toEqual({
+      platformName: '上海文化广场',
+      name: '音乐剧《粉丝来信》中文版',
+      play: '粉丝来信',
+      startedAtMs: null,
+      city: '上海',
+      venue: '上海文化广场·主剧场',
+      artistNames: [],
+      coverUrl: 'https://pic.shcstheatre.com/upload/program/cover.jpg',
+    })
+  })
+
+  it('keeps unavailable fields empty and rejects missing or malformed program data', () => {
+    const groundOnly = shcstheatreFixture.replace(
+      '"VC_VENUE_IDNAME": "主剧场",',
+      '"VC_VENUE_IDNAME": "",',
+    )
+    expect(parseShcstheatreHtml(groundOnly).venue).toBe('上海文化广场')
+    expect(() => parseShcstheatreHtml('<html></html>')).toThrowError(ParsePlatformError)
+    expect(() => parseShcstheatreHtml(
+      '<script>const data = {"SCS_WEB_BRIEFNAME": "bad\\q"};</script>',
+    )).toThrowError(ParsePlatformError)
+  })
+
+  it('extracts the link from complete Shanghai Culture Square share text', () => {
+    expect(extractFirstHttpUrl(
+      '【上海文化广场】https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892&headtype=YanChu&ARTICLE_ID=41892【杂技剧《战上海》】点击查看',
+    )).toEqual(url(
+      'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892&headtype=YanChu&ARTICLE_ID=41892',
+    ))
+  })
+})
+
+describe('Poly parser', () => {
+  it('accepts the four iOS-supported URL variants and rejects nearby invalid links', () => {
+    const parser = new PolyParser({ getJson: vi.fn() })
+    expect(parser.canParse(url(
+      'https://weixin.polyt.cn/#/projectdetail/9104700/null?theaterId=760',
+    ))).toBe(true)
+    expect(parser.canParse(url(
+      'https://m.polyt.cn/#/projectdetail/9104700/null?theaterId=760',
+    ))).toBe(true)
+    expect(parser.canParse(url(
+      'https://weixin.polyt.cn/thh5/#/projectdetail/9104700/null?theaterId=760',
+    ))).toBe(true)
+    expect(parser.canParse(url(
+      'https://www.polyt.cn/#/detail?productId=9104700',
+    ))).toBe(true)
+    expect(parser.canParse(url(
+      'http://weixin.polyt.cn/#/projectdetail/9104700/null?theaterId=760',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://weixin.polyt.cn.evil.test/#/projectdetail/9104700/null?theaterId=760',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://weixin.polyt.cn/other/#/projectdetail/9104700/null?theaterId=760',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://weixin.polyt.cn/#/projectdetail/not-a-number/null?theaterId=760',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://weixin.polyt.cn/#/projectdetail/9104700/null?theaterId=bad',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://www.polyt.cn/#/detail?productId=bad',
+    ))).toBe(false)
+    expect(parser.canParse(url(
+      'https://www.polyt.cn/#/details?productId=9104700',
+    ))).toBe(false)
+  })
+
+  it('normalizes share links to the official JSON API and maps iOS-equivalent fields', async () => {
+    const source = url(
+      'https://weixin.polyt.cn/thh5/#/projectdetail/9104700/null?theaterId=760',
+    )
+    expect(normalizePolyUrl(source).href).toBe(
+      'https://weixin.polyt.cn/platform-backend/good/project/detail/9104700?source=true',
+    )
+
+    const getJson = vi.fn().mockResolvedValue(polyFixture)
+    const parsed = await new PolyParser({ getJson }).parse(source)
+    expect(getJson).toHaveBeenCalledWith(normalizePolyUrl(source), {
+      Channel: 'plat_h5',
+      Theater: '760',
+    })
+    expect(parsed).toEqual({
+      platformName: '保利票务',
+      name: '圣彼得堡国立模范芭蕾舞团舞剧《天鹅湖》',
+      play: '天鹅湖',
+      startedAtMs: new Date(2026, 3, 1, 0, 0).getTime(),
+      city: '长沙',
+      venue: '长沙梅溪湖国际文化艺术中心大剧院',
+      artistNames: [],
+      coverUrl: 'https://cdn.polyt.cn/jpg/2026-02-09/poster.jpg',
+    })
+  })
+
+  it('supports desktop links without a theater ID and rejects malformed API data', async () => {
+    const source = url('https://www.polyt.cn/#/detail?productId=9104700')
+    const getJson = vi.fn().mockResolvedValue(JSON.stringify(polyFixture))
+    await new PolyParser({ getJson }).parse(source)
+    expect(getJson).toHaveBeenCalledWith(normalizePolyUrl(source), { Channel: 'plat_h5' })
+
+    expect(parsePolyResponse({ success: true, data: { productName: '无日期演出' } }).startedAtMs)
+      .toBeNull()
+    expect(() => parsePolyResponse({ success: false, data: null }))
+      .toThrowError(ParsePlatformError)
+    expect(() => parsePolyResponse('{bad json'))
+      .toThrowError(ParsePlatformError)
+  })
+
+  it('extracts a Poly link from complete share text before routing', () => {
+    expect(extractFirstHttpUrl(
+      '【保利票务】https://weixin.polyt.cn/thh5/#/projectdetail/9104700/null?theaterId=760【舞剧《天鹅湖》】点击链接可直接查看',
+    )).toEqual(url(
+      'https://weixin.polyt.cn/thh5/#/projectdetail/9104700/null?theaterId=760',
+    ))
+  })
+})
+
 describe('parsed-link field application', () => {
   const parsed: ParsePlatformResult = parseDamaiHtml(fixture)
 
@@ -380,6 +646,11 @@ describe('parsed-link field application', () => {
     expect(extractFirstHttpUrl(
       '猫眼：https://show.maoyan.com/qqw#/detail/387805，点击查看。',
     )).toEqual(url('https://show.maoyan.com/qqw#/detail/387805'))
+    expect(extractFirstHttpUrl(
+      '【保利票务】https://weixin.polyt.cn/#/projectdetail/9104700/null?theaterId=760【天鹅湖】',
+    )).toEqual(url(
+      'https://weixin.polyt.cn/#/projectdetail/9104700/null?theaterId=760',
+    ))
   })
 
   it('extracts only the first link and trims trailing share punctuation', () => {

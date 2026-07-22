@@ -37,3 +37,10 @@ export interface ParsePlatformParser {
 export interface ParsePlatformHttpClient {
   getText(url: ParsePlatformUrl): Promise<string>
 }
+
+export interface ParsePlatformJsonClient {
+  getJson(
+    url: ParsePlatformUrl,
+    headers?: Record<string, string>,
+  ): Promise<unknown>
+}

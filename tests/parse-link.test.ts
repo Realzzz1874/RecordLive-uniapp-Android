@@ -11,7 +11,16 @@ import {
   normalizeDamaiUrl,
   parseDamaiHtml,
 } from '@/features/performances/parse-platform/damai'
-import { defaultParsePlatformHttpClient } from '@/features/performances/parse-platform/networking'
+import {
+  MaoyanParser,
+  normalizeMaoyanUrl,
+  parseMaoyanHtml,
+} from '@/features/performances/parse-platform/maoyan'
+import {
+  defaultParsePlatformHttpClient,
+  platformAssetUrl,
+} from '@/features/performances/parse-platform/networking'
+import { createParsePlatformRouter } from '@/features/performances/parse-platform/registry'
 import { ParsePlatformRouter } from '@/features/performances/parse-platform/router'
 import { ParsePlatformError, type ParsePlatformResult } from '@/features/performances/parse-platform/types'
 import { parseHttpUrl, type ParsePlatformUrl } from '@/features/performances/parse-platform/url'
@@ -29,6 +38,22 @@ const fixture = `
         &quot;itemPic&quot;: &quot;//img.alicdn.com/poster.jpg&quot;
       }
     }</div>
+  </body></html>
+`
+
+const maoyanFixture = `
+  <html><body>
+    <script>
+      __NEXT_DATA__ = {"props":{"pageProps":{"detail":{
+        "name":"【猫眼官方优惠】音乐剧《寻找李二狗》",
+        "showTimeRange":"2025.4.19 19:30 周六",
+        "cityName":"济南",
+        "shopName":"山东省会大剧院",
+        "posterUrl":"//p0.meituan.net/moviesh/poster.jpg",
+        "notice":"包含 } 和 \\"引号\\" 的内容"
+      }}}};
+      window.__NEXT_LOADED_CHUNKS__ = []
+    </script>
   </body></html>
 `
 
@@ -84,6 +109,14 @@ describe('parse platform routing', () => {
       vi.unstubAllGlobals()
     }
   })
+
+  it('registers Maoyan without adding platform branches to the router', () => {
+    const router = createParsePlatformRouter()
+    expect(router.parserFor(url('https://www.gewara.com/detail/387805')).platformName)
+      .toBe('猫眼')
+    expect(router.parserFor(url('https://show.maoyan.com/qqw#/detail/387805')).platformName)
+      .toBe('猫眼')
+  })
 })
 
 describe('parse platform networking', () => {
@@ -106,11 +139,39 @@ describe('parse platform networking', () => {
       await expect(defaultParsePlatformHttpClient.getText(
         url('https://detail.damai.cn/item.htm?id=1061626307208'),
       )).resolves.toBe(fixture)
+      await expect(defaultParsePlatformHttpClient.getText(
+        url('https://www.gewara.com/detail/387805'),
+      )).resolves.toBe(fixture)
 
-      const options = request.mock.calls[0]?.[0]
-      expect(options?.url).toBe('https://detail.damai.cn/item.htm?id=1061626307208')
-      expect(options?.header['User-Agent']).toContain('Linux x86_64')
-      expect(options?.header['User-Agent']).not.toContain('Mobile')
+      const damaiOptions = request.mock.calls[0]?.[0]
+      expect(damaiOptions?.url).toBe('https://detail.damai.cn/item.htm?id=1061626307208')
+      expect(damaiOptions?.header['User-Agent']).toContain('Linux x86_64')
+      expect(damaiOptions?.header['User-Agent']).not.toContain('Mobile')
+      expect(request.mock.calls[1]?.[0].url).toBe('https://www.gewara.com/detail/387805')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('keeps Maoyan H5 proxying separate from the Android App request path', async () => {
+    interface RequestOptions {
+      url: string
+      success: (result: { statusCode: number; data: string }) => void
+    }
+
+    const request = vi.fn((options: RequestOptions) => {
+      options.success({ statusCode: 200, data: maoyanFixture })
+    })
+    vi.stubGlobal('uni', {
+      getSystemInfoSync: () => ({ uniPlatform: 'web' }),
+      request,
+    })
+
+    try {
+      await defaultParsePlatformHttpClient.getText(url('https://www.gewara.com/detail/387805'))
+      expect(request.mock.calls[0]?.[0].url).toBe('/maoyan-proxy/detail/387805')
+      expect(platformAssetUrl('https://p0.meituan.net/moviesh/poster.jpg'))
+        .toBe('/maoyan-image-proxy/moviesh/poster.jpg')
     } finally {
       vi.unstubAllGlobals()
     }
@@ -140,6 +201,61 @@ describe('Damai parser', () => {
 
   it('rejects a page without embedded performance data', () => {
     expect(() => parseDamaiHtml('<html></html>')).toThrowError(ParsePlatformError)
+  })
+})
+
+describe('Maoyan parser', () => {
+  it('accepts only exact iOS-supported hosts and routes and normalizes share links', () => {
+    const parser = new MaoyanParser({ getText: vi.fn() })
+    expect(parser.canParse(url('https://www.gewara.com/detail/387805'))).toBe(true)
+    expect(parser.canParse(url('https://show.maoyan.com/qqw#/detail/387805'))).toBe(true)
+    expect(parser.canParse(url('http://www.gewara.com/detail/387805'))).toBe(false)
+    expect(parser.canParse(url('https://gewara.com/detail/387805'))).toBe(false)
+    expect(parser.canParse(url('https://www.gewara.com/detail/not-a-number'))).toBe(false)
+    expect(parser.canParse(url('https://show.maoyan.com/qqw#/other/387805'))).toBe(false)
+    expect(parser.canParse(url('https://show.maoyan.com.evil.test/qqw#/detail/387805'))).toBe(false)
+
+    expect(normalizeMaoyanUrl(
+      url('https://show.maoyan.com/qqw#/detail/387805'),
+    ).href).toBe('https://www.gewara.com/detail/387805')
+  })
+
+  it('requests the normalized Gewara page and parses the current iOS data contract', async () => {
+    const getText = vi.fn().mockResolvedValue(maoyanFixture)
+    const parsed = await new MaoyanParser({ getText }).parse(
+      url('https://show.maoyan.com/qqw#/detail/387805'),
+    )
+
+    expect(getText).toHaveBeenCalledWith(url('https://www.gewara.com/detail/387805'))
+    expect(parsed).toEqual({
+      platformName: '猫眼',
+      name: '【猫眼官方优惠】音乐剧《寻找李二狗》',
+      play: '寻找李二狗',
+      startedAtMs: new Date(2025, 3, 19, 19, 30).getTime(),
+      city: '济南',
+      venue: '山东省会大剧院',
+      artistNames: [],
+      coverUrl: 'https://p0.meituan.net/moviesh/poster.jpg',
+    })
+  })
+
+  it('keeps a missing date empty and rejects missing or malformed embedded data', () => {
+    const withoutDate = maoyanFixture.replace('2025.4.19 19:30 周六', '')
+    expect(parseMaoyanHtml(withoutDate).startedAtMs).toBeNull()
+    expect(() => parseMaoyanHtml('<html></html>')).toThrowError(ParsePlatformError)
+    expect(() => parseMaoyanHtml('<script>__NEXT_DATA__ = {bad}</script>'))
+      .toThrowError(ParsePlatformError)
+  })
+
+  it('extracts a Maoyan hash link from shared text without browser URL APIs', () => {
+    vi.stubGlobal('URL', undefined)
+    try {
+      expect(extractFirstHttpUrl(
+        '猫眼演出 https://show.maoyan.com/qqw#/detail/387805 点击查看',
+      )?.href).toBe('https://show.maoyan.com/qqw#/detail/387805')
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })
 

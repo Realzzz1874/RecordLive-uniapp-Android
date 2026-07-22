@@ -192,7 +192,7 @@ function displayPlay(value: string): string {
         <button
           class="parse-button"
           :disabled="status === 'loading' || !input.trim()"
-          aria-label="解析大麦链接"
+          aria-label="解析演出链接"
           @tap="startParsing"
         >{{ status === 'loading' ? '解析中…' : '解析' }}</button>
       </view>
@@ -201,8 +201,8 @@ function displayPlay(value: string): string {
 
       <view v-if="status === 'idle'" class="support-section">
         <text class="support-title">已支持平台：</text>
-        <view class="support-tags"><text>大麦</text></view>
-        <text class="support-note">可直接粘贴大麦 App 分享文案或网页链接。</text>
+        <view class="support-tags"><text>大麦</text><text>猫眼</text></view>
+        <text class="support-note">可直接粘贴大麦或猫眼 App 分享文案及网页链接。</text>
       </view>
 
       <view v-if="status === 'ready' && parsedResult" class="preview-section">

@@ -4,12 +4,14 @@ import { parseHttpUrl, type ParsePlatformUrl } from './url'
 
 const DAMAI_DETAIL_HOST = 'detail.damai.cn'
 const DAMAI_IMAGE_HOST = 'img.alicdn.com'
-const DAMAI_PAGE_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+const MAOYAN_DETAIL_HOST = 'www.gewara.com'
+const MAOYAN_IMAGE_HOST = 'p0.meituan.net'
+const PAGE_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 const ANDROID_IMAGE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
 
 export const defaultParsePlatformHttpClient: ParsePlatformHttpClient = {
   getText(url) {
-    return requestText(platformRequestUrl(url))
+    return requestText(platformRequestUrl(url), platformName(url))
   },
 }
 
@@ -17,6 +19,7 @@ export function platformAssetUrl(value: string): string {
   const url = toUrl(value)
   if (!url || isAppPlatform()) return value
   if (url.hostname === DAMAI_IMAGE_HOST) return `/damai-image-proxy${url.pathname}${url.search}`
+  if (url.hostname === MAOYAN_IMAGE_HOST) return `/maoyan-image-proxy${url.pathname}${url.search}`
   return value
 }
 
@@ -50,10 +53,13 @@ function platformRequestUrl(url: ParsePlatformUrl): string {
   if (!isAppPlatform() && url.hostname === DAMAI_DETAIL_HOST) {
     return `/damai-proxy${url.pathname}${url.search}`
   }
+  if (!isAppPlatform() && url.hostname === MAOYAN_DETAIL_HOST) {
+    return `/maoyan-proxy${url.pathname}${url.search}`
+  }
   return url.href
 }
 
-function requestText(url: string): Promise<string> {
+function requestText(url: string, sourceName: string): Promise<string> {
   return new Promise((resolve, reject) => {
     uni.request({
       url,
@@ -62,22 +68,26 @@ function requestText(url: string): Promise<string> {
       timeout: 15_000,
       header: {
         Accept: 'text/html',
-        'User-Agent': DAMAI_PAGE_USER_AGENT,
+        'User-Agent': PAGE_USER_AGENT,
       },
       success: ({ statusCode, data }) => {
         if (statusCode < 200 || statusCode >= 300) {
-          reject(new ParsePlatformError('request-failed', `大麦页面请求失败（${statusCode}）`))
+          reject(new ParsePlatformError('request-failed', `${sourceName}页面请求失败（${statusCode}）`))
           return
         }
         if (typeof data !== 'string') {
-          reject(new ParsePlatformError('invalid-response', '大麦返回了无法识别的内容'))
+          reject(new ParsePlatformError('invalid-response', `${sourceName}返回了无法识别的内容`))
           return
         }
         resolve(data)
       },
-      fail: () => reject(new ParsePlatformError('request-failed', '无法连接大麦')),
+      fail: () => reject(new ParsePlatformError('request-failed', `无法连接${sourceName}`)),
     })
   })
+}
+
+function platformName(url: ParsePlatformUrl): string {
+  return url.hostname === MAOYAN_DETAIL_HOST ? '猫眼' : '大麦'
 }
 
 function isAppPlatform(): boolean {

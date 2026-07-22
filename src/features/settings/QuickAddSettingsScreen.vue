@@ -68,7 +68,7 @@ function updateKoreanMusicalSchedule(event: Event): void {
         <view class="settings-row settings-row--separated">
           <view class="settings-row__copy">
             <text class="settings-row__label">解析链接</text>
-            <text class="settings-row__supporting">当前支持：大麦</text>
+            <text class="settings-row__supporting">当前支持：大麦、猫眼</text>
           </view>
           <switch
             :checked="parseLink"

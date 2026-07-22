@@ -27,6 +27,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/damai-image-proxy/, ''),
       },
+      '/maoyan-proxy': {
+        target: 'https://www.gewara.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/maoyan-proxy/, ''),
+      },
+      '/maoyan-image-proxy': {
+        target: 'https://p0.meituan.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/maoyan-image-proxy/, ''),
+      },
     },
   },
 })

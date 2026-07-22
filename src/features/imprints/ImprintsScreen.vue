@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 
 import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import type { Performance } from '@/domain/performance'
+import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
+import ImprintFilterSheet from '@/features/imprints/ImprintFilterSheet.vue'
 import ImprintMonthView from '@/features/imprints/ImprintMonthView.vue'
-import { ImprintQueryService } from '@/features/imprints/model'
+import {
+  filterImprintPerformances,
+  ImprintQueryService,
+  type ImprintFilter,
+} from '@/features/imprints/model'
+import { ALL_PERFORMANCE_LIFECYCLES } from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
+import { useImprintPreferencesStore } from '@/stores/imprint-preferences'
 
 type ImprintSection = 'month' | 'year' | 'ranks'
 
@@ -20,12 +29,30 @@ const emit = defineEmits<{
   open: [id: string]
 }>()
 
+const imprintPreferencesStore = useImprintPreferencesStore()
+const { filter, alwaysShowDate, showPerformanceTime } = storeToRefs(imprintPreferencesStore)
 const activeSection = ref<ImprintSection>('month')
 const performances = ref<Performance[]>([])
+const categories = ref<PerformanceCategory[]>([])
+const tags = ref<PerformanceTag[]>([])
 const loading = ref(true)
+const filterVisible = ref(false)
 let requestSequence = 0
 
-onMounted(load)
+const filteredPerformances = computed(() => filterImprintPerformances(
+  performances.value,
+  filter.value,
+))
+const activeFilterCount = computed(() => (
+  (filter.value.categoryIds.length ? 1 : 0)
+  + (filter.value.tagIds.length ? 1 : 0)
+  + (filter.value.lifecycles.length === ALL_PERFORMANCE_LIFECYCLES.length ? 0 : 1)
+))
+
+onMounted(async () => {
+  await imprintPreferencesStore.initialize()
+  await load()
+})
 watch(() => props.refreshKey, load)
 
 async function load(): Promise<void> {
@@ -33,9 +60,16 @@ async function load(): Promise<void> {
   loading.value = true
   try {
     const repositories = await getAppRepositories()
-    const snapshot = await new ImprintQueryService(repositories.performances).loadSnapshot()
+    const [snapshot, categoryItems, tagItems] = await Promise.all([
+      new ImprintQueryService(repositories.performances).loadSnapshot(),
+      repositories.referenceData.listCategories(),
+      repositories.referenceData.listTags(),
+    ])
     if (sequence !== requestSequence) return
     performances.value = snapshot.performances
+    categories.value = categoryItems
+    tags.value = tagItems
+    removeUnavailableFilterValues(categoryItems, tagItems)
   } catch (error) {
     if (sequence !== requestSequence) return
     uni.showToast({
@@ -46,11 +80,48 @@ async function load(): Promise<void> {
     if (sequence === requestSequence) loading.value = false
   }
 }
+
+function removeUnavailableFilterValues(
+  categoryItems: PerformanceCategory[],
+  tagItems: PerformanceTag[],
+): void {
+  const categoryIds = new Set(categoryItems.map(({ id }) => id))
+  const tagIds = new Set(tagItems.map(({ id }) => id))
+  const normalizedFilter: ImprintFilter = {
+    categoryIds: filter.value.categoryIds.filter((id) => categoryIds.has(id)),
+    tagIds: filter.value.tagIds.filter((id) => tagIds.has(id)),
+    lifecycles: [...filter.value.lifecycles],
+  }
+  if (JSON.stringify(normalizedFilter) === JSON.stringify(filter.value)) return
+  imprintPreferencesStore.setPreferences(
+    normalizedFilter,
+    alwaysShowDate.value,
+    showPerformanceTime.value,
+  )
+}
+
+function applyPreferences(
+  nextFilter: ImprintFilter,
+  nextAlwaysShowDate: boolean,
+  nextShowPerformanceTime: boolean,
+): void {
+  imprintPreferencesStore.setPreferences(
+    nextFilter,
+    nextAlwaysShowDate,
+    nextShowPerformanceTime,
+  )
+}
 </script>
 
 <template>
   <view class="imprints-screen">
-    <AppHeader title="印记">
+    <AppHeader
+      title="印记"
+      :show-filter="activeSection === 'month'"
+      filter-label="筛选印记"
+      :filter-count="activeFilterCount"
+      @filter="filterVisible = true"
+    >
       <template #center>
         <view class="imprints-tabs" aria-label="印记视图">
           <button
@@ -78,7 +149,9 @@ async function load(): Promise<void> {
     <view v-if="loading" class="loading-state">正在整理演出印记…</view>
     <ImprintMonthView
       v-else-if="activeSection === 'month'"
-      :performances="performances"
+      :performances="filteredPerformances"
+      :always-show-date="alwaysShowDate"
+      :show-performance-time="showPerformanceTime"
       @add="$emit('add', $event)"
       @open="$emit('open', $event)"
     />
@@ -87,6 +160,17 @@ async function load(): Promise<void> {
       <text class="section-placeholder__title">{{ activeSection === 'year' ? '年' : '榜榜榜' }}</text>
       <text class="section-placeholder__description">本轮先完成月视图，这部分将在下一轮按 iOS 页面继续还原</text>
     </view>
+
+    <ImprintFilterSheet
+      :visible="filterVisible"
+      :filter="filter"
+      :always-show-date="alwaysShowDate"
+      :show-performance-time="showPerformanceTime"
+      :categories="categories"
+      :tags="tags"
+      @close="filterVisible = false"
+      @apply="applyPreferences"
+    />
   </view>
 </template>
 

@@ -10,6 +10,7 @@ withDefaults(
     showCalendar?: boolean
     showBack?: boolean
     showFilter?: boolean
+    filterLabel?: string
     filterCount?: number
     showSave?: boolean
     showEdit?: boolean
@@ -27,6 +28,7 @@ withDefaults(
     showCalendar: false,
     showBack: false,
     showFilter: false,
+    filterLabel: '筛选演出',
     filterCount: 0,
     showSave: false,
     showEdit: false,
@@ -68,7 +70,7 @@ defineEmits<{
           v-else-if="showFilter"
           class="icon-button icon-button--soft-accent app-header__filter"
           :class="{ 'app-header__filter--active': filterCount > 0 }"
-          aria-label="筛选演出"
+          :aria-label="filterLabel"
           hover-class="icon-button--soft-accent-pressed"
           @tap="$emit('filter')"
         >

@@ -6,19 +6,11 @@ import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import type { Performance } from '@/domain/performance'
-import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
-import ArtistSummary from '@/features/performances/ArtistSummary.vue'
 import PerformanceCard from '@/features/performances/PerformanceCard.vue'
-import PerformanceFilterSheet from '@/features/performances/PerformanceFilterSheet.vue'
-import {
-  yearRange,
-  type ArtistSortMode,
-  type PerformanceDisplayMode,
-  type PerformanceFilter,
-  type PerformanceTimeSortDirection,
-} from '@/features/preferences/model'
+import WantSeeFilterSheet from '@/features/want-see/WantSeeFilterSheet.vue'
+import { createWantSeeQuery, type WantSeeDisplayMode } from '@/features/want-see/model'
 import { getAppRepositories } from '@/platform/repositories/context'
-import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
+import { useWantSeePreferencesStore } from '@/stores/want-see-preferences'
 
 const props = defineProps<{
   theme: 'light' | 'dark'
@@ -30,8 +22,8 @@ const emit = defineEmits<{
   open: [id: string]
 }>()
 
-const browseStore = useBrowsePreferencesStore()
-const { displayMode, artistSortMode, posterColumnCount, posterTextColumnCount, filter } = storeToRefs(browseStore)
+const wantSeePreferencesStore = useWantSeePreferencesStore()
+const { displayMode, includePendingSale } = storeToRefs(wantSeePreferencesStore)
 const items = ref<Performance[]>([])
 const total = ref(0)
 const loading = ref(true)
@@ -39,23 +31,15 @@ const searchExpanded = ref(false)
 const searchQuery = ref('')
 const searchInputFocused = ref(false)
 const filterVisible = ref(false)
-const categories = ref<PerformanceCategory[]>([])
-const tags = ref<PerformanceTag[]>([])
-const years = ref<number[]>([])
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestSequence = 0
 
 const headerCount = computed(() => `${total.value}`)
-const activeFilterCount = computed(() => (
-  (filter.value.categoryIds.length ? 1 : 0)
-  + (filter.value.tagIds.length ? 1 : 0)
-  + (filter.value.year === null ? 0 : 1)
-))
+const activeFilterCount = computed(() => includePendingSale.value ? 0 : 1)
 const emptyIsFiltered = computed(() => Boolean(searchQuery.value) || activeFilterCount.value > 0)
 
 onMounted(async () => {
-  await browseStore.initialize()
-  await loadMetadata()
+  await wantSeePreferencesStore.initialize()
   await load()
 })
 onBeforeUnmount(() => clearTimeout(searchTimer))
@@ -70,14 +54,14 @@ async function load(): Promise<void> {
   loading.value = true
   try {
     const repositories = await getAppRepositories()
+    const referenceTimeMs = Date.now()
+    const baseQuery = createWantSeeQuery(
+      includePendingSale.value,
+      referenceTimeMs,
+      searchQuery.value,
+    )
     const listPage = (offset: number, limit: number) => repositories.performances.list({
-      search: searchQuery.value,
-      categoryIds: filter.value.categoryIds.length ? filter.value.categoryIds : undefined,
-      tagIdsAny: filter.value.tagIds.length ? filter.value.tagIds : undefined,
-      lifecycles: ['upcoming', 'pending-sale'],
-      referenceTimeMs: Date.now(),
-      ...yearRange(filter.value.year),
-      sortDirection: 'ascending',
+      ...baseQuery,
       offset,
       limit,
     })
@@ -103,40 +87,7 @@ async function load(): Promise<void> {
   }
 }
 
-async function loadMetadata(): Promise<void> {
-  try {
-    const repositories = await getAppRepositories()
-    const [categoryItems, tagItems, allPerformances] = await Promise.all([
-      repositories.referenceData.listCategories(),
-      repositories.referenceData.listTags(),
-      repositories.performances.list({ limit: 1000 }),
-    ])
-    categories.value = categoryItems
-    tags.value = tagItems
-    years.value = [...new Set(allPerformances.items.map(
-      ({ startedAtMs }) => new Date(startedAtMs).getFullYear(),
-    ))].sort((left, right) => right - left)
-    const categoryIds = new Set(categoryItems.map(({ id }) => id))
-    const tagIds = new Set(tagItems.map(({ id }) => id))
-    const normalizedFilter: PerformanceFilter = {
-      ...filter.value,
-      categoryIds: filter.value.categoryIds.filter((id) => categoryIds.has(id)),
-      tagIds: filter.value.tagIds.filter((id) => tagIds.has(id)),
-      year: filter.value.year !== null && !years.value.includes(filter.value.year)
-        ? null
-        : filter.value.year,
-      lifecycles: [...filter.value.lifecycles],
-    }
-    if (JSON.stringify(normalizedFilter) !== JSON.stringify(filter.value)) {
-      browseStore.setFilter(normalizedFilter)
-    }
-  } catch {
-    // Main list loading surfaces repository failures.
-  }
-}
-
 async function refreshAll(): Promise<void> {
-  await loadMetadata()
   await load()
 }
 
@@ -157,18 +108,10 @@ function closeSearch(): void {
 }
 
 function applyBrowseOptions(
-  value: PerformanceFilter,
-  mode: PerformanceDisplayMode,
-  _timeSortDirection: PerformanceTimeSortDirection,
-  columns: number,
-  posterTextColumns: number,
-  artistSort: ArtistSortMode,
+  mode: WantSeeDisplayMode,
+  shouldIncludePendingSale: boolean,
 ): void {
-  browseStore.setFilter(value)
-  browseStore.setDisplayMode(mode)
-  browseStore.setPosterColumnCount(columns)
-  browseStore.setPosterTextColumnCount(posterTextColumns)
-  browseStore.setArtistSortMode(artistSort)
+  wantSeePreferencesStore.setPreferences(mode, shouldIncludePendingSale)
   void load()
 }
 </script>
@@ -220,14 +163,7 @@ function applyBrowseOptions(
     </view>
     <scroll-view v-else class="want-see-list" scroll-y>
       <view
-        v-if="displayMode !== 'artist'"
         class="performance-collection"
-        :class="{ 'performance-collection--poster': displayMode === 'poster' || displayMode === 'poster-text' }"
-        :style="displayMode === 'poster'
-          ? { gridTemplateColumns: `repeat(${posterColumnCount}, minmax(0, 1fr))` }
-          : displayMode === 'poster-text'
-            ? { gridTemplateColumns: `repeat(${posterTextColumnCount}, minmax(0, 1fr))` }
-            : undefined"
       >
         <PerformanceCard
           v-for="performance in items"
@@ -237,27 +173,13 @@ function applyBrowseOptions(
           @open="$emit('open', $event)"
         />
       </view>
-      <ArtistSummary
-        v-else
-        :performances="items"
-        :sort-mode="artistSortMode"
-      />
       <text class="list-footer">共 {{ total }} 场待看演出</text>
     </scroll-view>
 
-    <PerformanceFilterSheet
+    <WantSeeFilterSheet
       :visible="filterVisible"
-      :filter="filter"
       :display-mode="displayMode"
-      sort-direction="ascending"
-      :artist-sort-mode="artistSortMode"
-      :poster-column-count="posterColumnCount"
-      :poster-text-column-count="posterTextColumnCount"
-      :categories="categories"
-      :tags="tags"
-      :years="years"
-      :show-lifecycle="false"
-      :show-time-sort="false"
+      :include-pending-sale="includePendingSale"
       @close="filterVisible = false"
       @apply="applyBrowseOptions"
     />
@@ -280,6 +202,5 @@ function applyBrowseOptions(
 .want-see-list { box-sizing: border-box; height: calc(100vh - var(--app-header-height) - 132rpx - env(safe-area-inset-bottom)); padding: 22rpx 26rpx 40rpx; }
 .search-bar ~ .want-see-list { height: calc(100vh - var(--app-header-height) - 116rpx - 132rpx - env(safe-area-inset-bottom)); }
 .performance-collection { display: flex; flex-direction: column; gap: 18rpx; }
-.performance-collection--poster { display: grid; gap: 8rpx; transition: grid-template-columns 180ms ease; }
 .list-footer { display: block; padding: 22rpx 0 40rpx; color: var(--color-muted); font-size: 23rpx; text-align: center; }
 </style>

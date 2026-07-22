@@ -3,10 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { PerformanceStatus, type Performance } from '@/domain/performance'
 import {
   buildMonthCalendar,
+  DEFAULT_IMPRINT_PREFERENCES,
+  filterImprintPerformances,
   formatAggregatedAmount,
   ImprintQueryService,
   imprintYears,
   localDateKey,
+  normalizeImprintPreferences,
   seedImprintDateTime,
   shiftImprintMonth,
   summarizeImprintYear,
@@ -80,6 +83,51 @@ describe('Milestone 4 imprint calendar', () => {
     const seeded = new Date(seedImprintDateTime(new Date(2026, 6, 8).getTime()))
     expect([seeded.getFullYear(), seeded.getMonth(), seeded.getDate()]).toEqual([2026, 6, 8])
     expect([seeded.getHours(), seeded.getMinutes()]).toEqual([19, 30])
+  })
+
+  it('filters imprint data independently by category, any tag and lifecycle', () => {
+    const referenceTimeMs = new Date(2026, 6, 20, 12).getTime()
+    const items = [
+      performance('matched', new Date(2026, 6, 1, 19).getTime(), {
+        categoryId: 'concert',
+        tagIds: ['favorite'],
+      }),
+      performance('wrong-tag', new Date(2026, 6, 2, 19).getTime(), {
+        categoryId: 'concert',
+        tagIds: ['tour'],
+      }),
+      performance('upcoming', new Date(2026, 7, 1, 19).getTime(), {
+        categoryId: 'concert',
+        tagIds: ['favorite'],
+      }),
+    ]
+
+    expect(filterImprintPerformances(items, {
+      categoryIds: ['concert'],
+      tagIds: ['favorite', 'encore'],
+      lifecycles: ['attended'],
+    }, referenceTimeMs).map(({ id }) => id)).toEqual(['matched'])
+  })
+
+  it('normalizes imprint-only filters and iOS-compatible calendar display defaults', () => {
+    expect(normalizeImprintPreferences(null)).toEqual(DEFAULT_IMPRINT_PREFERENCES)
+    expect(normalizeImprintPreferences({
+      filter: {
+        categoryIds: [' concert ', 'concert'],
+        tagIds: ['favorite'],
+        lifecycles: ['attended', 'invalid'],
+      },
+      alwaysShowDate: true,
+      showPerformanceTime: false,
+    })).toEqual({
+      filter: {
+        categoryIds: ['concert'],
+        tagIds: ['favorite'],
+        lifecycles: ['attended'],
+      },
+      alwaysShowDate: true,
+      showPerformanceTime: false,
+    })
   })
 })
 

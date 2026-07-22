@@ -4,6 +4,29 @@ import {
   type PerformanceLifecycle,
 } from '@/domain/performance'
 import type { PerformanceRepository } from '@/features/performances/repository'
+import { ALL_PERFORMANCE_LIFECYCLES } from '@/features/preferences/model'
+
+export interface ImprintFilter {
+  categoryIds: string[]
+  tagIds: string[]
+  lifecycles: PerformanceLifecycle[]
+}
+
+export interface ImprintPreferences {
+  filter: ImprintFilter
+  alwaysShowDate: boolean
+  showPerformanceTime: boolean
+}
+
+export const DEFAULT_IMPRINT_PREFERENCES: ImprintPreferences = {
+  filter: {
+    categoryIds: [],
+    tagIds: [],
+    lifecycles: [...ALL_PERFORMANCE_LIFECYCLES],
+  },
+  alwaysShowDate: false,
+  showPerformanceTime: true,
+}
 
 export interface ImprintCalendarCell {
   dateMs: number
@@ -77,6 +100,58 @@ export async function listAllPerformances(
     items.push(...page.items)
     if (!page.hasMore || page.items.length === 0) return items
     offset += page.items.length
+  }
+}
+
+export function filterImprintPerformances(
+  performances: readonly Performance[],
+  filter: ImprintFilter,
+  referenceTimeMs = Date.now(),
+): Performance[] {
+  const categoryIds = new Set(filter.categoryIds)
+  const tagIds = new Set(filter.tagIds)
+  const lifecycles = new Set(filter.lifecycles)
+
+  return performances.filter((performance) => {
+    if (categoryIds.size && (!performance.categoryId || !categoryIds.has(performance.categoryId))) {
+      return false
+    }
+    if (tagIds.size && !performance.tagIds.some((id) => tagIds.has(id))) return false
+    return lifecycles.has(derivePerformanceLifecycle(performance, referenceTimeMs))
+  })
+}
+
+export function normalizeImprintPreferences(value: unknown): ImprintPreferences {
+  if (!isRecord(value)) return cloneImprintPreferences(DEFAULT_IMPRINT_PREFERENCES)
+  const rawFilter = isRecord(value.filter) ? value.filter : {}
+  const lifecycles = uniqueStrings(rawFilter.lifecycles).filter(isPerformanceLifecycle)
+
+  return {
+    filter: {
+      categoryIds: uniqueStrings(rawFilter.categoryIds),
+      tagIds: uniqueStrings(rawFilter.tagIds),
+      lifecycles: Array.isArray(rawFilter.lifecycles)
+        ? lifecycles
+        : [...ALL_PERFORMANCE_LIFECYCLES],
+    },
+    alwaysShowDate: typeof value.alwaysShowDate === 'boolean'
+      ? value.alwaysShowDate
+      : DEFAULT_IMPRINT_PREFERENCES.alwaysShowDate,
+    showPerformanceTime: typeof value.showPerformanceTime === 'boolean'
+      ? value.showPerformanceTime
+      : DEFAULT_IMPRINT_PREFERENCES.showPerformanceTime,
+  }
+}
+
+export function cloneImprintPreferences(value: ImprintPreferences): ImprintPreferences {
+  return {
+    filter: {
+      categoryIds: [...value.filter.categoryIds],
+      tagIds: [...value.filter.tagIds],
+      lifecycles: [...value.filter.lifecycles],
+    },
+    alwaysShowDate: value.alwaysShowDate,
+    showPerformanceTime: value.showPerformanceTime,
   }
 }
 
@@ -308,4 +383,19 @@ function formatDecimalPart(value: bigint, scale: number): string {
   const fraction = digits.slice(-scale).replace(/0+$/, '')
   const result = fraction ? `${integer}.${fraction}` : integer
   return `${negative ? '-' : ''}${result}`
+}
+
+function uniqueStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean))]
+}
+
+function isPerformanceLifecycle(value: string): value is PerformanceLifecycle {
+  return ALL_PERFORMANCE_LIFECYCLES.includes(value as PerformanceLifecycle)
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

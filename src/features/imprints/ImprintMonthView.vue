@@ -16,6 +16,8 @@ import { performanceMediaPath } from '@/features/performances/browser'
 
 const props = defineProps<{
   performances: Performance[]
+  alwaysShowDate: boolean
+  showPerformanceTime: boolean
 }>()
 
 const emit = defineEmits<{
@@ -169,9 +171,8 @@ function handleTouchEnd(): void {
   swipeHorizontal = false
 }
 
-function cellPoster(cell: ImprintCalendarCell): string {
-  const performance = cell.performances.find((item) => performanceMediaPath(item, 'poster'))
-  return performance ? performanceMediaPath(performance, 'poster') : ''
+function performancePoster(performance: Performance): string {
+  return performanceMediaPath(performance, 'poster')
 }
 
 function cellLabel(cell: ImprintCalendarCell): string {
@@ -208,12 +209,12 @@ function startOfLocalDay(timestamp: number): number {
                 <view class="month-picker__chevron"><AppIcon name="chevron" /></view>
               </view>
             </picker>
-            <text class="month-count">✗ {{ monthPerformances.length }} 场</text>
+            <text class="month-count">✘ {{ monthPerformances.length }} 场</text>
           </view>
           <view class="month-toolbar__actions">
-            <button class="month-action month-action--today" aria-label="回到本月" @tap="resetToCurrentMonth">今</button>
-            <button class="month-action" aria-label="上个月" @tap="changeMonth(-1)"><AppIcon name="arrow-left" /></button>
-            <button class="month-action month-action--next" aria-label="下个月" @tap="changeMonth(1)"><AppIcon name="arrow-left" /></button>
+            <button class="month-action" aria-label="回到本月" @tap="resetToCurrentMonth"><AppIcon name="arrow.counterclockwise.square" /></button>
+            <button class="month-action" aria-label="上个月" @tap="changeMonth(-1)"><AppIcon name="arrow.left.square" /></button>
+            <button class="month-action" aria-label="下个月" @tap="changeMonth(1)"><AppIcon name="arrow.right.square" /></button>
           </view>
         </view>
 
@@ -241,19 +242,35 @@ function startOfLocalDay(timestamp: number): number {
                 'calendar-cell--today': cell.isToday,
                 'calendar-cell--selected': cell.isSelected,
                 'calendar-cell--event': cell.count > 0,
+                'calendar-cell--multiple': cell.count > 1,
+                'calendar-cell--date-visible': cell.count > 0 && alwaysShowDate,
+                'calendar-cell--time-visible': cell.count > 0 && showPerformanceTime,
               }"
               :disabled="!cell.inCurrentMonth"
               :aria-label="cell.inCurrentMonth ? cellLabel(cell) : undefined"
               @tap="handleDay(cell)"
             >
               <template v-if="cell.inCurrentMonth">
-                <image v-if="cellPoster(cell)" class="calendar-cell__image" :src="cellPoster(cell)" mode="aspectFill" />
-                <view v-else-if="cell.count" class="calendar-cell__fallback">
-                  <text>{{ cell.performances[0]?.name }}</text>
+                <view v-if="cell.count" class="calendar-cell__events">
+                  <view
+                    v-for="performance in cell.performances"
+                    :key="performance.id"
+                    class="calendar-cell__event-slice"
+                  >
+                    <image
+                      v-if="performancePoster(performance)"
+                      class="calendar-cell__image"
+                      :src="performancePoster(performance)"
+                      mode="aspectFill"
+                    />
+                    <view v-else class="calendar-cell__fallback">
+                      <text>{{ performance.name }}</text>
+                    </view>
+                    <text v-if="showPerformanceTime" class="calendar-cell__time">{{ formatTime(performance.startedAtMs) }}</text>
+                  </view>
                 </view>
                 <text v-else class="calendar-cell__empty-day">{{ cell.isToday ? '今' : cell.day }}</text>
-                <text v-if="cell.count" class="calendar-cell__day-overlay">{{ cell.isToday ? '今' : cell.day }}</text>
-                <text v-if="cell.count" class="calendar-cell__time">{{ formatTime(cell.performances[0]?.startedAtMs ?? cell.dateMs) }}</text>
+                <text v-if="cell.count && alwaysShowDate" class="calendar-cell__day-overlay">{{ cell.isToday ? '今' : cell.day }}</text>
                 <text v-if="cell.count > 1" class="calendar-cell__badge">{{ cell.count }}</text>
               </template>
             </button>
@@ -308,8 +325,6 @@ function startOfLocalDay(timestamp: number): number {
 .month-toolbar__actions { flex: none; gap: 2rpx; }
 .month-action { display: flex; width: 54rpx; height: 54rpx; margin: 0; padding: 14rpx; align-items: center; justify-content: center; border: 0; border-radius: 13rpx; background: transparent; color: var(--color-accent); }
 .month-action::after, .calendar-cell::after, .memory-row::after { border: 0; }
-.month-action--today { padding: 0; font-size: 23rpx; font-weight: 720; line-height: 54rpx; }
-.month-action--next { transform: rotate(180deg); }
 .weekday-grid, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .weekday-grid { margin: 24rpx 0 12rpx; }
 .weekday { color: var(--color-accent); font-size: 21rpx; font-weight: 680; text-align: center; }
@@ -321,13 +336,20 @@ function startOfLocalDay(timestamp: number): number {
 .calendar-cell--today { background: var(--color-accent); }
 .calendar-cell--selected { border-color: var(--color-accent-border); box-shadow: inset 0 0 0 2rpx var(--color-background); }
 .calendar-cell--event { background: var(--color-accent); }
+.calendar-cell__events { display: flex; width: 100%; height: 100%; flex-direction: column; }
+.calendar-cell__event-slice { position: relative; min-height: 0; flex: 1 1 0; overflow: hidden; }
+.calendar-cell__event-slice + .calendar-cell__event-slice::before { position: absolute; z-index: 2; top: 0; right: 0; left: 0; height: 1rpx; background: rgba(255,255,255,.26); content: ''; }
 .calendar-cell__image, .calendar-cell__fallback { width: 100%; height: 100%; }
-.calendar-cell__image { position: absolute; inset: 0; object-position: center; }
-.calendar-cell__fallback { display: flex; padding: 8rpx 5rpx 26rpx; align-items: center; justify-content: center; background: var(--color-accent); }
+.calendar-cell__image { display: block; object-position: center; }
+.calendar-cell__fallback { display: flex; padding: 8rpx 5rpx; align-items: center; justify-content: center; background: var(--color-accent); }
+.calendar-cell--date-visible:not(.calendar-cell--multiple) .calendar-cell__fallback { align-items: flex-start; }
+.calendar-cell--date-visible:not(.calendar-cell--multiple) .calendar-cell__fallback text { padding-top: 3rpx; font-size: 15rpx; opacity: .82; -webkit-line-clamp: 2; }
+.calendar-cell--multiple .calendar-cell__fallback text { font-size: 14rpx; -webkit-line-clamp: 2; }
+.calendar-cell--time-visible .calendar-cell__fallback { padding-bottom: 26rpx; }
 .calendar-cell__fallback text { display: -webkit-box; overflow: hidden; color: var(--color-on-accent); font-size: 18rpx; line-height: 1.2; text-align: center; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .calendar-cell__empty-day { color: var(--color-accent); font-size: 24rpx; font-weight: 650; }
 .calendar-cell--today .calendar-cell__empty-day { color: var(--color-on-accent); }
-.calendar-cell__day-overlay { position: absolute; top: 5rpx; left: 6rpx; color: #fff; font-size: 18rpx; font-weight: 720; text-shadow: 0 1rpx 4rpx rgba(0,0,0,.6); }
+.calendar-cell__day-overlay { position: absolute; z-index: 2; top: 50%; left: 50%; color: #fff; font-size: 24rpx; font-weight: 720; line-height: 1; text-shadow: 0 1rpx 5rpx rgba(0,0,0,.72); transform: translate(-50%, -50%); }
 .calendar-cell__time { position: absolute; right: 0; bottom: 0; left: 0; padding: 4rpx 1rpx; background: rgba(255,255,255,.84); color: var(--color-accent); font-size: 15rpx; font-weight: 650; line-height: 18rpx; text-align: center; }
 .calendar-cell__badge { position: absolute; top: 4rpx; right: 4rpx; display: flex; min-width: 24rpx; height: 24rpx; padding: 0 4rpx; align-items: center; justify-content: center; border-radius: 6rpx; background: rgba(255,255,255,.88); color: #b5473e; font-size: 15rpx; font-weight: 760; line-height: 24rpx; }
 .month-empty-tip { display: block; padding: 26rpx 0 4rpx; color: var(--color-muted); font-size: 22rpx; text-align: center; }

@@ -16,6 +16,9 @@ defineProps<{
     | 'award'
     | 'chevron'
     | 'arrow-left'
+    | 'arrow.counterclockwise.square'
+    | 'arrow.left.square'
+    | 'arrow.right.square'
     | 'edit'
     | 'trash'
     | 'check'
@@ -66,6 +69,9 @@ defineProps<{
 .app-icon--award { -webkit-mask-image: url('/static/icons/award.svg'); mask-image: url('/static/icons/award.svg'); }
 .app-icon--chevron { -webkit-mask-image: url('/static/icons/chevron.svg'); mask-image: url('/static/icons/chevron.svg'); }
 .app-icon--arrow-left { -webkit-mask-image: url('/static/icons/arrow-left.svg'); mask-image: url('/static/icons/arrow-left.svg'); }
+.app-icon--arrow\.counterclockwise\.square { -webkit-mask-image: url('/static/icons/arrow.counterclockwise.square.svg'); mask-image: url('/static/icons/arrow.counterclockwise.square.svg'); }
+.app-icon--arrow\.left\.square { -webkit-mask-image: url('/static/icons/arrow.left.square.svg'); mask-image: url('/static/icons/arrow.left.square.svg'); }
+.app-icon--arrow\.right\.square { -webkit-mask-image: url('/static/icons/arrow.right.square.svg'); mask-image: url('/static/icons/arrow.right.square.svg'); }
 .app-icon--edit { -webkit-mask-image: url('/static/icons/edit.svg'); mask-image: url('/static/icons/edit.svg'); }
 .app-icon--trash { -webkit-mask-image: url('/static/icons/trash.svg'); mask-image: url('/static/icons/trash.svg'); }
 .app-icon--check { -webkit-mask-image: url('/static/icons/check.svg'); mask-image: url('/static/icons/check.svg'); }

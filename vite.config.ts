@@ -1,5 +1,8 @@
+import { Agent as HttpsAgent } from 'node:https'
 import { defineConfig } from 'vite'
 import uni from '@dcloudio/vite-plugin-uni'
+
+const ipv4HttpsAgent = new HttpsAgent({ family: 4 })
 
 export default defineConfig({
   plugins: [uni()],
@@ -67,6 +70,90 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/poly-image-proxy/, ''),
       },
+      '/piaowutong-proxy': {
+        target: 'https://m.piaowutong.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/piaowutong-proxy/, ''),
+      },
+      '/piaowutong-alt-proxy': {
+        target: 'https://m.0368.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/piaowutong-alt-proxy/, ''),
+      },
+      '/piaowutong-image-proxy': {
+        target: 'https://img.piaowutong.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/piaowutong-image-proxy/, ''),
+      },
+      '/cityline-proxy': {
+        target: 'https://shows.cityline.com',
+        changeOrigin: true,
+        agent: ipv4HttpsAgent,
+        rewrite: (path) => path.replace(/^\/cityline-proxy/, ''),
+      },
+      '/cityline-image-proxy': {
+        target: 'https://shows.cityline.com',
+        changeOrigin: true,
+        agent: ipv4HttpsAgent,
+        rewrite: (path) => path.replace(/^\/cityline-image-proxy/, ''),
+      },
+      '/chncpa-proxy': {
+        target: 'https://openapi.chncpa.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/chncpa-proxy/, ''),
+      },
+      '/chncpa-image-proxy': {
+        target: 'https://www.chncpa.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/chncpa-image-proxy/, ''),
+      },
+      '/bjconcerthall-proxy': {
+        target: 'https://www.bjconcerthall.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bjconcerthall-proxy/, ''),
+      },
+      '/maitix-proxy': {
+        target: 'https://client.maitix.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/maitix-proxy/, ''),
+        configure(proxy) {
+          proxy.on('proxyReq', (proxyRequest, request) => {
+            const value = request.headers['x-parse-origin']
+            const origin = Array.isArray(value) ? value[0] : value
+            if (!origin || !isAllowedMaitixOrigin(origin)) return
+            proxyRequest.setHeader('Origin', origin)
+            proxyRequest.setHeader('Referer', `${origin}/`)
+            proxyRequest.removeHeader('X-Parse-Origin')
+          })
+        },
+      },
+      '/klook-short-proxy': {
+        target: 'https://s.klook.cn',
+        changeOrigin: true,
+        followRedirects: true,
+        rewrite: (path) => path.replace(/^\/klook-short-proxy/, ''),
+      },
+      '/klook-link-proxy': {
+        target: 'https://short.klook.cn',
+        changeOrigin: true,
+        followRedirects: true,
+        rewrite: (path) => path.replace(/^\/klook-link-proxy/, ''),
+      },
+      '/klook-proxy': {
+        target: 'https://www.klook.cn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/klook-proxy/, ''),
+      },
+      '/klook-image-proxy': {
+        target: 'https://res.klook.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/klook-image-proxy/, ''),
+      },
     },
   },
 })
+
+function isAllowedMaitixOrigin(value: string): boolean {
+  return /^https:\/\/(?:[a-z\d-]+\.)*maitix\.com$/i.test(value)
+    || value === 'https://www.cadxy.cn'
+}

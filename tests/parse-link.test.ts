@@ -178,7 +178,12 @@ describe('parse platform routing', () => {
   it('registers every parser without adding platform branches to the router', () => {
     const router = createParsePlatformRouter()
     expect(SUPPORTED_PARSE_PLATFORM_NAMES)
-      .toEqual(['大麦', '猫眼', '秀动', '上海文化广场', '保利票务'])
+      .toEqual([
+        '大麦', '猫眼', '秀动', '上海文化广场', '保利票务', '票务通', 'cityline',
+        '国家大剧院', '北京音乐厅', '北京人艺票务中心', '天津中华剧院',
+        '北京吉祥大戏院', '北京长安大戏院', '北京人民剧场', '北京梅兰芳大剧院',
+        'Klook',
+      ])
     expect(router.parserFor(url('https://www.gewara.com/detail/387805')).platformName)
       .toBe('猫眼')
     expect(router.parserFor(url('https://show.maoyan.com/qqw#/detail/387805')).platformName)
@@ -194,6 +199,12 @@ describe('parse platform routing', () => {
     expect(router.parserFor(url(
       'https://weixin.polyt.cn/thh5/#/projectdetail/9104700/null?theaterId=760',
     )).platformName).toBe('保利票务')
+    expect(router.parserFor(url(
+      'https://bjyyt.maitix.com/h5#/pages-order/projectDetail/index?projectId=238282035',
+    )).platformName).toBe('北京音乐厅')
+    expect(router.parserFor(url(
+      'https://tjyrwh.maitix.com/h5#/pages-order/projectDetail/index?projectId=238832016',
+    )).platformName).toBe('剧院票务')
   })
 })
 

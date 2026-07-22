@@ -16,6 +16,17 @@ const SHCSTHEATRE_DETAIL_HOST = 'm.shcstheatre.com'
 const SHCSTHEATRE_IMAGE_HOST = 'pic.shcstheatre.com'
 const POLY_DETAIL_HOST = 'weixin.polyt.cn'
 const POLY_IMAGE_HOST = 'cdn.polyt.cn'
+const PIAOWUTONG_HOSTS = new Set(['piaowutong.com', 'm.piaowutong.com'])
+const PIAOWUTONG_ALT_HOST = 'm.0368.com'
+const PIAOWUTONG_IMAGE_HOST = 'img.piaowutong.com'
+const CITYLINE_HOST = 'shows.cityline.com'
+const CHNCPA_API_HOST = 'openapi.chncpa.org'
+const CHNCPA_IMAGE_HOST = 'www.chncpa.org'
+const BJ_CONCERT_HALL_HOST = 'www.bjconcerthall.cn'
+const MAITIX_API_HOST = 'client.maitix.com'
+const KLOOK_SHORT_HOST = 's.klook.cn'
+const KLOOK_LINK_HOST = 'short.klook.cn'
+const KLOOK_IMAGE_HOST = 'res.klook.com'
 const PAGE_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 const ANDROID_IMAGE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
 
@@ -39,6 +50,10 @@ export function platformAssetUrl(value: string): string {
   if (url.hostname === SHOWSTART_IMAGE_HOST) return `/showstart-image-proxy${url.pathname}${url.search}`
   if (url.hostname === SHCSTHEATRE_IMAGE_HOST) return `/shcstheatre-image-proxy${url.pathname}${url.search}`
   if (url.hostname === POLY_IMAGE_HOST) return `/poly-image-proxy${url.pathname}${url.search}`
+  if (url.hostname === PIAOWUTONG_IMAGE_HOST) return `/piaowutong-image-proxy${url.pathname}${url.search}`
+  if (url.hostname === CITYLINE_HOST) return `/cityline-image-proxy${url.pathname}${url.search}`
+  if (url.hostname === CHNCPA_IMAGE_HOST) return `/chncpa-image-proxy${url.pathname}${url.search}`
+  if (url.hostname === KLOOK_IMAGE_HOST) return `/klook-image-proxy${url.pathname}${url.search}`
   return value
 }
 
@@ -84,6 +99,33 @@ function platformRequestUrl(url: ParsePlatformUrl): string {
   if (!isAppPlatform() && url.hostname === POLY_DETAIL_HOST) {
     return `/poly-proxy${url.pathname}${url.search}`
   }
+  if (!isAppPlatform() && PIAOWUTONG_HOSTS.has(url.hostname)) {
+    return `/piaowutong-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && url.hostname === PIAOWUTONG_ALT_HOST) {
+    return `/piaowutong-alt-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && url.hostname === CITYLINE_HOST) {
+    return `/cityline-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && url.hostname === CHNCPA_API_HOST) {
+    return `/chncpa-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && url.hostname === BJ_CONCERT_HALL_HOST) {
+    return `/bjconcerthall-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && url.hostname === MAITIX_API_HOST) {
+    return `/maitix-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && url.hostname === KLOOK_SHORT_HOST) {
+    return `/klook-short-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && url.hostname === KLOOK_LINK_HOST) {
+    return `/klook-link-proxy${url.pathname}${url.search}`
+  }
+  if (!isAppPlatform() && isKlookHost(url.hostname)) {
+    return `/klook-proxy${url.pathname}${url.search}`
+  }
   return url.href
 }
 
@@ -100,7 +142,7 @@ function requestJson(
       timeout: 15_000,
       header: {
         Accept: 'application/json',
-        ...headers,
+        ...platformRequestHeaders(headers),
       },
       success: ({ statusCode, data }) => {
         if (statusCode < 200 || statusCode >= 300) {
@@ -123,7 +165,7 @@ function requestText(url: string, sourceName: string): Promise<string> {
       timeout: 15_000,
       header: {
         Accept: 'text/html',
-        'User-Agent': PAGE_USER_AGENT,
+        ...(isAppPlatform() ? { 'User-Agent': PAGE_USER_AGENT } : {}),
       },
       success: ({ statusCode, data }) => {
         if (statusCode < 200 || statusCode >= 300) {
@@ -146,7 +188,26 @@ function platformName(url: ParsePlatformUrl): string {
   if (url.hostname === SHOWSTART_DETAIL_HOST) return '秀动'
   if (url.hostname === SHCSTHEATRE_DETAIL_HOST) return '上海文化广场'
   if (url.hostname === POLY_DETAIL_HOST) return '保利票务'
+  if (PIAOWUTONG_HOSTS.has(url.hostname) || url.hostname === PIAOWUTONG_ALT_HOST) return '票务通'
+  if (url.hostname === CITYLINE_HOST) return 'Cityline'
+  if (url.hostname === CHNCPA_API_HOST) return '国家大剧院'
+  if (url.hostname === BJ_CONCERT_HALL_HOST) return '北京音乐厅'
+  if (url.hostname === MAITIX_API_HOST) return '剧院票务'
+  if (isKlookHost(url.hostname)) return 'Klook'
   return '大麦'
+}
+
+function platformRequestHeaders(headers: Record<string, string>): Record<string, string> {
+  if (isAppPlatform()) {
+    const { 'X-Parse-Origin': _, ...appHeaders } = headers
+    return appHeaders
+  }
+  const { Origin: _, Referer: __, ...webHeaders } = headers
+  return webHeaders
+}
+
+function isKlookHost(hostname: string): boolean {
+  return hostname === 'klook.cn' || hostname.endsWith('.klook.cn')
 }
 
 function isAppPlatform(): boolean {

@@ -393,15 +393,15 @@ function startOfLocalDay(timestamp: number): number {
 .calendar-cell__image { display: block; object-position: center; }
 .calendar-cell__fallback { display: flex; padding: 8rpx 5rpx; align-items: center; justify-content: center; background: var(--color-accent); }
 .calendar-cell--date-visible:not(.calendar-cell--multiple) .calendar-cell__fallback { align-items: flex-start; }
-.calendar-cell--date-visible:not(.calendar-cell--multiple) .calendar-cell__fallback text { padding-top: 3rpx; font-size: 15rpx; opacity: .82; -webkit-line-clamp: 2; }
-.calendar-cell--multiple .calendar-cell__fallback text { font-size: 14rpx; -webkit-line-clamp: 2; }
+.calendar-cell--date-visible:not(.calendar-cell--multiple) .calendar-cell__fallback text { padding-top: 3rpx; font-size: 15rpx; opacity: .82; }
+.calendar-cell--multiple .calendar-cell__fallback text { font-size: 14rpx; }
 .calendar-cell--time-visible .calendar-cell__fallback { padding-bottom: 26rpx; }
-.calendar-cell__fallback text { display: -webkit-box; overflow: hidden; color: var(--color-on-accent); font-size: 18rpx; line-height: 1.2; text-align: center; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.calendar-cell__fallback text { display: block; width: 100%; overflow: hidden; color: var(--color-on-accent); font-size: 18rpx; line-height: 1.2; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .calendar-cell__empty-day { color: var(--color-accent); font-size: 24rpx; font-weight: 650; }
 .calendar-cell--today .calendar-cell__empty-day { color: var(--color-on-accent); }
 .calendar-cell__day-overlay { position: absolute; z-index: 2; top: 50%; left: 50%; color: #fff; font-size: 24rpx; font-weight: 720; line-height: 1; text-shadow: 0 1rpx 5rpx rgba(0,0,0,.72); transform: translate(-50%, -50%); }
 .calendar-cell__time { position: absolute; right: 0; bottom: 0; left: 0; padding: 4rpx 1rpx; background: rgba(255,255,255,.84); color: var(--color-accent); font-size: 15rpx; font-weight: 650; line-height: 18rpx; text-align: center; }
-.calendar-cell__badge { position: absolute; top: 4rpx; right: 4rpx; display: flex; min-width: 24rpx; height: 24rpx; padding: 0 4rpx; align-items: center; justify-content: center; border-radius: 6rpx; background: rgba(255,255,255,.88); color: #b5473e; font-size: 15rpx; font-weight: 760; line-height: 24rpx; }
+.calendar-cell__badge { position: absolute; top: 0; right: 0; display: flex; min-width: 24rpx; height: 24rpx; padding: 0 4rpx; align-items: center; justify-content: center; border-radius: 6rpx; background: rgba(255,255,255,.88); color: #b5473e; font-size: 15rpx; font-weight: 760; line-height: 24rpx; }
 .month-empty-tip { display: block; padding: 26rpx 0 4rpx; color: var(--color-muted); font-size: 22rpx; text-align: center; }
 .month-summary { padding: 16rpx; border-radius: 20rpx; background: var(--color-secondary-surface); }
 .summary-heading { display: flex; min-height: 34rpx; margin-bottom: 20rpx; align-items: center; gap: 8rpx; color: var(--color-accent); font-size: 25rpx; font-weight: 650; }

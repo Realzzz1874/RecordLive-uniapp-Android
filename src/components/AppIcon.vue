@@ -15,6 +15,7 @@ defineProps<{
     | 'droplet'
     | 'folder'
     | 'tag'
+    | 'theatermasks.circle'
     | 'backup'
     | 'info'
     | 'award'
@@ -77,6 +78,7 @@ defineProps<{
 .app-icon--droplet { -webkit-mask-image: url('/static/icons/droplet.svg'); mask-image: url('/static/icons/droplet.svg'); }
 .app-icon--folder { -webkit-mask-image: url('/static/icons/folder.svg'); mask-image: url('/static/icons/folder.svg'); }
 .app-icon--tag { -webkit-mask-image: url('/static/icons/tag.svg'); mask-image: url('/static/icons/tag.svg'); }
+.app-icon--theatermasks\.circle { -webkit-mask-image: url('/static/icons/theatermasks.circle.svg'); mask-image: url('/static/icons/theatermasks.circle.svg'); }
 .app-icon--backup { -webkit-mask-image: url('/static/icons/backup.svg'); mask-image: url('/static/icons/backup.svg'); }
 .app-icon--info { -webkit-mask-image: url('/static/icons/info.svg'); mask-image: url('/static/icons/info.svg'); }
 .app-icon--award { -webkit-mask-image: url('/static/icons/award.svg'); mask-image: url('/static/icons/award.svg'); }

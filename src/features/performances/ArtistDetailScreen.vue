@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import AppHeader from '@/components/AppHeader.vue'
@@ -13,6 +14,7 @@ import {
 import { artistIntensityLevel } from '@/features/performances/artist-summary'
 import PerformanceCard from '@/features/performances/PerformanceCard.vue'
 import { getAppRepositories } from '@/platform/repositories/context'
+import { useImprintPreferencesStore } from '@/stores/imprint-preferences'
 
 const props = defineProps<{
   artistName: string
@@ -24,6 +26,8 @@ const emit = defineEmits<{
   open: [id: string]
 }>()
 
+const imprintPreferencesStore = useImprintPreferencesStore()
+const { showExpenseAmounts } = storeToRefs(imprintPreferencesStore)
 const loading = ref(true)
 const summary = ref<ArtistDetailSummary>({
   performances: [],
@@ -35,7 +39,10 @@ let requestSequence = 0
 
 const performanceCount = computed(() => String(summary.value.performances.length))
 
-onMounted(load)
+onMounted(async () => {
+  await imprintPreferencesStore.initialize()
+  await load()
+})
 watch(() => props.refreshKey, load)
 watch(() => props.artistName, load)
 
@@ -80,37 +87,46 @@ function rankClass(item: ArtistDetailRankEntry): string {
         <text class="artist-identity__count">✘ {{ summary.performances.length }} 场</text>
       </view>
 
-      <view v-if="summary.expenses.length" class="summary-card" aria-label="花费统计">
-        <view class="summary-card__heading">
-          <view class="summary-card__icon"><AppIcon name="ticket" /></view>
-          <text class="summary-card__title">花费</text>
+      <view v-if="summary.expenses.length" class="summary-card app-stat-card" aria-label="花费统计">
+        <view class="expense-heading">
+          <view class="expense-heading__title">
+            <view class="expense-heading__icon"><AppIcon name="dollarsign.circle" /></view>
+            <text>花费{{ summary.expenses.length === 1 ? `(${summary.expenses[0]?.currency})` : '' }}</text>
+          </view>
+          <button
+            class="expense-heading__action"
+            :aria-label="showExpenseAmounts ? '隐藏花费金额' : '显示花费金额'"
+            @tap="imprintPreferencesStore.setShowExpenseAmounts(!showExpenseAmounts)"
+          >
+            <AppIcon :name="showExpenseAmounts ? 'eye' : 'eye.slash'" />
+          </button>
         </view>
         <view
           v-for="expense in summary.expenses"
           :key="expense.currency"
           class="expense-group"
         >
-          <text class="expense-group__currency">{{ expense.currency }}</text>
-          <view class="expense-grid">
-            <view class="expense-item">
-              <text class="expense-item__label">票面价</text>
-              <text class="expense-item__value">{{ formatAggregatedAmount(expense.ticketPrice) }}</text>
+          <text v-if="summary.expenses.length > 1" class="expense-currency">{{ expense.currency }}</text>
+          <view class="expense-columns">
+            <view class="expense-metric">
+              <text class="expense-metric__label">票价</text>
+              <text class="expense-metric__value">{{ showExpenseAmounts ? formatAggregatedAmount(expense.ticketPrice) : '***' }}</text>
             </view>
-            <view class="expense-item">
-              <text class="expense-item__label">实付价</text>
-              <text class="expense-item__value">{{ formatAggregatedAmount(expense.paidPrice) }}</text>
+            <view class="expense-metric">
+              <text class="expense-metric__label">实付</text>
+              <text class="expense-metric__value">{{ showExpenseAmounts ? formatAggregatedAmount(expense.paidPrice) : '***' }}</text>
             </view>
-            <view class="expense-item">
-              <text class="expense-item__label">其他花费</text>
-              <text class="expense-item__value">{{ formatAggregatedAmount(expense.otherCost) }}</text>
+            <view class="expense-metric">
+              <text class="expense-metric__label">其它</text>
+              <text class="expense-metric__value">{{ showExpenseAmounts ? formatAggregatedAmount(expense.otherCost) : '***' }}</text>
             </view>
           </view>
         </view>
       </view>
 
-      <view v-if="summary.plays.length" class="summary-card" aria-label="剧目主题统计">
+      <view v-if="summary.plays.length" class="summary-card app-stat-card" aria-label="剧目主题统计">
         <view class="summary-card__heading">
-          <view class="summary-card__icon"><AppIcon name="award" /></view>
+          <view class="summary-card__icon"><AppIcon name="theatermasks.circle" /></view>
           <text class="summary-card__title">剧目/主题</text>
           <text class="summary-card__count">✘{{ summary.plays.length }}</text>
         </view>
@@ -124,7 +140,7 @@ function rankClass(item: ArtistDetailRankEntry): string {
         </view>
       </view>
 
-      <view v-if="summary.cities.length" class="summary-card" aria-label="城市统计">
+      <view v-if="summary.cities.length" class="summary-card app-stat-card" aria-label="城市统计">
         <view class="summary-card__heading">
           <view class="summary-card__icon"><AppIcon name="location" /></view>
           <text class="summary-card__title">城市</text>
@@ -167,18 +183,21 @@ function rankClass(item: ArtistDetailRankEntry): string {
 .artist-identity { display: flex; padding: 6rpx 4rpx 20rpx; flex-direction: column; gap: 8rpx; }
 .artist-identity__name { overflow: hidden; color: var(--color-accent); font-size: 34rpx; font-weight: 680; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .artist-identity__count { color: var(--color-muted); font-size: 23rpx; }
-.summary-card { margin-bottom: 18rpx; padding: 18rpx; border: var(--app-border-width) solid var(--color-border-subtle); border-radius: 16rpx; background: var(--color-surface); }
 .summary-card__heading { display: flex; min-height: 42rpx; align-items: center; gap: 11rpx; color: var(--color-accent); }
 .summary-card__icon { width: 31rpx; height: 31rpx; flex: none; }
 .summary-card__title { font-size: 27rpx; font-weight: 650; }
 .summary-card__count { margin-left: auto; color: var(--color-muted); font-size: 22rpx; }
-.expense-group { margin-top: 16rpx; padding-top: 15rpx; border-top: var(--app-border-width) solid var(--color-border-subtle); }
-.expense-group__currency { display: block; margin-bottom: 12rpx; color: var(--color-muted); font-size: 21rpx; font-weight: 620; }
-.expense-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.expense-item { display: flex; min-width: 0; padding: 2rpx 8rpx; align-items: center; flex-direction: column; gap: 8rpx; }
-.expense-item + .expense-item { border-left: var(--app-border-width) solid var(--color-border-subtle); }
-.expense-item__label { color: var(--color-muted); font-size: 21rpx; white-space: nowrap; }
-.expense-item__value { max-width: 100%; overflow: hidden; color: var(--color-accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 25rpx; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.expense-heading { display: flex; min-height: 34rpx; margin-bottom: 20rpx; align-items: center; justify-content: space-between; gap: 8rpx; color: var(--color-accent); font-size: 25rpx; font-weight: 650; }
+.expense-heading__title { display: flex; min-width: 0; align-items: center; gap: 8rpx; }
+.expense-heading__icon { width: 28rpx; height: 28rpx; flex: none; }
+.expense-heading__action { display: flex; width: 52rpx; height: 44rpx; margin: -6rpx -6rpx -6rpx 0; padding: 10rpx 14rpx; align-items: center; justify-content: center; border: 0; border-radius: 12rpx; background: transparent; color: var(--color-accent); }
+.expense-heading__action::after { border: 0; }
+.expense-group + .expense-group { margin-top: 16rpx; padding-top: 16rpx; border-top: var(--app-border-width) solid var(--color-border-subtle); }
+.expense-currency { display: block; margin-bottom: 10rpx; color: var(--color-accent); font-size: 20rpx; font-weight: 650; }
+.expense-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.expense-metric { display: flex; min-width: 0; align-items: center; flex-direction: column; gap: 7rpx; text-align: center; }
+.expense-metric__label { color: var(--color-muted); font-size: 20rpx; }
+.expense-metric__value { max-width: 100%; overflow: hidden; color: var(--color-accent); font-size: 28rpx; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .rank-list { display: flex; margin-top: 15rpx; flex-wrap: wrap; gap: 9rpx; }
 .rank-chip { position: relative; overflow: hidden; padding: 8rpx 13rpx; border-radius: 14rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 23rpx; font-weight: 620; line-height: 1.3; }
 .rank-chip--level-0 { background: var(--color-accent-soft); color: var(--color-accent); }

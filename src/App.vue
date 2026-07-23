@@ -8,6 +8,7 @@ onLaunch(() => {
 
 <style>
 @import "./styles/chips.css";
+@import "./styles/statistics.css";
 
 page,
 body {

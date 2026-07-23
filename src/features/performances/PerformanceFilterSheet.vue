@@ -196,7 +196,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
               aria-label="阵容展示"
               @tap="displayModeDraft = 'artist'"
             >
-              <AppIcon name="award" />
+              <AppIcon name="square.on.square.badge.person.crop" />
               <text>阵容</text>
             </button>
             <button
@@ -205,7 +205,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
               aria-label="剧目主题名称展示"
               @tap="displayModeDraft = 'play'"
             >
-              <AppIcon name="tag" />
+              <AppIcon name="theatermasks.circle" />
               <text>剧目/主题（名称）</text>
             </button>
             

@@ -3,11 +3,11 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import AppHeader from '@/components/AppHeader.vue'
-import AppIcon from '@/components/AppIcon.vue'
 import type { Performance } from '@/domain/performance'
 import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-data'
 import ImprintFilterSheet from '@/features/imprints/ImprintFilterSheet.vue'
 import ImprintMonthView from '@/features/imprints/ImprintMonthView.vue'
+import ImprintRanksView from '@/features/imprints/ImprintRanksView.vue'
 import ImprintYearView from '@/features/imprints/ImprintYearView.vue'
 import {
   filterImprintPerformances,
@@ -18,8 +18,6 @@ import { ALL_PERFORMANCE_LIFECYCLES } from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
 import { useImprintPreferencesStore } from '@/stores/imprint-preferences'
 
-type ImprintSection = 'month' | 'year' | 'ranks'
-
 const props = defineProps<{
   theme: 'light' | 'dark'
   refreshKey: number
@@ -28,12 +26,19 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: [startedAtMs: number]
   open: [id: string]
-  openArtist: [name: string]
+  openArtist: [name: string, performanceIds: string[]]
+  openPlay: [name: string, performanceIds: string[]]
 }>()
 
 const imprintPreferencesStore = useImprintPreferencesStore()
-const { filter, alwaysShowDate, showPerformanceTime, showExpenseAmounts } = storeToRefs(imprintPreferencesStore)
-const activeSection = ref<ImprintSection>('month')
+const {
+  filter,
+  alwaysShowDate,
+  showPerformanceTime,
+  showExpenseAmounts,
+  activeSection,
+  rankView,
+} = storeToRefs(imprintPreferencesStore)
 const performances = ref<Performance[]>([])
 const categories = ref<PerformanceCategory[]>([])
 const tags = ref<PerformanceTag[]>([])
@@ -45,6 +50,14 @@ const filteredPerformances = computed(() => filterImprintPerformances(
   performances.value,
   filter.value,
 ))
+const filteredPerformanceIds = computed(() => filteredPerformances.value.map(({ id }) => id))
+const rankDetailTitle = computed(() => ({
+  'artist-times': '阵容次数排行',
+  'artist-expense': '阵容花费排行',
+  'play-times': '剧目/主题次数排行',
+  'play-expense': '剧目/主题花费排行',
+  overview: '榜榜榜',
+}[rankView.value]))
 const activeFilterCount = computed(() => (
   (filter.value.categoryIds.length ? 1 : 0)
   + (filter.value.tagIds.length ? 1 : 0)
@@ -113,11 +126,27 @@ function applyPreferences(
     nextShowPerformanceTime,
   )
 }
+
+function openArtistDetail(name: string): void {
+  emit('openArtist', name, filteredPerformanceIds.value)
+}
+
+function openPlayDetail(name: string): void {
+  emit('openPlay', name, filteredPerformanceIds.value)
+}
 </script>
 
 <template>
   <view class="imprints-screen">
     <AppHeader
+      v-if="activeSection === 'ranks' && rankView !== 'overview'"
+      :title="rankDetailTitle"
+      show-back
+      back-label="返回榜榜榜"
+      @back="imprintPreferencesStore.setRankView('overview')"
+    />
+    <AppHeader
+      v-else
       title="印记"
       show-filter
       filter-label="筛选印记"
@@ -130,19 +159,19 @@ function applyPreferences(
             class="imprints-tab"
             :class="{ 'imprints-tab--active': activeSection === 'month' }"
             aria-label="月视图"
-            @tap="activeSection = 'month'"
+            @tap="imprintPreferencesStore.setActiveSection('month')"
           >月</button>
           <button
             class="imprints-tab"
             :class="{ 'imprints-tab--active': activeSection === 'year' }"
             aria-label="年视图"
-            @tap="activeSection = 'year'"
+            @tap="imprintPreferencesStore.setActiveSection('year')"
           >年</button>
           <button
             class="imprints-tab imprints-tab--wide"
             :class="{ 'imprints-tab--active': activeSection === 'ranks' }"
             aria-label="榜榜榜视图"
-            @tap="activeSection = 'ranks'"
+            @tap="imprintPreferencesStore.setActiveSection('ranks')"
           >榜榜榜</button>
         </view>
       </template>
@@ -157,7 +186,7 @@ function applyPreferences(
       :show-expense-amounts="showExpenseAmounts"
       @add="$emit('add', $event)"
       @open="$emit('open', $event)"
-      @open-artist="$emit('openArtist', $event)"
+      @open-artist="openArtistDetail"
       @toggle-expense-amounts="imprintPreferencesStore.setShowExpenseAmounts(!showExpenseAmounts)"
     />
     <ImprintYearView
@@ -165,11 +194,15 @@ function applyPreferences(
       :performances="filteredPerformances"
       :show-expense-amounts="showExpenseAmounts"
     />
-    <view v-else class="section-placeholder">
-      <view class="section-placeholder__icon"><AppIcon name="award" /></view>
-      <text class="section-placeholder__title">榜榜榜</text>
-      <text class="section-placeholder__description">排行页面将在后续按 iOS 页面继续还原</text>
-    </view>
+    <ImprintRanksView
+      v-else
+      :performances="filteredPerformances"
+      :view="rankView"
+      :show-expense-amounts="showExpenseAmounts"
+      @update-view="imprintPreferencesStore.setRankView"
+      @select-artist="openArtistDetail"
+      @select-play="openPlayDetail"
+    />
 
     <ImprintFilterSheet
       :visible="filterVisible"
@@ -192,8 +225,4 @@ function applyPreferences(
 .imprints-tab::after { border: 0; }
 .imprints-tab--active { background: var(--color-accent); color: var(--color-on-accent); box-shadow: 0 4rpx 10rpx var(--color-tab-shadow); }
 .loading-state { display: flex; min-height: calc(100vh - var(--app-header-height) - 132rpx); align-items: center; justify-content: center; color: var(--color-muted); font-size: 26rpx; }
-.section-placeholder { display: flex; height: calc(100vh - var(--app-header-height) - 132rpx - env(safe-area-inset-bottom)); padding: 40rpx; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.section-placeholder__icon { width: 72rpx; height: 72rpx; color: var(--color-accent); opacity: .68; }
-.section-placeholder__title { margin-top: 24rpx; color: var(--color-text); font-size: 34rpx; font-weight: 720; }
-.section-placeholder__description { max-width: 520rpx; margin-top: 13rpx; color: var(--color-muted); font-size: 23rpx; line-height: 1.55; }
 </style>

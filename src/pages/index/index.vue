@@ -35,6 +35,7 @@ const recordsRefreshKey = ref(0)
 const selectedPerformanceId = ref('')
 const selectedArtistName = ref('')
 const selectedPlayName = ref('')
+const statisticsScopeIds = ref<string[] | null>(null)
 const performanceDetailReturnDestination = ref<'root' | 'artist' | 'play'>('root')
 const editorPerformanceId = ref<string | undefined>()
 const editorReturnDestination = ref<'root' | 'detail'>('root')
@@ -133,8 +134,9 @@ function closePerformanceDetail(): void {
   recordsDestination.value = performanceDetailReturnDestination.value
 }
 
-function openArtistDetail(name: string): void {
+function openArtistDetail(name: string, performanceIds?: string[]): void {
   selectedArtistName.value = name
+  statisticsScopeIds.value = performanceIds ? [...performanceIds] : null
   recordsDestination.value = 'artist'
 }
 
@@ -146,8 +148,9 @@ function openArtistPerformance(id: string): void {
   openPerformanceDetail(id, 'artist')
 }
 
-function openPlayDetail(name: string): void {
+function openPlayDetail(name: string, performanceIds?: string[]): void {
   selectedPlayName.value = name
+  statisticsScopeIds.value = performanceIds ? [...performanceIds] : null
   recordsDestination.value = 'play'
 }
 
@@ -209,7 +212,7 @@ onBackPress(() => {
     return true
   }
 
-  if (activeTab.value === 'records' && recordsDestination.value === 'play') {
+  if ((activeTab.value === 'records' || activeTab.value === 'imprints') && recordsDestination.value === 'play') {
     closePlayDetail()
     return true
   }
@@ -276,13 +279,15 @@ watch(
         v-else-if="(activeTab === 'records' || activeTab === 'imprints') && recordsDestination === 'artist'"
         :artist-name="selectedArtistName"
         :refresh-key="recordsRefreshKey"
+        :performance-ids="statisticsScopeIds"
         @back="closeArtistDetail"
         @open="openArtistPerformance"
       />
       <PlayDetailScreen
-        v-else-if="activeTab === 'records' && recordsDestination === 'play'"
+        v-else-if="(activeTab === 'records' || activeTab === 'imprints') && recordsDestination === 'play'"
         :play-name="selectedPlayName"
         :refresh-key="recordsRefreshKey"
+        :performance-ids="statisticsScopeIds"
         @back="closePlayDetail"
         @open="openPlayPerformance"
       />
@@ -309,6 +314,7 @@ watch(
         @add="openPerformanceEditorForDate"
         @open="openPerformanceDetail"
         @open-artist="openArtistDetail"
+        @open-play="openPlayDetail"
       />
       <template v-else>
         <SettingsScreen

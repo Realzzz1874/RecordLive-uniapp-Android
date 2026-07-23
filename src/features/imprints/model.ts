@@ -46,6 +46,34 @@ export interface ImprintRankEntry {
   count: number
 }
 
+export type ImprintRankFacet = 'artist' | 'play'
+
+export type ImprintExpenseMetric =
+  | 'ticketPrice'
+  | 'paidPrice'
+  | 'otherCost'
+  | 'ticketAndOther'
+  | 'paidAndOther'
+
+export interface ImprintTimesRankEntry {
+  name: string
+  times: number
+}
+
+export interface ImprintExpenseRankEntry extends ImprintTimesRankEntry {
+  ticketPrice: string
+  paidPrice: string
+  otherCost: string
+  ticketAndOther: string
+  paidAndOther: string
+}
+
+export interface ImprintExpenseRankGroup {
+  currency: string
+  totals: Record<ImprintExpenseMetric, string>
+  entries: ImprintExpenseRankEntry[]
+}
+
 export interface ImprintExpenseSummary {
   currency: string
   ticketPrice: string
@@ -307,6 +335,85 @@ export function formatAggregatedAmount(value: string): string {
   return value
 }
 
+export function summarizeImprintTimesRank(
+  performances: readonly Performance[],
+  facet: ImprintRankFacet,
+): ImprintTimesRankEntry[] {
+  const counts = new Map<string, number>()
+  for (const performance of performances) {
+    for (const name of normalizedFacetValues(performance, facet)) {
+      counts.set(name, (counts.get(name) ?? 0) + 1)
+    }
+  }
+  return [...counts.entries()]
+    .map(([name, times]) => ({ name, times }))
+    .sort(compareTimesRankEntries)
+}
+
+export function summarizeImprintExpenseRank(
+  performances: readonly Performance[],
+  facet: ImprintRankFacet,
+  metric: ImprintExpenseMetric,
+): ImprintExpenseRankGroup[] {
+  const times = new Map(
+    summarizeImprintTimesRank(performances, facet).map((entry) => [entry.name, entry.times]),
+  )
+  const totalsByCurrency = new Map<string, ExpenseAccumulator>()
+  const valuesByCurrency = new Map<string, Map<string, ExpenseAccumulator>>()
+
+  for (const performance of performances) {
+    const names = normalizedFacetValues(performance, facet)
+    const amounts = performanceExpenseAmounts(performance)
+    const currencies = new Set(amounts.map(({ currency }) => currency).filter(Boolean))
+
+    for (const currency of currencies) {
+      const totals = ensureExpenseAccumulator(totalsByCurrency, currency)
+      addPerformanceAmounts(totals, amounts, currency)
+
+      for (const name of names) {
+        const byName = valuesByCurrency.get(currency) ?? new Map<string, ExpenseAccumulator>()
+        valuesByCurrency.set(currency, byName)
+        const values = ensureExpenseAccumulator(byName, name)
+        addPerformanceAmounts(values, amounts, currency)
+      }
+    }
+  }
+
+  return [...valuesByCurrency.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([currency, byName]) => {
+      const totals = expenseMetrics(totalsByCurrency.get(currency) ?? emptyExpenseAccumulator())
+      const entries = [...byName.entries()]
+        .map(([name, values]) => ({
+          name,
+          times: times.get(name) ?? 0,
+          ...expenseMetrics(values),
+        }))
+        .sort((left, right) => (
+          compareDecimalStrings(right[metric], left[metric])
+          || right.times - left.times
+          || left.name.localeCompare(right.name, 'zh-CN')
+        ))
+      return { currency, totals, entries }
+    })
+}
+
+export function imprintExpenseMetricValue(
+  entry: Pick<ImprintExpenseRankEntry, ImprintExpenseMetric>,
+  metric: ImprintExpenseMetric,
+): string {
+  return entry[metric]
+}
+
+export function formatImprintPercentage(value: string, total: string): string {
+  const numerator = Number(value)
+  const denominator = Number(total)
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) {
+    return '0.00%'
+  }
+  return `${((numerator / denominator) * 100).toFixed(2)}%`
+}
+
 function rankValues(groups: readonly (readonly string[])[]): ImprintRankEntry[] {
   const counts = new Map<string, number>()
   for (const values of groups) {
@@ -364,6 +471,95 @@ function collectAmount(
   const values = currencies.get(code) ?? { ticketPrice: [], paidPrice: [], otherCost: [] }
   values[kind].push(amount)
   currencies.set(code, values)
+}
+
+interface PerformanceExpenseAmount {
+  kind: 'ticketPrice' | 'paidPrice' | 'otherCost'
+  amount: string
+  currency: string
+}
+
+interface ExpenseAccumulator {
+  ticketPrice: string[]
+  paidPrice: string[]
+  otherCost: string[]
+}
+
+function normalizedFacetValues(
+  performance: Performance,
+  facet: ImprintRankFacet,
+): string[] {
+  return (performance.facets[facet] ?? []).map((name) => name.trim()).filter(Boolean)
+}
+
+function compareTimesRankEntries(
+  left: ImprintTimesRankEntry,
+  right: ImprintTimesRankEntry,
+): number {
+  return right.times - left.times || left.name.localeCompare(right.name, 'zh-CN')
+}
+
+function performanceExpenseAmounts(performance: Performance): PerformanceExpenseAmount[] {
+  return ([
+    ['ticketPrice', performance.ticketPrice],
+    ['paidPrice', performance.paidPrice],
+    ['otherCost', performance.otherCost],
+  ] as const).map(([kind, value]) => ({
+    kind,
+    amount: value.amount,
+    currency: value.currency.trim().toUpperCase(),
+  }))
+}
+
+function ensureExpenseAccumulator(
+  values: Map<string, ExpenseAccumulator>,
+  key: string,
+): ExpenseAccumulator {
+  const existing = values.get(key)
+  if (existing) return existing
+  const created = emptyExpenseAccumulator()
+  values.set(key, created)
+  return created
+}
+
+function emptyExpenseAccumulator(): ExpenseAccumulator {
+  return { ticketPrice: [], paidPrice: [], otherCost: [] }
+}
+
+function addPerformanceAmounts(
+  accumulator: ExpenseAccumulator,
+  amounts: readonly PerformanceExpenseAmount[],
+  currency: string,
+): void {
+  for (const amount of amounts) {
+    if (amount.currency === currency) accumulator[amount.kind].push(amount.amount)
+  }
+}
+
+function expenseMetrics(
+  accumulator: ExpenseAccumulator,
+): Record<ImprintExpenseMetric, string> {
+  const ticketPrice = sumDecimalStrings(accumulator.ticketPrice)
+  const paidPrice = sumDecimalStrings(accumulator.paidPrice)
+  const otherCost = sumDecimalStrings(accumulator.otherCost)
+  return {
+    ticketPrice,
+    paidPrice,
+    otherCost,
+    ticketAndOther: sumDecimalStrings([ticketPrice, otherCost]),
+    paidAndOther: sumDecimalStrings([paidPrice, otherCost]),
+  }
+}
+
+function compareDecimalStrings(left: string, right: string): number {
+  const leftPart = parseDecimal(left)
+  const rightPart = parseDecimal(right)
+  if (!leftPart || !rightPart) return 0
+  const scale = Math.max(leftPart.scale, rightPart.scale)
+  const leftValue = leftPart.value * (10n ** BigInt(scale - leftPart.scale))
+  const rightValue = rightPart.value * (10n ** BigInt(scale - rightPart.scale))
+  if (leftValue === rightValue) return 0
+  return leftValue > rightValue ? 1 : -1
 }
 
 function sumDecimalStrings(values: readonly string[]): string {

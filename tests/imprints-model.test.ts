@@ -6,6 +6,7 @@ import {
   DEFAULT_IMPRINT_PREFERENCES,
   filterImprintPerformances,
   formatAggregatedAmount,
+  formatImprintPercentage,
   ImprintQueryService,
   imprintYears,
   localDateKey,
@@ -13,6 +14,8 @@ import {
   seedImprintDateTime,
   shiftImprintMonth,
   summarizeImprintPerformances,
+  summarizeImprintExpenseRank,
+  summarizeImprintTimesRank,
   summarizeImprintYear,
 } from '@/features/imprints/model'
 import { InMemoryPerformanceRepository } from '@/platform/repositories/in-memory-performance-repository'
@@ -219,5 +222,112 @@ describe('Milestone 4 annual insights', () => {
     expect(snapshot.performances).toHaveLength(251)
     expect(snapshot.years).toEqual([2026, 2025])
     expect(imprintYears([], 2027)).toEqual([2027])
+  })
+})
+
+describe('Milestone 4 ranking lists', () => {
+  it('matches iOS occurrence rankings and uses localized names to break ties', () => {
+    const items = [
+      performance('one', new Date(2026, 0, 1).getTime(), {
+        facets: { artist: ['乙', '甲'], play: ['剧目 B'] },
+      }),
+      performance('two', new Date(2026, 0, 2).getTime(), {
+        facets: { artist: ['甲'], play: ['剧目 A'] },
+      }),
+      performance('three', new Date(2026, 0, 3).getTime(), {
+        facets: { artist: ['乙'], play: ['剧目 A'] },
+      }),
+    ]
+
+    expect(summarizeImprintTimesRank(items, 'artist')).toEqual([
+      { name: '甲', times: 2 },
+      { name: '乙', times: 2 },
+    ])
+    expect(summarizeImprintTimesRank(items, 'play')).toEqual([
+      { name: '剧目 A', times: 2 },
+      { name: '剧目 B', times: 1 },
+    ])
+  })
+
+  it('credits a performance full cost to every lineup and keeps currencies separate', () => {
+    const items = [
+      performance('shared', new Date(2026, 0, 1).getTime(), {
+        facets: { artist: ['甲', '乙'] },
+        ticketPrice: { amount: '100.1', currency: 'CNY' },
+        paidPrice: { amount: '80', currency: 'CNY' },
+        otherCost: { amount: '20', currency: 'CNY' },
+      }),
+      performance('solo', new Date(2026, 0, 2).getTime(), {
+        facets: { artist: ['甲'] },
+        ticketPrice: { amount: '49.9', currency: 'CNY' },
+        paidPrice: { amount: '40', currency: 'CNY' },
+        otherCost: { amount: '5', currency: 'CNY' },
+      }),
+      performance('overseas', new Date(2026, 0, 3).getTime(), {
+        facets: { artist: ['丙'] },
+        ticketPrice: { amount: '10', currency: 'USD' },
+        paidPrice: { amount: '8', currency: 'USD' },
+        otherCost: { amount: '1', currency: 'USD' },
+      }),
+    ]
+
+    const groups = summarizeImprintExpenseRank(items, 'artist', 'paidAndOther')
+    expect(groups.map(({ currency }) => currency)).toEqual(['CNY', 'USD'])
+    expect(groups[0]?.totals).toEqual({
+      ticketPrice: '150',
+      paidPrice: '120',
+      otherCost: '25',
+      ticketAndOther: '175',
+      paidAndOther: '145',
+    })
+    expect(groups[0]?.entries).toEqual([
+      {
+        name: '甲',
+        times: 2,
+        ticketPrice: '150',
+        paidPrice: '120',
+        otherCost: '25',
+        ticketAndOther: '175',
+        paidAndOther: '145',
+      },
+      {
+        name: '乙',
+        times: 1,
+        ticketPrice: '100.1',
+        paidPrice: '80',
+        otherCost: '20',
+        ticketAndOther: '120.1',
+        paidAndOther: '100',
+      },
+    ])
+    expect(formatImprintPercentage('100', '150')).toBe('66.67%')
+    expect(formatImprintPercentage('10', '0')).toBe('0.00%')
+  })
+
+  it('uses the same expense aggregation for play and theme rankings', () => {
+    const items = [
+      performance('shared-play', new Date(2026, 0, 1).getTime(), {
+        facets: { play: ['剧目甲', '主题乙'] },
+        ticketPrice: { amount: '100', currency: 'CNY' },
+        paidPrice: { amount: '80', currency: 'CNY' },
+        otherCost: { amount: '20', currency: 'CNY' },
+      }),
+      performance('repeat-play', new Date(2026, 0, 2).getTime(), {
+        facets: { play: ['剧目甲'] },
+        ticketPrice: { amount: '50', currency: 'CNY' },
+        paidPrice: { amount: '40', currency: 'CNY' },
+        otherCost: { amount: '5', currency: 'CNY' },
+      }),
+    ]
+
+    const groups = summarizeImprintExpenseRank(items, 'play', 'ticketPrice')
+    expect(groups[0]?.entries.map(({ name, times, ticketPrice }) => ({
+      name,
+      times,
+      ticketPrice,
+    }))).toEqual([
+      { name: '剧目甲', times: 2, ticketPrice: '150' },
+      { name: '主题乙', times: 1, ticketPrice: '100' },
+    ])
   })
 })

@@ -22,6 +22,7 @@ import { useImprintPreferencesStore } from '@/stores/imprint-preferences'
 const props = defineProps<{
   artistName: string
   refreshKey: number
+  performanceIds?: string[] | null
 }>()
 
 const emit = defineEmits<{
@@ -38,14 +39,20 @@ const performances = ref<Performance[]>([])
 const filterVisible = ref(false)
 let requestSequence = 0
 
+const hasPerformanceScope = computed(() => props.performanceIds !== undefined && props.performanceIds !== null)
+const scopedPerformances = computed(() => {
+  if (!hasPerformanceScope.value) return performances.value
+  const ids = new Set(props.performanceIds ?? [])
+  return performances.value.filter(({ id }) => ids.has(id))
+})
 const summary = computed<ArtistDetailSummary>(() => buildArtistDetailSummary(
   props.artistName,
-  performances.value,
-  filter.value.lifecycles,
+  scopedPerformances.value,
+  hasPerformanceScope.value ? undefined : filter.value.lifecycles,
 ))
 const performanceCount = computed(() => String(summary.value.performances.length))
 const activeFilterCount = computed(() => (
-  filter.value.lifecycles.length === ALL_PERFORMANCE_LIFECYCLES.length ? 0 : 1
+  hasPerformanceScope.value || filter.value.lifecycles.length === ALL_PERFORMANCE_LIFECYCLES.length ? 0 : 1
 ))
 
 onMounted(async () => {
@@ -57,6 +64,7 @@ onMounted(async () => {
 })
 watch(() => props.refreshKey, load)
 watch(() => props.artistName, load)
+watch(() => props.performanceIds, load, { deep: true })
 
 async function load(): Promise<void> {
   const sequence = ++requestSequence
@@ -95,7 +103,7 @@ function applyLifecycleFilter(lifecycles: PerformanceLifecycle[]): void {
       :title="artistName"
       :count="performanceCount"
       show-back
-      show-filter
+      :show-filter="!hasPerformanceScope"
       back-label="返回阵容统计"
       filter-label="筛选阵容演出状态"
       :filter-count="activeFilterCount"
@@ -198,6 +206,7 @@ function applyLifecycleFilter(lifecycles: PerformanceLifecycle[]): void {
     </scroll-view>
 
     <PerformanceLifecycleFilterSheet
+      v-if="!hasPerformanceScope"
       :visible="filterVisible"
       :lifecycles="filter.lifecycles"
       @close="filterVisible = false"

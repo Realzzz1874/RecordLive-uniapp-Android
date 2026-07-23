@@ -1,4 +1,5 @@
 import type { SelectedImage } from '@/platform/media/types'
+import { requestAndroidText } from '@/platform/networking/android-text-request'
 import {
   ParsePlatformError,
   type ParsePlatformHttpClient,
@@ -30,8 +31,8 @@ const KLOOK_IMAGE_HOST = 'res.klook.com'
 const ANDROID_IMAGE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
 
 export const defaultParsePlatformHttpClient: ParsePlatformHttpClient = {
-  getText(url) {
-    return requestText(platformRequestUrl(url), platformName(url))
+  getText(url, headers = {}) {
+    return requestText(platformRequestUrl(url), platformName(url), headers)
   },
 }
 
@@ -155,7 +156,23 @@ function requestJson(
   })
 }
 
-function requestText(url: string, sourceName: string): Promise<string> {
+function requestText(
+  url: string,
+  sourceName: string,
+  headers: Record<string, string>,
+): Promise<string> {
+  if (isAppPlatform() && hasUserAgent(headers)) {
+    return requestAndroidText(
+      url,
+      { Accept: 'text/html', ...headers },
+      15_000,
+    ).then(({ statusCode, text }) => parseTextResponse(statusCode, text, sourceName))
+      .catch((error: unknown) => {
+        if (error instanceof ParsePlatformError) throw error
+        throw new ParsePlatformError('request-failed', `无法连接${sourceName}`)
+      })
+  }
+
   return new Promise((resolve, reject) => {
     uni.request({
       url,
@@ -164,21 +181,28 @@ function requestText(url: string, sourceName: string): Promise<string> {
       timeout: 15_000,
       header: {
         Accept: 'text/html',
+        ...platformTextRequestHeaders(headers),
       },
       success: ({ statusCode, data }) => {
-        if (statusCode < 200 || statusCode >= 300) {
-          reject(new ParsePlatformError('request-failed', `${sourceName}页面请求失败（${statusCode}）`))
-          return
+        try {
+          resolve(parseTextResponse(statusCode, data, sourceName))
+        } catch (error) {
+          reject(error)
         }
-        if (typeof data !== 'string') {
-          reject(new ParsePlatformError('invalid-response', `${sourceName}返回了无法识别的内容`))
-          return
-        }
-        resolve(data)
       },
       fail: () => reject(new ParsePlatformError('request-failed', `无法连接${sourceName}`)),
     })
   })
+}
+
+function parseTextResponse(statusCode: number, data: unknown, sourceName: string): string {
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new ParsePlatformError('request-failed', `${sourceName}页面请求失败（${statusCode}）`)
+  }
+  if (typeof data !== 'string') {
+    throw new ParsePlatformError('invalid-response', `${sourceName}返回了无法识别的内容`)
+  }
+  return data
 }
 
 function platformName(url: ParsePlatformUrl): string {
@@ -202,6 +226,17 @@ function platformRequestHeaders(headers: Record<string, string>): Record<string,
   }
   const { Origin: _, Referer: __, ...webHeaders } = headers
   return webHeaders
+}
+
+function platformTextRequestHeaders(headers: Record<string, string>): Record<string, string> {
+  if (isAppPlatform()) return headers
+  return Object.fromEntries(
+    Object.entries(headers).filter(([name]) => name.toLowerCase() !== 'user-agent'),
+  )
+}
+
+function hasUserAgent(headers: Record<string, string>): boolean {
+  return Object.keys(headers).some((name) => name.toLowerCase() === 'user-agent')
 }
 
 function isKlookHost(hostname: string): boolean {

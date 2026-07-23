@@ -10,6 +10,8 @@ import { type ParsePlatformUrl, urlSearchParam } from './url'
 const DESKTOP_HOST = 'www.showstart.com'
 const MOBILE_HOST = 'wap.showstart.com'
 const MOBILE_PATH = '/pages/activity/detail/detail'
+// 秀动会把带 Android 标识的请求重定向到不含 Nuxt 数据的移动端 SPA。
+const PC_PAGE_HEADERS = { 'User-Agent': 'RecordLive/0.1.0' }
 
 export class ShowstartParser implements ParsePlatformParser {
   readonly platformName = '秀动'
@@ -24,7 +26,7 @@ export class ShowstartParser implements ParsePlatformParser {
 
   async parse(url: ParsePlatformUrl): Promise<ParsePlatformResult> {
     const normalizedUrl = normalizeShowstartUrl(url)
-    const html = await this.httpClient.getText(normalizedUrl)
+    const html = await this.httpClient.getText(normalizedUrl, PC_PAGE_HEADERS)
     return parseShowstartHtml(html)
   }
 }

@@ -210,7 +210,7 @@ describe('parse platform routing', () => {
 })
 
 describe('parse platform networking', () => {
-  it('does not override the App runtime user agent for page requests', async () => {
+  it('keeps the runtime UA for regular App pages and isolates the Showstart PC request', async () => {
     interface RequestOptions {
       url: string
       header: Record<string, string>
@@ -242,8 +242,8 @@ describe('parse platform networking', () => {
         'https://m.0368.com/ticket/20/23943.html?orgId=116&siteId=59',
       ))).resolves.toBe(fixture)
 
-      const damaiOptions = request.mock.calls[0]?.[0]
-      expect(damaiOptions?.url).toBe('https://detail.damai.cn/item.htm?id=1061626307208')
+      expect(request.mock.calls[0]?.[0].url)
+        .toBe('https://detail.damai.cn/item.htm?id=1061626307208')
       expect(request.mock.calls[1]?.[0].url).toBe('https://www.gewara.com/detail/387805')
       expect(request.mock.calls[2]?.[0].url).toBe('https://www.showstart.com/event/299543')
       expect(request.mock.calls[3]?.[0].url)
@@ -254,6 +254,53 @@ describe('parse platform networking', () => {
         expect(options.header).toEqual({ Accept: 'text/html' })
         expect(options.header).not.toHaveProperty('User-Agent')
       }
+
+      const nativeLines = [fixture, null]
+      const nativeConnection = { type: 'connection' }
+      const nativeReader = { type: 'reader' }
+      const nativeRunnable = { run: () => undefined }
+      const nativeHeaders: Record<string, string> = {}
+      vi.stubGlobal('plus', {
+        android: {
+          implements: (_name: string, implementation: typeof nativeRunnable) => {
+            nativeRunnable.run = implementation.run
+            return nativeRunnable
+          },
+          newObject: (className: string) => {
+            if (className === 'java.net.URL') return { type: 'url' }
+            if (className === 'java.io.BufferedReader') return nativeReader
+            if (className === 'java.lang.Thread') return { type: 'thread' }
+            return { type: className }
+          },
+          invoke: (
+            object: { type: string },
+            methodName: string,
+            ...arguments_: unknown[]
+          ) => {
+            if (object.type === 'thread' && methodName === 'start') nativeRunnable.run()
+            if (object.type === 'url' && methodName === 'openConnection') return nativeConnection
+            if (object === nativeConnection && methodName === 'setRequestProperty') {
+              nativeHeaders[String(arguments_[0])] = String(arguments_[1])
+            }
+            if (object === nativeConnection && methodName === 'getResponseCode') return 200
+            if (object === nativeConnection && methodName === 'getInputStream') {
+              return { type: 'input-stream' }
+            }
+            if (object === nativeReader && methodName === 'readLine') return nativeLines.shift()
+            return undefined
+          },
+        },
+      })
+
+      await defaultParsePlatformHttpClient.getText(
+        url('https://www.showstart.com/event/299765'),
+        { 'User-Agent': 'RecordLive/0.1.0' },
+      )
+      expect(request).toHaveBeenCalledTimes(5)
+      expect(nativeHeaders).toEqual({
+        Accept: 'text/html',
+        'User-Agent': 'RecordLive/0.1.0',
+      })
     } finally {
       vi.unstubAllGlobals()
     }
@@ -262,6 +309,7 @@ describe('parse platform networking', () => {
   it('keeps Maoyan and Showstart H5 proxying separate from the Android App request path', async () => {
     interface RequestOptions {
       url: string
+      header: Record<string, string>
       success: (result: { statusCode: number; data: string }) => void
     }
 
@@ -279,8 +327,13 @@ describe('parse platform networking', () => {
       expect(platformAssetUrl('https://p0.meituan.net/moviesh/poster.jpg'))
         .toBe('/maoyan-image-proxy/moviesh/poster.jpg')
 
-      await defaultParsePlatformHttpClient.getText(url('https://www.showstart.com/event/299543'))
+      await defaultParsePlatformHttpClient.getText(
+        url('https://www.showstart.com/event/299543'),
+        { 'User-Agent': 'RecordLive/0.1.0' },
+      )
       expect(request.mock.calls[1]?.[0].url).toBe('/showstart-proxy/event/299543')
+      expect(request.mock.calls[1]?.[0].header).toEqual({ Accept: 'text/html' })
+      expect(request.mock.calls[1]?.[0].header).not.toHaveProperty('User-Agent')
       expect(platformAssetUrl('https://s2.showstart.com/img/poster.jpg?imageMogr2/thumbnail/640x'))
         .toBe('/showstart-image-proxy/img/poster.jpg?imageMogr2/thumbnail/640x')
 
@@ -425,7 +478,7 @@ describe('Maoyan parser', () => {
 describe('Showstart parser', () => {
   it('accepts only the iOS-supported hosts and routes and normalizes mobile links', () => {
     const parser = new ShowstartParser({ getText: vi.fn() })
-    expect(parser.canParse(url('https://www.showstart.com/event/299543'))).toBe(true)
+    expect(parser.canParse(url('https://www.showstart.com/event/304522'))).toBe(true)
     expect(parser.canParse(url('https://www.showstart.com/event/299543/'))).toBe(true)
     expect(parser.canParse(url(
       'https://wap.showstart.com/pages/activity/detail/detail?activityId=299543&shareId=1',
@@ -441,15 +494,21 @@ describe('Showstart parser', () => {
     expect(normalizeShowstartUrl(url(
       'https://wap.showstart.com/pages/activity/detail/detail?activityId=299543&shareId=1',
     )).href).toBe('https://www.showstart.com/event/299543')
+    expect(normalizeShowstartUrl(url(
+      'https://www.showstart.com/event/304522?from=share',
+    )).href).toBe('https://www.showstart.com/event/304522')
   })
 
-  it('requests the normalized desktop page and parses its Nuxt payload', async () => {
+  it('requests only the normalized PC page with the app user agent and parses its Nuxt payload', async () => {
     const getText = vi.fn().mockResolvedValue(showstartFixture)
     const parsed = await new ShowstartParser({ getText }).parse(url(
-      'https://wap.showstart.com/pages/activity/detail/detail?activityId=299543',
+      'https://wap.showstart.com/pages/activity/detail/detail?activityId=299765',
     ))
 
-    expect(getText).toHaveBeenCalledWith(url('https://www.showstart.com/event/299543'))
+    expect(getText).toHaveBeenCalledWith(
+      url('https://www.showstart.com/event/299765'),
+      { 'User-Agent': 'RecordLive/0.1.0' },
+    )
     expect(parsed).toEqual({
       platformName: '秀动',
       name: '北京丨音乐剧《时光代理人》特别场',
@@ -471,14 +530,16 @@ describe('Showstart parser', () => {
     )).toThrowError(ParsePlatformError)
   })
 
-  it('extracts a mobile Showstart link from shared text without browser URL APIs', () => {
+  it('extracts the mobile activity ID from complete shared text and builds the PC URL', () => {
     vi.stubGlobal('URL', undefined)
     try {
-      expect(extractFirstHttpUrl(
-        '秀动演出 https://wap.showstart.com/pages/activity/detail/detail?activityId=299543 点击查看',
-      )?.href).toBe(
-        'https://wap.showstart.com/pages/activity/detail/detail?activityId=299543',
+      const sharedUrl = extractFirstHttpUrl(
+        '&&`buhwhux,388674-3695768&&【秀动】https://wap.showstart.com/pages/activity/detail/detail?activityId=299765【tobi lou 2026「Same Old Jeans」巡演杭州站 | 漠星制造呈现】点击链接可直接查看，或复制整段后打开秀动app查看',
       )
+      expect(sharedUrl?.href)
+        .toBe('https://wap.showstart.com/pages/activity/detail/detail?activityId=299765')
+      expect(normalizeShowstartUrl(sharedUrl as ParsePlatformUrl).href)
+        .toBe('https://www.showstart.com/event/299765')
     } finally {
       vi.unstubAllGlobals()
     }

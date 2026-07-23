@@ -171,7 +171,12 @@ function formatBytes(value: number): string {
 
 function formatDate(value: number | null): string {
   if (value === null) return '尚未备份'
-  return new Date(value).toLocaleString('zh-CN', { hour12: false })
+  const date = new Date(value)
+  const part = (number: number) => String(number).padStart(2, '0')
+  return [
+    `${date.getFullYear()}-${part(date.getMonth() + 1)}-${part(date.getDate())}`,
+    `${part(date.getHours())}:${part(date.getMinutes())}:${part(date.getSeconds())}`,
+  ].join(' ')
 }
 </script>
 

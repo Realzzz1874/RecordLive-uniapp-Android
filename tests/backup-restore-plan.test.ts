@@ -26,6 +26,22 @@ describe('Android backup restore planner', () => {
     expect(plan.planFingerprint).toMatch(/^[a-f0-9]{64}$/)
   })
 
+  it('plans Unicode backup data without a browser TextEncoder global', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'TextEncoder')
+    Reflect.deleteProperty(globalThis, 'TextEncoder')
+    try {
+      const backup = data({
+        performances: [performance('p-unicode', '现场🎵')],
+      })
+
+      const plan = planRestore(current(data()), backup, 'replace-all', context())
+
+      expect(plan.planFingerprint).toMatch(/^[a-f0-9]{64}$/)
+    } finally {
+      if (descriptor) Object.defineProperty(globalThis, 'TextEncoder', descriptor)
+    }
+  })
+
   it('merges with local scalar fields winning and multi-value relationships unioned', () => {
     const local = data({
       performances: [performance('p-1', '本机名称')],

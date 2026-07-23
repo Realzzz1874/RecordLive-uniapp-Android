@@ -35,35 +35,40 @@ export class AndroidBackupArchiveGateway implements BackupArchiveGateway {
     const sourceDirectory = `${workDirectory}/source`
     const zipPath = `${workDirectory}/prepared.backup.zip`
     await ensureEmptyDirectory(sourceDirectory)
-    await writeTextFile(`${sourceDirectory}/data.json`, JSON.stringify(data))
-    await ensureDirectory(`${sourceDirectory}/media`)
+    try {
+      await writeTextFile(`${sourceDirectory}/data.json`, JSON.stringify(data))
+      await ensureDirectory(`${sourceDirectory}/media`)
 
-    for (const asset of data.mediaAssets) {
-      const source = mediaSourcePaths[asset.id]
-      if (!source) throw new Error(`找不到媒体文件路径：${asset.id}`)
-      await copyFile(source, `${sourceDirectory}/${asset.archivePath}`)
-    }
+      for (const asset of data.mediaAssets) {
+        const source = mediaSourcePaths[asset.id]
+        if (!source) throw new Error(`找不到媒体文件路径：${asset.id}`)
+        await copyFile(source, `${sourceDirectory}/${asset.archivePath}`)
+      }
 
-    const dataEntry = await fileEntry(`${sourceDirectory}/data.json`, 'data.json')
-    const mediaEntries = await Promise.all(data.mediaAssets.map((asset) =>
-      fileEntry(`${sourceDirectory}/${asset.archivePath}`, asset.archivePath)))
-    const manifest: AndroidBackupManifestV1 = {
-      schemaVersion: 1,
-      backupKind: 'android-local',
-      appVersion: '0.1.0',
-      exportedAtMs: context.appliedAtMs,
-      dataFile: 'data.json',
-      files: [dataEntry, ...mediaEntries],
-    }
-    await writeTextFile(`${sourceDirectory}/manifest.json`, JSON.stringify(manifest))
-    await createZip(absolute(sourceDirectory), absolute(zipPath))
-    await verifyArchive(zipPath)
-    return {
-      operationId: context.operationId,
-      sandboxPath: zipPath,
-      suggestedName: backupFileName(context.appliedAtMs),
-      manifest,
-      data,
+      const dataEntry = await fileEntry(`${sourceDirectory}/data.json`, 'data.json')
+      const mediaEntries = await Promise.all(data.mediaAssets.map((asset) =>
+        fileEntry(`${sourceDirectory}/${asset.archivePath}`, asset.archivePath)))
+      const manifest: AndroidBackupManifestV1 = {
+        schemaVersion: 1,
+        backupKind: 'android-local',
+        appVersion: '0.1.0',
+        exportedAtMs: context.appliedAtMs,
+        dataFile: 'data.json',
+        files: [dataEntry, ...mediaEntries],
+      }
+      await writeTextFile(`${sourceDirectory}/manifest.json`, JSON.stringify(manifest))
+      await createZip(absolute(sourceDirectory), absolute(zipPath))
+      await verifyArchive(zipPath)
+      return {
+        operationId: context.operationId,
+        sandboxPath: zipPath,
+        suggestedName: backupFileName(context.appliedAtMs),
+        manifest,
+        data,
+      }
+    } catch (error) {
+      await cleanupFailedArchive(workDirectory)
+      throw normalizeError(error, '生成本地备份失败')
     }
   }
 
@@ -367,7 +372,7 @@ async function ensureDirectory(path: string): Promise<void> {
 async function writeTextFile(path: string, content: string): Promise<void> {
   const slash = path.lastIndexOf('/')
   await ensureDirectory(path.slice(0, slash))
-  const directory = await resolveEntry(path.slice(0, slash)) as PlusIoDirectoryEntry
+  const directory = await resolveEntry(`${path.slice(0, slash)}/`) as PlusIoDirectoryEntry
   const file = await new Promise<PlusIoFileEntry>((resolve, reject) =>
     directory.getFile(path.slice(slash + 1), { create: true }, resolve, reject))
   const writer = await new Promise<PlusIoFileWriter>((resolve, reject) => file.createWriter(resolve, reject))
@@ -432,5 +437,26 @@ async function removeEntry(path: string): Promise<void> {
 }
 
 function resolveEntry(path: string): Promise<PlusIoFileEntry | PlusIoDirectoryEntry> {
-  return new Promise((resolve, reject) => plus.io.resolveLocalFileSystemURL(path, resolve, reject))
+  return new Promise((resolve, reject) => plus.io.resolveLocalFileSystemURL(
+    path,
+    resolve,
+    (error) => reject(normalizeError(error, `无法访问本地文件：${path}`)),
+  ))
+}
+
+async function cleanupFailedArchive(workDirectory: string): Promise<void> {
+  try {
+    await removeEntry(workDirectory)
+  } catch (error) {
+    console.error('RecordLive failed to clean an incomplete backup archive', error)
+  }
+}
+
+function normalizeError(error: unknown, fallback: string): Error {
+  if (error instanceof Error) return error
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = String((error as { message?: unknown }).message ?? '').trim()
+    if (message) return new Error(message)
+  }
+  return new Error(fallback)
 }

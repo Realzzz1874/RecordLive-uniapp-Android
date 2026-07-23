@@ -418,7 +418,7 @@ function stableJson(value: unknown): string {
 
 // Compact synchronous SHA-256 keeps restore planning pure in both App and H5 runtimes.
 function sha256(message: string): string {
-  const bytes = new TextEncoder().encode(message)
+  const bytes = encodeUtf8(message)
   const bitLength = bytes.length * 8
   const paddedLength = Math.ceil((bytes.length + 9) / 64) * 64
   const padded = new Uint8Array(paddedLength)
@@ -469,6 +469,46 @@ function sha256(message: string): string {
     h[7] = (h[7] + hh) >>> 0
   }
   return [...h].map((value) => value.toString(16).padStart(8, '0')).join('')
+}
+
+function encodeUtf8(value: string): Uint8Array {
+  const bytes = new Uint8Array(value.length * 3)
+  let offset = 0
+  for (let index = 0; index < value.length; index += 1) {
+    let codePoint = value.charCodeAt(index)
+    if (codePoint >= 0xd800 && codePoint <= 0xdbff) {
+      const next = value.charCodeAt(index + 1)
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        codePoint = 0x10000 + ((codePoint - 0xd800) << 10) + (next - 0xdc00)
+        index += 1
+      } else {
+        codePoint = 0xfffd
+      }
+    } else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
+      codePoint = 0xfffd
+    }
+
+    if (codePoint <= 0x7f) {
+      bytes[offset] = codePoint
+      offset += 1
+    } else if (codePoint <= 0x7ff) {
+      bytes[offset] = 0xc0 | (codePoint >>> 6)
+      bytes[offset + 1] = 0x80 | (codePoint & 0x3f)
+      offset += 2
+    } else if (codePoint <= 0xffff) {
+      bytes[offset] = 0xe0 | (codePoint >>> 12)
+      bytes[offset + 1] = 0x80 | ((codePoint >>> 6) & 0x3f)
+      bytes[offset + 2] = 0x80 | (codePoint & 0x3f)
+      offset += 3
+    } else {
+      bytes[offset] = 0xf0 | (codePoint >>> 18)
+      bytes[offset + 1] = 0x80 | ((codePoint >>> 12) & 0x3f)
+      bytes[offset + 2] = 0x80 | ((codePoint >>> 6) & 0x3f)
+      bytes[offset + 3] = 0x80 | (codePoint & 0x3f)
+      offset += 4
+    }
+  }
+  return bytes.slice(0, offset)
 }
 
 function rotateRight(value: number, count: number): number {

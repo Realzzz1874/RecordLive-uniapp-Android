@@ -69,4 +69,22 @@ describe('iOS-compatible artist detail summary', () => {
       { currency: 'USD', ticketPrice: '50', paidPrice: '45', otherCost: '0', totalCost: '45' },
     ])
   })
+
+  it('filters the complete artist summary by the selected homepage lifecycle values', () => {
+    const referenceTimeMs = new Date(2026, 0, 2, 23).getTime()
+    const summary = buildArtistDetailSummary(
+      '甲乐队',
+      [
+        performance('1'),
+        performance('2', { status: PerformanceStatus.Cancelled }),
+        performance('3'),
+      ],
+      ['cancelled'],
+      referenceTimeMs,
+    )
+
+    expect(summary.performances.map(({ id }) => id)).toEqual(['2'])
+    expect(summary.cities).toEqual([{ name: '上海', times: 1 }])
+    expect(summary.expenses).toHaveLength(1)
+  })
 })

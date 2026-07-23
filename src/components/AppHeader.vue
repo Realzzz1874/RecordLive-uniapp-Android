@@ -90,6 +90,17 @@ defineEmits<{
       <view class="app-header__side app-header__side--right">
         <slot name="right">
           <button
+            v-if="showBack && showFilter"
+            class="icon-button icon-button--soft-accent app-header__filter"
+            :class="{ 'app-header__filter--active': filterCount > 0 }"
+            :aria-label="filterLabel"
+            hover-class="icon-button--soft-accent-pressed"
+            @tap="$emit('filter')"
+          >
+            <AppIcon name="filter" />
+            <text v-if="filterCount" class="app-header__filter-count">{{ filterCount }}</text>
+          </button>
+          <button
             v-if="showEdit"
             class="icon-button icon-button--plain"
             aria-label="编辑演出"

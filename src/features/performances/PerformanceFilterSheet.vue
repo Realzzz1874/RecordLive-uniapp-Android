@@ -7,6 +7,7 @@ import type { PerformanceCategory, PerformanceTag } from '@/domain/reference-dat
 import {
   ALL_PERFORMANCE_LIFECYCLES,
   DEFAULT_BROWSE_PREFERENCES,
+  PERFORMANCE_LIFECYCLE_OPTIONS,
   POSTER_COLUMN_COUNTS,
   POSTER_TEXT_COLUMN_COUNTS,
   type ArtistSortMode,
@@ -51,13 +52,6 @@ const sortDirectionDraft = ref<PerformanceTimeSortDirection>(props.sortDirection
 const artistSortModeDraft = ref<ArtistSortMode>(props.artistSortMode)
 const posterColumnCountDraft = ref(props.posterColumnCount)
 const posterTextColumnCountDraft = ref(props.posterTextColumnCount)
-const lifecycleOptions: readonly { value: PerformanceLifecycle; label: string }[] = [
-  { value: 'attended', label: '已看' },
-  { value: 'upcoming', label: '待看' },
-  { value: 'pending-sale', label: '待开票' },
-  { value: 'cancelled', label: '已取消' },
-  { value: 'missed', label: '未赴约' },
-] as const
 
 watch(
   () => [
@@ -277,7 +271,7 @@ function cloneFilter(value: PerformanceFilter): PerformanceFilter {
           <text class="filter-section__title">状态</text>
           <view class="chip-list">
             <button
-              v-for="option in lifecycleOptions"
+              v-for="option in PERFORMANCE_LIFECYCLE_OPTIONS"
               :key="option.value"
               class="filter-chip"
               :class="{ 'filter-chip--selected': draft.lifecycles.includes(option.value) }"

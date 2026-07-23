@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import AppHeader from '@/components/AppHeader.vue'
 import AppIcon from '@/components/AppIcon.vue'
-import type { Performance } from '@/domain/performance'
+import type { Performance, PerformanceLifecycle } from '@/domain/performance'
 import { formatAggregatedAmount, listAllPerformances } from '@/features/imprints/model'
 import {
   buildArtistDetailSummary,
@@ -13,7 +13,10 @@ import {
 } from '@/features/performances/artist-detail'
 import { artistIntensityLevel } from '@/features/performances/artist-summary'
 import PerformanceCard from '@/features/performances/PerformanceCard.vue'
+import PerformanceLifecycleFilterSheet from '@/features/performances/PerformanceLifecycleFilterSheet.vue'
+import { ALL_PERFORMANCE_LIFECYCLES } from '@/features/preferences/model'
 import { getAppRepositories } from '@/platform/repositories/context'
+import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
 import { useImprintPreferencesStore } from '@/stores/imprint-preferences'
 
 const props = defineProps<{
@@ -27,20 +30,29 @@ const emit = defineEmits<{
 }>()
 
 const imprintPreferencesStore = useImprintPreferencesStore()
+const browsePreferencesStore = useBrowsePreferencesStore()
 const { showExpenseAmounts } = storeToRefs(imprintPreferencesStore)
+const { filter } = storeToRefs(browsePreferencesStore)
 const loading = ref(true)
-const summary = ref<ArtistDetailSummary>({
-  performances: [],
-  expenses: [],
-  plays: [],
-  cities: [],
-})
+const performances = ref<Performance[]>([])
+const filterVisible = ref(false)
 let requestSequence = 0
 
+const summary = computed<ArtistDetailSummary>(() => buildArtistDetailSummary(
+  props.artistName,
+  performances.value,
+  filter.value.lifecycles,
+))
 const performanceCount = computed(() => String(summary.value.performances.length))
+const activeFilterCount = computed(() => (
+  filter.value.lifecycles.length === ALL_PERFORMANCE_LIFECYCLES.length ? 0 : 1
+))
 
 onMounted(async () => {
-  await imprintPreferencesStore.initialize()
+  await Promise.all([
+    imprintPreferencesStore.initialize(),
+    browsePreferencesStore.initialize(),
+  ])
   await load()
 })
 watch(() => props.refreshKey, load)
@@ -51,9 +63,9 @@ async function load(): Promise<void> {
   loading.value = true
   try {
     const repositories = await getAppRepositories()
-    const performances = await listAllPerformances(repositories.performances)
+    const items = await listAllPerformances(repositories.performances)
     if (sequence !== requestSequence) return
-    summary.value = buildArtistDetailSummary(props.artistName, performances)
+    performances.value = items
   } catch (error) {
     if (sequence !== requestSequence) return
     uni.showToast({
@@ -68,6 +80,13 @@ async function load(): Promise<void> {
 function rankClass(item: ArtistDetailRankEntry): string {
   return `rank-chip--level-${artistIntensityLevel(item.times)}`
 }
+
+function applyLifecycleFilter(lifecycles: PerformanceLifecycle[]): void {
+  browsePreferencesStore.setFilter({
+    ...filter.value,
+    lifecycles,
+  })
+}
 </script>
 
 <template>
@@ -76,8 +95,12 @@ function rankClass(item: ArtistDetailRankEntry): string {
       :title="artistName"
       :count="performanceCount"
       show-back
+      show-filter
       back-label="返回阵容统计"
+      filter-label="筛选阵容演出状态"
+      :filter-count="activeFilterCount"
       @back="$emit('back')"
+      @filter="filterVisible = true"
     />
 
     <view v-if="loading" class="loading-state">正在汇总阵容数据…</view>
@@ -173,6 +196,13 @@ function rankClass(item: ArtistDetailRankEntry): string {
         <text v-else class="empty-state">没有找到包含该阵容的演出</text>
       </view>
     </scroll-view>
+
+    <PerformanceLifecycleFilterSheet
+      :visible="filterVisible"
+      :lifecycles="filter.lifecycles"
+      @close="filterVisible = false"
+      @apply="applyLifecycleFilter"
+    />
   </view>
 </template>
 

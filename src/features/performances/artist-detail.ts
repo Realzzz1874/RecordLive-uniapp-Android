@@ -1,4 +1,8 @@
-import type { Performance } from '@/domain/performance'
+import {
+  derivePerformanceLifecycle,
+  type Performance,
+  type PerformanceLifecycle,
+} from '@/domain/performance'
 import {
   summarizeExpenses,
   type ImprintExpenseSummary,
@@ -26,11 +30,16 @@ export interface PlayDetailSummary {
 export function buildArtistDetailSummary(
   artistName: string,
   performances: readonly Performance[],
+  lifecycles?: readonly PerformanceLifecycle[],
+  referenceTimeMs = Date.now(),
 ): ArtistDetailSummary {
   const normalizedArtistName = artistName.trim()
   const artistPerformances = performances
-    .filter(({ facets }) => (facets.artist ?? []).some(
-      (name) => name.trim() === normalizedArtistName,
+    .filter((performance) => (
+      matchesLifecycle(performance, lifecycles, referenceTimeMs)
+      && (performance.facets.artist ?? []).some(
+        (name) => name.trim() === normalizedArtistName,
+      )
     ))
     .sort((left, right) => right.startedAtMs - left.startedAtMs || left.id.localeCompare(right.id))
 
@@ -45,11 +54,16 @@ export function buildArtistDetailSummary(
 export function buildPlayDetailSummary(
   playName: string,
   performances: readonly Performance[],
+  lifecycles?: readonly PerformanceLifecycle[],
+  referenceTimeMs = Date.now(),
 ): PlayDetailSummary {
   const normalizedPlayName = playName.trim()
   const playPerformances = performances
-    .filter(({ facets }) => (facets.play ?? []).some(
-      (name) => name.trim() === normalizedPlayName,
+    .filter((performance) => (
+      matchesLifecycle(performance, lifecycles, referenceTimeMs)
+      && (performance.facets.play ?? []).some(
+        (name) => name.trim() === normalizedPlayName,
+      )
     ))
     .sort((left, right) => right.startedAtMs - left.startedAtMs || left.id.localeCompare(right.id))
 
@@ -59,6 +73,15 @@ export function buildPlayDetailSummary(
     artists: rankAppearances(playPerformances.flatMap(({ facets }) => facets.artist ?? [])),
     cities: rankCities(playPerformances.map(({ city }) => city)),
   }
+}
+
+function matchesLifecycle(
+  performance: Performance,
+  lifecycles: readonly PerformanceLifecycle[] | undefined,
+  referenceTimeMs: number,
+): boolean {
+  return !lifecycles
+    || lifecycles.includes(derivePerformanceLifecycle(performance, referenceTimeMs))
 }
 
 function rankAppearances(values: readonly string[]): ArtistDetailRankEntry[] {

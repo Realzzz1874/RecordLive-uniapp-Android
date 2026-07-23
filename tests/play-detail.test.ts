@@ -49,4 +49,21 @@ describe('iOS-compatible play detail summary', () => {
       { currency: 'CNY', ticketPrice: '200', paidPrice: '160', otherCost: '40', totalCost: '200' },
     ])
   })
+
+  it('filters the complete play summary by the selected homepage lifecycle values', () => {
+    const referenceTimeMs = new Date(2026, 0, 2, 23).getTime()
+    const summary = buildPlayDetailSummary(
+      '剧目 A',
+      [
+        performance('1'),
+        performance('3', { city: '杭州' }),
+      ],
+      ['upcoming'],
+      referenceTimeMs,
+    )
+
+    expect(summary.performances.map(({ id }) => id)).toEqual(['3'])
+    expect(summary.cities).toEqual([{ name: '杭州', times: 1 }])
+    expect(summary.expenses).toHaveLength(1)
+  })
 })

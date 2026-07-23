@@ -30,6 +30,17 @@ export interface PerformanceBrowsePreferences {
   filter: PerformanceFilter
 }
 
+export const PERFORMANCE_LIFECYCLE_OPTIONS: readonly {
+  value: PerformanceLifecycle
+  label: string
+}[] = [
+  { value: 'attended', label: '已看' },
+  { value: 'upcoming', label: '待看' },
+  { value: 'pending-sale', label: '待开票' },
+  { value: 'cancelled', label: '已取消' },
+  { value: 'missed', label: '未赴约' },
+] as const
+
 export const ALL_PERFORMANCE_LIFECYCLES: readonly PerformanceLifecycle[] = [
   'attended',
   'upcoming',

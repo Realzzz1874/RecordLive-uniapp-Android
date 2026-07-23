@@ -15,6 +15,7 @@ import {
   moveSelectedName,
   replaceSelectedName,
 } from '@/features/performances/editor'
+import { getAppRepositories } from '@/platform/repositories/context'
 
 const props = defineProps<{
   visible: boolean
@@ -40,27 +41,29 @@ const filteredSuggestions = computed(() => companyNameSuggestions(
   50,
 ))
 
-watch(() => props.visible, (visible) => {
+watch(() => props.visible, async (visible) => {
   if (!visible) return
   mode.value = 'select'
   selectedNames.value = normalizeCompanyNames(props.values)
-  customNames.value = normalizeCompanyNames(readStoredCompanies())
+  customNames.value = normalizeCompanyNames(await readStoredCompanies())
   inputName.value = ''
   cancelEditing()
 }, { immediate: true })
 
-function readStoredCompanies(): unknown {
+async function readStoredCompanies(): Promise<unknown> {
   try {
-    return uni.getStorageSync(CUSTOM_COMPANIES_STORAGE_KEY)
+    const repositories = await getAppRepositories()
+    return repositories.settings.get<unknown>(CUSTOM_COMPANIES_STORAGE_KEY)
   } catch {
     return undefined
   }
 }
 
-function persistCustomCompanies(names: readonly string[]): void {
+async function persistCustomCompanies(names: readonly string[]): Promise<void> {
   customNames.value = normalizeCompanyNames(names)
   try {
-    uni.setStorageSync(CUSTOM_COMPANIES_STORAGE_KEY, [...customNames.value])
+    const repositories = await getAppRepositories()
+    await repositories.settings.set(CUSTOM_COMPANIES_STORAGE_KEY, [...customNames.value])
   } catch {
     uni.showToast({ title: '自定义厂牌保存失败', icon: 'none' })
   }
@@ -121,7 +124,7 @@ function isStoredCustomCompany(name: string): boolean {
 }
 
 function deleteCustomCompany(name: string): void {
-  persistCustomCompanies(customNames.value.filter((company) => company !== name))
+  void persistCustomCompanies(customNames.value.filter((company) => company !== name))
   publish(selectedNames.value.filter((company) => company !== name))
 }
 
@@ -138,7 +141,7 @@ function handleConfirm(): void {
     mode.value = 'select'
     return
   }
-  persistCustomCompanies(mergeCustomCompanyNames(customNames.value, selectedNames.value))
+  void persistCustomCompanies(mergeCustomCompanyNames(customNames.value, selectedNames.value))
   emit('close')
 }
 </script>

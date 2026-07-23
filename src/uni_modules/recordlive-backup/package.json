@@ -1,0 +1,26 @@
+{
+  "id": "recordlive-backup",
+  "displayName": "RecordLive Android Local Backup",
+  "version": "1.0.0",
+  "description": "Android SAF and verified ZIP support for RecordLive local backups",
+  "engines": {
+    "HBuilderX": "^5.15.0",
+    "uni-app": "^3.0.0"
+  },
+  "dcloudext": {
+    "type": "uts"
+  },
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "client": {
+        "uni-app": {
+          "app": {
+            "android": "u"
+          }
+        }
+      }
+    }
+  }
+}

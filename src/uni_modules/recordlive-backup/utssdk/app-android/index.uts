@@ -1,0 +1,200 @@
+import {
+  type AvailableBytes,
+  type CopySandboxToUri,
+  type CopyUriToSandbox,
+  type CreateLocalDocument,
+  type CreateZip,
+  type ExtractZipEntries,
+  type InspectZip,
+  type LocalDocument,
+  type OpenLocalBackupDocument,
+  type ReadUtf8ZipEntry,
+  type Sha256File,
+  type ZipEntryInfo,
+  type ZipExpectedEntry,
+  type ZipLimits
+} from '../interface.uts'
+import Activity from 'android.app.Activity'
+import Intent from 'android.content.Intent'
+import OpenableColumns from 'android.provider.OpenableColumns'
+import Uri from 'android.net.Uri'
+import File from 'java.io.File'
+import Thread from 'java.lang.Thread'
+
+const CREATE_REQUEST_CODE: Int = 24631
+const OPEN_REQUEST_CODE: Int = 24632
+
+function documentFrom(uri: Uri): LocalDocument {
+  const activity = UTSAndroid.getUniActivity()!
+  let displayName = "RecordLive.backup.zip"
+  let byteSize: number | null = null
+  const cursor = activity.contentResolver.query(uri, null, null, null, null)
+  if (cursor != null) {
+    if (cursor.moveToFirst()) {
+      const nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+      const sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+      if (nameIndex >= 0) displayName = cursor.getString(nameIndex)
+      if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) byteSize = cursor.getLong(sizeIndex).toDouble()
+    }
+    cursor.close()
+  }
+  return { uri: uri.toString(), displayName, byteSize }
+}
+
+function launchDocumentIntent(
+  intent: Intent,
+  requestCode: Int,
+  success: (document: LocalDocument) => void,
+  cancel: () => void,
+  fail: (message: string) => void
+) {
+  const activity = UTSAndroid.getUniActivity()
+  if (activity == null) {
+    fail("当前 Android 页面不可用")
+    return
+  }
+  let callback: ((requestCode: Int, resultCode: Int, data?: Intent) => void) | null = null
+  callback = (receivedCode: Int, resultCode: Int, data?: Intent) => {
+    if (receivedCode != requestCode) return
+    UTSAndroid.offAppActivityResult(callback!)
+    if (resultCode != Activity.RESULT_OK || data == null || data.data == null) {
+      cancel()
+      return
+    }
+    try {
+      success(documentFrom(data.data!))
+    } catch (error) {
+      fail(error.message ?? "无法读取所选文档")
+    }
+  }
+  UTSAndroid.onAppActivityResult(callback!)
+  try {
+    activity.startActivityForResult(intent, requestCode)
+  } catch (error) {
+    UTSAndroid.offAppActivityResult(callback!)
+    fail(error.message ?? "无法打开 Android 文件选择器")
+  }
+}
+
+export const createLocalDocument: CreateLocalDocument = function (
+  suggestedName, success, cancel, fail
+) {
+  const intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
+  intent.addCategory(Intent.CATEGORY_OPENABLE)
+  intent.setType("application/zip")
+  intent.putExtra(Intent.EXTRA_TITLE, suggestedName)
+  intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+  launchDocumentIntent(intent, CREATE_REQUEST_CODE, success, cancel, fail)
+}
+
+export const openLocalBackupDocument: OpenLocalBackupDocument = function (
+  success, cancel, fail
+) {
+  const intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+  intent.addCategory(Intent.CATEGORY_OPENABLE)
+  intent.setType("application/zip")
+  intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+  launchDocumentIntent(intent, OPEN_REQUEST_CODE, success, cancel, fail)
+}
+
+function asyncUnit(work: () => void, success: () => void, fail: (message: string) => void) {
+  new Thread(() => {
+    try {
+      work()
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { success() })
+    } catch (error) {
+      const message = error.message ?? "Android 本地备份操作失败"
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { fail(message) })
+    }
+  }).start()
+}
+
+export const copyUriToSandbox: CopyUriToSandbox = function (
+  uri, destinationPath, maxBytes, success, fail
+) {
+  asyncUnit(() => {
+    RecordLiveBackup.copyUriToFile(
+      UTSAndroid.getAppContext()!, uri, destinationPath, maxBytes.toLong()
+    )
+  }, success, fail)
+}
+
+export const copySandboxToUri: CopySandboxToUri = function (
+  sourcePath, uri, success, fail
+) {
+  asyncUnit(() => {
+    RecordLiveBackup.copyFileToUri(UTSAndroid.getAppContext()!, sourcePath, uri)
+  }, success, fail)
+}
+
+export const createZip: CreateZip = function (
+  sourceDirectoryPath, destinationZipPath, success, fail
+) {
+  asyncUnit(() => { RecordLiveBackup.createZip(sourceDirectoryPath, destinationZipPath) }, success, fail)
+}
+
+export const inspectZip: InspectZip = function (zipPath, limits, success, fail) {
+  new Thread(() => {
+    try {
+      const json = RecordLiveBackup.inspectZip(zipPath, JSON.stringify(limits))
+      const entries = JSON.parse<Array<ZipEntryInfo>>(json)!
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { success(entries) })
+    } catch (error) {
+      const message = error.message ?? "ZIP 检查失败"
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { fail(message) })
+    }
+  }).start()
+}
+
+export const readUtf8ZipEntry: ReadUtf8ZipEntry = function (
+  zipPath, entryPath, maxBytes, success, fail
+) {
+  new Thread(() => {
+    try {
+      const value = RecordLiveBackup.readUtf8ZipEntry(
+        zipPath, entryPath, maxBytes.toLong()
+      )
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { success(value) })
+    } catch (error) {
+      const message = error.message ?? "ZIP 条目读取失败"
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { fail(message) })
+    }
+  }).start()
+}
+
+export const extractZipEntries: ExtractZipEntries = function (
+  zipPath, destinationDirectoryPath, expectedEntries, limits, success, fail
+) {
+  asyncUnit(() => {
+    RecordLiveBackup.extractZipEntries(
+      zipPath,
+      destinationDirectoryPath,
+      JSON.stringify(expectedEntries),
+      JSON.stringify(limits)
+    )
+  }, success, fail)
+}
+
+export const sha256File: Sha256File = function (path, success, fail) {
+  new Thread(() => {
+    try {
+      const value = RecordLiveBackup.sha256File(path)
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { success(value) })
+    } catch (error) {
+      const message = error.message ?? "文件哈希计算失败"
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { fail(message) })
+    }
+  }).start()
+}
+
+export const availableBytes: AvailableBytes = function (path, success, fail) {
+  new Thread(() => {
+    try {
+      const value = new File(path).usableSpace.toDouble()
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { success(value) })
+    } catch (error) {
+      const message = error.message ?? "无法读取可用空间"
+      UTSAndroid.getUniActivity()?.runOnUiThread(() => { fail(message) })
+    }
+  }).start()
+}

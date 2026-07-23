@@ -36,6 +36,11 @@ export const useImprintPreferencesStore = defineStore('imprint-preferences', () 
     return initialization
   }
 
+  function reload(): Promise<void> {
+    initialization = load()
+    return initialization
+  }
+
   async function load(): Promise<void> {
     try {
       const repositories = await getAppRepositories()
@@ -108,6 +113,7 @@ export const useImprintPreferencesStore = defineStore('imprint-preferences', () 
     rankView,
     initialized,
     initialize,
+    reload,
     reset,
     setActiveSection,
     setRankView,

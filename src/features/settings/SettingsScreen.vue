@@ -11,6 +11,9 @@
 		PERFORMANCE_DISPLAY_MODE_LABELS,
 		type PerformanceDisplayMode,
 	} from '@/features/preferences/model'
+	import { openExternalUrl } from '@/platform/navigation/external-url'
+
+	const DEVELOPER_PROFILE_URL = 'https://www.xiaohongshu.com/user/profile/634a8c5a000000001802c875'
 
 	const props = defineProps<{
 		themePreference : ThemePreference
@@ -20,15 +23,19 @@
 	const emit = defineEmits<{
 		selectTheme : []
 		plannedAction : [message: string]
-		showAbout : []
 		openCategories : []
 		openTags : []
 		openQuickAddSettings : []
+		openBackup : []
 		selectDisplayMode : []
 	}>()
 
 	const themeLabel = computed(() => THEME_LABELS[props.themePreference])
 	const displayModeLabel = computed(() => PERFORMANCE_DISPLAY_MODE_LABELS[props.displayMode])
+
+	function openDeveloperProfile(): void {
+		openExternalUrl(DEVELOPER_PROFILE_URL)
+	}
 </script>
 
 <template>
@@ -130,7 +137,7 @@
 				</button>
 
 				<button class="settings-row settings-row--supporting" aria-label="本地备份与恢复"
-					hover-class="settings-row--pressed" @tap="$emit('plannedAction', 'Android 本地备份将在 Milestone 5 开放')">
+					hover-class="settings-row--pressed" @tap="$emit('openBackup')">
 					<view class="settings-row__icon">
 						<AppIcon name="backup" />
 					</view>
@@ -147,8 +154,8 @@
 			<view class="settings-section">
 				<text class="settings-section__title">关于</text>
 
-				<button class="settings-row" aria-label="关于记录现场" hover-class="settings-row--pressed"
-					@tap="$emit('showAbout')">
+				<button class="settings-row" aria-label="关于开发者/意见反馈" hover-class="settings-row--pressed"
+					@tap="openDeveloperProfile">
 					<view class="settings-row__icon">
 						<AppIcon name="info" />
 					</view>

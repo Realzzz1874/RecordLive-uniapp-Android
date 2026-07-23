@@ -25,6 +25,11 @@ export const useQuickAddPreferencesStore = defineStore('quick-add-preferences', 
     return initialization
   }
 
+  function reload(): Promise<void> {
+    initialization = load()
+    return initialization
+  }
+
   async function load(): Promise<void> {
     try {
       const repositories = await getAppRepositories()
@@ -79,6 +84,7 @@ export const useQuickAddPreferencesStore = defineStore('quick-add-preferences', 
     chineseMusicalCity,
     initialized,
     initialize,
+    reload,
     setCopyExisting,
     setParseLink,
     setChineseMusicalSchedule,

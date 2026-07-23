@@ -20,6 +20,10 @@ import {
   sqlOptionalNumber,
   sqlText,
 } from '@/platform/database/sql-values'
+import {
+  DefaultDataOperationCoordinator,
+  type DataOperationCoordinator,
+} from '@/platform/backup/data-operation-coordinator'
 
 interface PerformanceRow extends DatabaseRow {
   id: string
@@ -90,6 +94,7 @@ export class SQLitePerformanceRepository implements PerformanceRepository {
   constructor(
     private readonly driver: DatabaseDriver,
     options: SQLitePerformanceRepositoryOptions = {},
+    private readonly coordinator: DataOperationCoordinator = new DefaultDataOperationCoordinator(),
   ) {
     this.generateId = options.generateId ?? createId
     this.now = options.now ?? Date.now
@@ -119,6 +124,10 @@ export class SQLitePerformanceRepository implements PerformanceRepository {
   }
 
   async save(draft: PerformanceDraft): Promise<Performance> {
+    return this.coordinator.withMutation(() => this.saveUnlocked(draft))
+  }
+
+  private async saveUnlocked(draft: PerformanceDraft): Promise<Performance> {
     validateDraft(draft)
     const existing = draft.id ? await this.get(draft.id) : null
     if (draft.id && !existing) throw new DomainNotFoundError('演出记录不存在')
@@ -210,6 +219,10 @@ export class SQLitePerformanceRepository implements PerformanceRepository {
   }
 
   async remove(id: string): Promise<void> {
+    return this.coordinator.withMutation(() => this.removeUnlocked(id))
+  }
+
+  private async removeUnlocked(id: string): Promise<void> {
     if (!await this.get(id)) throw new DomainNotFoundError('演出记录不存在')
     const timestamp = this.now()
     await this.driver.execute(

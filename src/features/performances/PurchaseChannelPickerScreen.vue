@@ -8,6 +8,7 @@ import {
   PURCHASE_CHANNELS_STORAGE_KEY,
   purchaseChannelOptions,
 } from '@/features/performances/purchase-channels'
+import { getAppRepositories } from '@/platform/repositories/context'
 
 const props = defineProps<{
   visible: boolean
@@ -24,25 +25,27 @@ const channels = ref<string[]>([])
 const selectedChannel = ref('')
 const newName = ref('')
 
-watch(() => props.visible, (visible) => {
+watch(() => props.visible, async (visible) => {
   if (!visible) return
   mode.value = 'select'
   selectedChannel.value = props.value.trim()
   newName.value = ''
-  channels.value = purchaseChannelOptions(readStoredChannels(), selectedChannel.value)
+  channels.value = purchaseChannelOptions(await readStoredChannels(), selectedChannel.value)
 }, { immediate: true })
 
-function readStoredChannels(): unknown {
+async function readStoredChannels(): Promise<unknown> {
   try {
-    return uni.getStorageSync(PURCHASE_CHANNELS_STORAGE_KEY)
+    const repositories = await getAppRepositories()
+    return repositories.settings.get<unknown>(PURCHASE_CHANNELS_STORAGE_KEY)
   } catch {
     return undefined
   }
 }
 
-function persistChannels(): void {
+async function persistChannels(): Promise<void> {
   try {
-    uni.setStorageSync(PURCHASE_CHANNELS_STORAGE_KEY, [...channels.value])
+    const repositories = await getAppRepositories()
+    await repositories.settings.set(PURCHASE_CHANNELS_STORAGE_KEY, [...channels.value])
   } catch {
     uni.showToast({ title: '渠道列表保存失败', icon: 'none' })
   }
@@ -53,7 +56,7 @@ function addChannel(): void {
   if (!name) return
   if (!channels.value.includes(name)) {
     channels.value = [name, ...channels.value]
-    persistChannels()
+    void persistChannels()
   }
   selectedChannel.value = name
   newName.value = ''
@@ -68,12 +71,12 @@ function removeChannel(index: number): void {
   if (!channel) return
   channels.value = channels.value.filter((_, currentIndex) => currentIndex !== index)
   if (selectedChannel.value === channel) selectedChannel.value = ''
-  persistChannels()
+  void persistChannels()
 }
 
 function moveChannel(index: number, offset: -1 | 1): void {
   channels.value = moveSelectedName(channels.value, index, index + offset)
-  persistChannels()
+  void persistChannels()
 }
 
 function handleBack(): void {

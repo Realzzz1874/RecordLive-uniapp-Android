@@ -1,0 +1,69 @@
+export type LocalDocument = {
+  uri: string
+  displayName: string
+  byteSize: number | null
+}
+
+export type ZipLimits = {
+  maxArchiveBytes: number
+  maxEntryCount: number
+  maxEntryBytes: number
+  maxExtractedBytes: number
+}
+
+export type ZipEntryInfo = {
+  path: string
+  compressedBytes: number
+  uncompressedBytes: number
+  directory: boolean
+  encrypted: boolean
+}
+
+export type ZipExpectedEntry = {
+  path: string
+  byteSize: number
+  sha256: string
+}
+
+export type CreateLocalDocument = (
+  suggestedName: string,
+  success: (document: LocalDocument) => void,
+  cancel: () => void,
+  fail: (message: string) => void
+) => void
+export type OpenLocalBackupDocument = (
+  success: (document: LocalDocument) => void,
+  cancel: () => void,
+  fail: (message: string) => void
+) => void
+export type CopyUriToSandbox = (
+  uri: string, destinationPath: string, maxBytes: number,
+  success: () => void, fail: (message: string) => void
+) => void
+export type CopySandboxToUri = (
+  sourcePath: string, uri: string,
+  success: () => void, fail: (message: string) => void
+) => void
+export type CreateZip = (
+  sourceDirectoryPath: string, destinationZipPath: string,
+  success: () => void, fail: (message: string) => void
+) => void
+export type InspectZip = (
+  zipPath: string, limits: ZipLimits,
+  success: (entries: Array<ZipEntryInfo>) => void, fail: (message: string) => void
+) => void
+export type ReadUtf8ZipEntry = (
+  zipPath: string, entryPath: string, maxBytes: number,
+  success: (content: string) => void, fail: (message: string) => void
+) => void
+export type ExtractZipEntries = (
+  zipPath: string, destinationDirectoryPath: string,
+  expectedEntries: Array<ZipExpectedEntry>, limits: ZipLimits,
+  success: () => void, fail: (message: string) => void
+) => void
+export type Sha256File = (
+  path: string, success: (sha256: string) => void, fail: (message: string) => void
+) => void
+export type AvailableBytes = (
+  path: string, success: (bytes: number) => void, fail: (message: string) => void
+) => void

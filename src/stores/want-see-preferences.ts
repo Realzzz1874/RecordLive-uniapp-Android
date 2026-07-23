@@ -23,6 +23,11 @@ export const useWantSeePreferencesStore = defineStore('want-see-preferences', ()
     return initialization
   }
 
+  function reload(): Promise<void> {
+    initialization = load()
+    return initialization
+  }
+
   async function load(): Promise<void> {
     try {
       const repositories = await getAppRepositories()
@@ -65,6 +70,7 @@ export const useWantSeePreferencesStore = defineStore('want-see-preferences', ()
     includePendingSale,
     initialized,
     initialize,
+    reload,
     reset,
     setPreferences,
   }

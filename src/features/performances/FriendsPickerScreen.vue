@@ -8,6 +8,7 @@ import {
   FRIENDS_STORAGE_KEY,
   friendOptions,
 } from '@/features/performances/friends'
+import { getAppRepositories } from '@/platform/repositories/context'
 
 const props = defineProps<{
   visible: boolean
@@ -24,27 +25,29 @@ const friends = ref<string[]>([])
 const selectedFriends = ref<string[]>([])
 const newName = ref('')
 
-watch(() => props.visible, (visible) => {
+watch(() => props.visible, async (visible) => {
   if (!visible) return
   mode.value = 'select'
   selectedFriends.value = friendOptions([], props.values)
   newName.value = ''
-  const stored = readStoredFriends()
+  const stored = await readStoredFriends()
   friends.value = friendOptions(stored, selectedFriends.value)
-  if (friends.value.length !== friendOptions(stored).length) persistFriends()
+  if (friends.value.length !== friendOptions(stored).length) void persistFriends()
 }, { immediate: true })
 
-function readStoredFriends(): unknown {
+async function readStoredFriends(): Promise<unknown> {
   try {
-    return uni.getStorageSync(FRIENDS_STORAGE_KEY)
+    const repositories = await getAppRepositories()
+    return repositories.settings.get<unknown>(FRIENDS_STORAGE_KEY)
   } catch {
     return undefined
   }
 }
 
-function persistFriends(): void {
+async function persistFriends(): Promise<void> {
   try {
-    uni.setStorageSync(FRIENDS_STORAGE_KEY, [...friends.value])
+    const repositories = await getAppRepositories()
+    await repositories.settings.set(FRIENDS_STORAGE_KEY, [...friends.value])
   } catch {
     uni.showToast({ title: '好友列表保存失败', icon: 'none' })
   }
@@ -55,7 +58,7 @@ function addFriend(): void {
   if (!name) return
   if (!friends.value.includes(name)) {
     friends.value = [name, ...friends.value]
-    persistFriends()
+    void persistFriends()
   }
   if (!selectedFriends.value.includes(name)) {
     selectedFriends.value = [...selectedFriends.value, name]
@@ -74,12 +77,12 @@ function removeFriend(index: number): void {
   if (!friend) return
   friends.value = friends.value.filter((_, currentIndex) => currentIndex !== index)
   selectedFriends.value = selectedFriends.value.filter((item) => item !== friend)
-  persistFriends()
+  void persistFriends()
 }
 
 function moveFriend(index: number, offset: -1 | 1): void {
   friends.value = moveSelectedName(friends.value, index, index + offset)
-  persistFriends()
+  void persistFriends()
 }
 
 function handleBack(): void {

@@ -12,6 +12,10 @@ import type {
 import type { ReferenceDataRepository } from '@/features/reference-data/repository'
 import type { DatabaseDriver, DatabaseRow } from '@/platform/database/driver'
 import { sqlInteger, sqlText } from '@/platform/database/sql-values'
+import {
+  DefaultDataOperationCoordinator,
+  type DataOperationCoordinator,
+} from '@/platform/backup/data-operation-coordinator'
 
 interface ReferenceRow extends DatabaseRow {
   id: string
@@ -37,6 +41,7 @@ export class SQLiteReferenceDataRepository implements ReferenceDataRepository {
   constructor(
     private readonly driver: DatabaseDriver,
     options: SQLiteReferenceDataRepositoryOptions = {},
+    private readonly coordinator: DataOperationCoordinator = new DefaultDataOperationCoordinator(),
   ) {
     this.generateId = options.generateId ?? createId
     this.now = options.now ?? Date.now
@@ -47,18 +52,19 @@ export class SQLiteReferenceDataRepository implements ReferenceDataRepository {
   }
 
   async saveCategory(draft: CategoryDraft): Promise<PerformanceCategory> {
-    return this.save('performance_categories', draft, '分类')
+    return this.coordinator.withMutation(() =>
+      this.save('performance_categories', draft, '分类'))
   }
 
   async removeCategory(id: string): Promise<void> {
-    await this.driver.transaction(async () => {
+    await this.coordinator.withMutation(() => this.driver.transaction(async () => {
       await this.assertExists('performance_categories', id, '分类')
       const timestamp = this.now()
       await this.driver.execute([
         `UPDATE performances SET category_id = NULL, updated_at_ms = ${sqlInteger(timestamp)} WHERE category_id = ${sqlText(id)} AND deleted_at_ms IS NULL`,
         `UPDATE performance_categories SET deleted_at_ms = ${sqlInteger(timestamp)}, updated_at_ms = ${sqlInteger(timestamp)} WHERE id = ${sqlText(id)}`,
       ])
-    })
+    }))
   }
 
   async listTags(): Promise<PerformanceTag[]> {
@@ -66,18 +72,19 @@ export class SQLiteReferenceDataRepository implements ReferenceDataRepository {
   }
 
   async saveTag(draft: TagDraft): Promise<PerformanceTag> {
-    return this.save('performance_tags', draft, '标签')
+    return this.coordinator.withMutation(() =>
+      this.save('performance_tags', draft, '标签'))
   }
 
   async removeTag(id: string): Promise<void> {
-    await this.driver.transaction(async () => {
+    await this.coordinator.withMutation(() => this.driver.transaction(async () => {
       await this.assertExists('performance_tags', id, '标签')
       const timestamp = this.now()
       await this.driver.execute([
         `DELETE FROM performance_tag_links WHERE tag_id = ${sqlText(id)}`,
         `UPDATE performance_tags SET deleted_at_ms = ${sqlInteger(timestamp)}, updated_at_ms = ${sqlInteger(timestamp)} WHERE id = ${sqlText(id)}`,
       ])
-    })
+    }))
   }
 
   private async list<T extends PerformanceCategory | PerformanceTag>(table: ReferenceTable): Promise<T[]> {

@@ -8,8 +8,9 @@ import {
   type ResolvedTheme,
   type ThemePreference,
 } from '@/features/app-shell/model'
+import { getAppRepositories } from '@/platform/repositories/context'
 
-const THEME_STORAGE_KEY = 'recordlive.theme-preference'
+export const THEME_STORAGE_KEY = 'recordlive.theme-preference'
 
 function readSystemTheme(): ResolvedTheme {
   try {
@@ -29,11 +30,12 @@ export const useAppShellStore = defineStore('app-shell', () => {
     resolveTheme(themePreference.value, systemTheme.value),
   )
 
-  function initialize(): void {
+  async function initialize(): Promise<void> {
     systemTheme.value = readSystemTheme()
 
     try {
-      const savedPreference: unknown = uni.getStorageSync(THEME_STORAGE_KEY)
+      const repositories = await getAppRepositories()
+      const savedPreference = await repositories.settings.get<unknown>(THEME_STORAGE_KEY)
       if (isThemePreference(savedPreference)) {
         themePreference.value = savedPreference
       }
@@ -51,10 +53,15 @@ export const useAppShellStore = defineStore('app-shell', () => {
   function setThemePreference(preference: ThemePreference): void {
     themePreference.value = preference
 
+    void persistTheme(preference)
+  }
+
+  async function persistTheme(preference: ThemePreference): Promise<void> {
     try {
-      uni.setStorageSync(THEME_STORAGE_KEY, preference)
+      const repositories = await getAppRepositories()
+      await repositories.settings.set(THEME_STORAGE_KEY, preference)
     } catch {
-      // Keep the in-memory preference when storage is unavailable.
+      // Keep the in-memory preference when persistence is temporarily unavailable.
     }
   }
 

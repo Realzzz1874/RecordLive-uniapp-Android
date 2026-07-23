@@ -15,6 +15,7 @@ import type { Performance } from '@/domain/performance'
 import ReferenceDataScreen from '@/features/reference-data/ReferenceDataScreen.vue'
 import QuickAddSettingsScreen from '@/features/settings/QuickAddSettingsScreen.vue'
 import SettingsScreen from '@/features/settings/SettingsScreen.vue'
+import BackupScreen from '@/features/backup/BackupScreen.vue'
 import WantSeeScreen from '@/features/want-see/WantSeeScreen.vue'
 import {
   PERFORMANCE_DISPLAY_MODE_LABELS,
@@ -23,13 +24,17 @@ import {
 import { useAppShellStore } from '@/stores/app-shell'
 import { useBrowsePreferencesStore } from '@/stores/browse-preferences'
 import { useQuickAddPreferencesStore } from '@/stores/quick-add-preferences'
+import { useWantSeePreferencesStore } from '@/stores/want-see-preferences'
+import { useImprintPreferencesStore } from '@/stores/imprint-preferences'
 
 const appShellStore = useAppShellStore()
 const browsePreferencesStore = useBrowsePreferencesStore()
 const quickAddPreferencesStore = useQuickAddPreferencesStore()
+const wantSeePreferencesStore = useWantSeePreferencesStore()
+const imprintPreferencesStore = useImprintPreferencesStore()
 const { activeTab, resolvedTheme, themePreference } = storeToRefs(appShellStore)
 const { displayMode } = storeToRefs(browsePreferencesStore)
-const settingsDestination = ref<'root' | 'category' | 'tag' | 'quick-add'>('root')
+const settingsDestination = ref<'root' | 'category' | 'tag' | 'quick-add' | 'backup'>('root')
 const recordsDestination = ref<'root' | 'artist' | 'play' | 'detail' | 'editor'>('root')
 const recordsRefreshKey = ref(0)
 const selectedPerformanceId = ref('')
@@ -88,15 +93,6 @@ function selectDisplayMode(): void {
       const mode = modes[tapIndex]
       if (mode) browsePreferencesStore.setDisplayMode(mode)
     },
-  })
-}
-
-function showAbout(): void {
-  uni.showModal({
-    title: '关于记录现场',
-    content: '为喜欢的现场演出留下时间、票根与回忆。\nAndroid 版本 0.1.0',
-    showCancel: false,
-    confirmText: '知道了',
   })
 }
 
@@ -188,6 +184,24 @@ function openReferenceData(kind: 'category' | 'tag'): void {
 
 function openQuickAddSettings(): void {
   settingsDestination.value = 'quick-add'
+}
+
+function openBackup(): void {
+  settingsDestination.value = 'backup'
+}
+
+async function handleBackupRestored(): Promise<void> {
+  await Promise.all([
+    appShellStore.initialize(),
+    browsePreferencesStore.reload(),
+    quickAddPreferencesStore.reload(),
+    wantSeePreferencesStore.reload(),
+    imprintPreferencesStore.reload(),
+  ])
+  settingsDestination.value = 'root'
+  recordsDestination.value = 'root'
+  recordsRefreshKey.value += 1
+  appShellStore.setActiveTab('records')
 }
 
 function closeReferenceData(): void {
@@ -324,10 +338,15 @@ watch(
           @select-theme="selectTheme"
           @select-display-mode="selectDisplayMode"
           @planned-action="showPlannedAction"
-          @show-about="showAbout"
           @open-categories="openReferenceData('category')"
           @open-tags="openReferenceData('tag')"
           @open-quick-add-settings="openQuickAddSettings"
+          @open-backup="openBackup"
+        />
+        <BackupScreen
+          v-else-if="settingsDestination === 'backup'"
+          @back="closeReferenceData"
+          @restored="handleBackupRestored"
         />
         <QuickAddSettingsScreen
           v-else-if="settingsDestination === 'quick-add'"

@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 220" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <ellipse fill="#271e1a" cx="132" cy="199" rx="86" ry="8"/>
-  <path fill="#211c19" d="M72 55h137a8 8 0 0 1 8 8v119H64V63a8 8 0 0 1 8-8Z"/>
-  <path stroke="#d8824e" stroke-width="2.4" d="M72 55h137a8 8 0 0 1 8 8v119H64V63a8 8 0 0 1 8-8ZM86 43v24M118 43v24M150 43v24M182 43v24M80 84h120"/>
-  <path fill="#2b2420" d="M89 104h18v15H89zM118 104h18v15h-18zM147 104h18v15h-18zM176 104h18v15h-18zM89 129h18v15H89zM118 129h18v15h-18zM147 129h18v15h-18z"/>
-  <path stroke="#d6783f" stroke-width="2.2" d="M176 129h18v15h-18z"/>
-  <path fill="#211c19" d="M28 134h122v15a16 16 0 0 0 0 32v16H28v-16a16 16 0 0 0 0-32v-15Z"/>
-  <path stroke="#d8824e" stroke-width="2.4" d="M28 134h122v15a16 16 0 0 0 0 32v16H28v-16a16 16 0 0 0 0-32v-15Z"/>
-  <path stroke="#d6783f" stroke-width="2.2" d="M79 151v26a8 8 0 1 1-6-7.8V148l21-5v24a8 8 0 1 1-6-7.8v-14.7"/>
-  <path stroke="#8f7770" stroke-width="2" d="M105 157h26M105 170h18"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 260 220"><ellipse cx="132" cy="199" fill="#271e1a" rx="86" ry="8"/><path fill="#211c19" d="M72 55h137a8 8 0 0 1 8 8v119H64V63a8 8 0 0 1 8-8Z"/><path stroke="#d8824e" stroke-width="2.4" d="M72 55h137a8 8 0 0 1 8 8v119H64V63a8 8 0 0 1 8-8ZM86 43v24M118 43v24M150 43v24M182 43v24M80 84h120"/><path fill="#2b2420" d="M89 104h18v15H89zM118 104h18v15h-18zM147 104h18v15h-18zM176 104h18v15h-18zM89 129h18v15H89zM118 129h18v15h-18zM147 129h18v15h-18z"/><path stroke="#d6783f" stroke-width="2.2" d="M176 129h18v15h-18z"/><path fill="#211c19" d="M28 134h122v15a16 16 0 0 0 0 32v16H28v-16a16 16 0 0 0 0-32v-15Z"/><path stroke="#d8824e" stroke-width="2.4" d="M28 134h122v15a16 16 0 0 0 0 32v16H28v-16a16 16 0 0 0 0-32v-15Z"/><path stroke="#d6783f" stroke-width="2.2" d="M79 151v26a8 8 0 1 1-6-7.8V148l21-5v24a8 8 0 1 1-6-7.8v-14.7"/><path stroke="#8f7770" stroke-width="2" d="M105 157h26M105 170h18"/></svg>

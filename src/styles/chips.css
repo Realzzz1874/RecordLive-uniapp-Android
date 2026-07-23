@@ -62,3 +62,41 @@
 .app-chip--level-3::before {
   opacity: .1;
 }
+
+.app-intensity-chip {
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  color: #fff;
+}
+
+.app-intensity-chip::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  background: var(--color-intensity-primary);
+  content: '';
+  opacity: 1;
+}
+
+.app-intensity-chip > text {
+  position: relative;
+  z-index: 1;
+}
+
+.app-intensity-chip--level-0::before {
+  background: var(--color-intensity-soft);
+}
+
+.app-intensity-chip--level-1::before {
+  opacity: .65;
+}
+
+.app-intensity-chip--level-2::before {
+  opacity: .78;
+}
+
+.app-intensity-chip--level-3::before {
+  opacity: .9;
+}

@@ -86,7 +86,7 @@ async function load(): Promise<void> {
 }
 
 function rankClass(item: ArtistDetailRankEntry): string {
-  return `rank-chip--level-${artistIntensityLevel(item.times)}`
+  return `app-intensity-chip--level-${artistIntensityLevel(item.times)}`
 }
 
 function applyLifecycleFilter(lifecycles: PerformanceLifecycle[]): void {
@@ -161,12 +161,14 @@ function applyLifecycleFilter(lifecycles: PerformanceLifecycle[]): void {
           <text class="summary-card__count">✘{{ summary.artists.length }}</text>
         </view>
         <view class="rank-list">
-          <text
+          <view
             v-for="item in summary.artists"
             :key="item.name"
-            class="rank-chip"
+            class="rank-chip app-intensity-chip"
             :class="rankClass(item)"
-          >{{ item.name }} ✘{{ item.times }}</text>
+          >
+            <text>{{ item.name }} ✘{{ item.times }}</text>
+          </view>
         </view>
       </view>
 
@@ -177,12 +179,14 @@ function applyLifecycleFilter(lifecycles: PerformanceLifecycle[]): void {
           <text class="summary-card__count">✘{{ summary.cities.length }}</text>
         </view>
         <view class="rank-list">
-          <text
+          <view
             v-for="item in summary.cities"
             :key="item.name"
-            class="rank-chip"
+            class="rank-chip app-intensity-chip"
             :class="rankClass(item)"
-          >{{ item.name }} ✘{{ item.times }}</text>
+          >
+            <text>{{ item.name }} ✘{{ item.times }}</text>
+          </view>
         </view>
       </view>
 
@@ -239,11 +243,7 @@ function applyLifecycleFilter(lifecycles: PerformanceLifecycle[]): void {
 .expense-metric__label { color: var(--color-muted); font-size: 20rpx; }
 .expense-metric__value { max-width: 100%; overflow: hidden; color: var(--color-accent); font-size: 28rpx; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .rank-list { display: flex; margin-top: 15rpx; flex-wrap: wrap; gap: 9rpx; }
-.rank-chip { position: relative; overflow: hidden; padding: 8rpx 13rpx; border-radius: 14rpx; background: var(--color-accent); color: var(--color-on-accent); font-size: 23rpx; font-weight: 620; line-height: 1.3; }
-.rank-chip--level-0 { background: var(--color-accent-soft); color: var(--color-accent); }
-.rank-chip--level-1 { opacity: .72; }
-.rank-chip--level-2 { opacity: .82; }
-.rank-chip--level-3 { opacity: .91; }
+.rank-chip { position: relative; overflow: hidden; padding: 8rpx 13rpx; border-radius: 14rpx; font-size: 23rpx; font-weight: 620; line-height: 1.3; }
 .performance-section { padding-top: 12rpx; }
 .performance-section__heading { display: flex; padding: 8rpx 4rpx 18rpx; align-items: center; }
 .performance-section__title { color: var(--color-text); font-size: 28rpx; font-weight: 680; }

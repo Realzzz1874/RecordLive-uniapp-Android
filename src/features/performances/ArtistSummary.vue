@@ -25,8 +25,8 @@ defineEmits<{
     <button
       v-for="artist in artists"
       :key="artist.name"
-      class="artist-chip app-chip"
-      :class="`app-chip--level-${artistIntensityLevel(artist.times)}`"
+      class="artist-chip app-chip app-intensity-chip"
+      :class="`app-intensity-chip--level-${artistIntensityLevel(artist.times)}`"
       :aria-label="`查看${artist.name}的${artist.times}场演出统计`"
       hover-class="app-chip--pressed"
       @tap="$emit('select', artist.name)"

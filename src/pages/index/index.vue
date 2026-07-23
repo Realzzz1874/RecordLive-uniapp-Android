@@ -389,6 +389,8 @@ watch(
   --color-accent-border: #8f4215;
   --color-accent-soft: #f7eee8;
   --color-on-accent: #ffffff;
+  --color-intensity-primary: #994d1c;
+  --color-intensity-soft: #c8ae7d;
   --color-tab-idle: #676561;
   --color-tab-background: rgba(255, 255, 255, 0.98);
   --color-tab-shadow: rgba(45, 31, 22, 0.05);
@@ -427,6 +429,8 @@ watch(
   --color-accent-border: #db8652;
   --color-accent-soft: #2c211b;
   --color-on-accent: #fff8f3;
+  --color-intensity-primary: #e48f45;
+  --color-intensity-soft: #daa464;
   --color-tab-idle: #b6aaa4;
   --color-tab-background: rgba(28, 23, 20, 0.98);
   --color-tab-shadow: rgba(0, 0, 0, 0.18);

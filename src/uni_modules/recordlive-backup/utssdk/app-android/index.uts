@@ -1,5 +1,7 @@
 import {
   type AvailableBytes,
+  type CancelPendingDocumentRequests,
+  type CleanupStaleBackupArtifacts,
   type CopySandboxToUri,
   type CopyUriToSandbox,
   type CreateLocalDocument,
@@ -23,6 +25,33 @@ import Thread from 'java.lang.Thread'
 
 const CREATE_REQUEST_CODE: Int = 24631
 const OPEN_REQUEST_CODE: Int = 24632
+let createActivityCallback: ((requestCode: Int, resultCode: Int, data?: Intent) => void) | null = null
+let openActivityCallback: ((requestCode: Int, resultCode: Int, data?: Intent) => void) | null = null
+
+function clearActivityCallback(requestCode: Int) {
+  const callback = requestCode == CREATE_REQUEST_CODE
+    ? createActivityCallback
+    : openActivityCallback
+  if (callback != null) UTSAndroid.offAppActivityResult(callback)
+  if (requestCode == CREATE_REQUEST_CODE) {
+    createActivityCallback = null
+  } else {
+    openActivityCallback = null
+  }
+}
+
+function assignActivityCallback(
+  requestCode: Int,
+  callback: (requestCode: Int, resultCode: Int, data?: Intent) => void
+) {
+  clearActivityCallback(requestCode)
+  if (requestCode == CREATE_REQUEST_CODE) {
+    createActivityCallback = callback
+  } else {
+    openActivityCallback = callback
+  }
+  UTSAndroid.onAppActivityResult(callback)
+}
 
 function documentFrom(uri: Uri): LocalDocument {
   const activity = UTSAndroid.getUniActivity()!
@@ -56,7 +85,7 @@ function launchDocumentIntent(
   let callback: ((requestCode: Int, resultCode: Int, data?: Intent) => void) | null = null
   callback = (receivedCode: Int, resultCode: Int, data?: Intent) => {
     if (receivedCode != requestCode) return
-    UTSAndroid.offAppActivityResult(callback!)
+    clearActivityCallback(requestCode)
     if (resultCode != Activity.RESULT_OK || data == null || data.data == null) {
       cancel()
       return
@@ -67,11 +96,11 @@ function launchDocumentIntent(
       fail(error.message ?? "无法读取所选文档")
     }
   }
-  UTSAndroid.onAppActivityResult(callback!)
+  assignActivityCallback(requestCode, callback!)
   try {
     activity.startActivityForResult(intent, requestCode)
   } catch (error) {
-    UTSAndroid.offAppActivityResult(callback!)
+    clearActivityCallback(requestCode)
     fail(error.message ?? "无法打开 Android 文件选择器")
   }
 }
@@ -197,4 +226,22 @@ export const availableBytes: AvailableBytes = function (path, success, fail) {
       UTSAndroid.getUniActivity()?.runOnUiThread(() => { fail(message) })
     }
   }).start()
+}
+
+export const cleanupStaleBackupArtifacts: CleanupStaleBackupArtifacts = function (
+  mediaRootPath, workRootPath, referencedMediaPaths, cutoffMs, success, fail
+) {
+  asyncUnit(() => {
+    RecordLiveBackup.cleanupStaleBackupArtifacts(
+      mediaRootPath,
+      workRootPath,
+      JSON.stringify(referencedMediaPaths),
+      cutoffMs.toLong()
+    )
+  }, success, fail)
+}
+
+export const cancelPendingDocumentRequests: CancelPendingDocumentRequests = function () {
+  clearActivityCallback(CREATE_REQUEST_CODE)
+  clearActivityCallback(OPEN_REQUEST_CODE)
 }

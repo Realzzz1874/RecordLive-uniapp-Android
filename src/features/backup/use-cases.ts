@@ -5,8 +5,11 @@ import type {
   BackupSnapshotRepository,
   BackupSummary,
   InspectedBackupArchive,
+  PreparedBackupArchive,
 } from './repository'
 import type { DataOperationCoordinator } from '@/platform/backup/data-operation-coordinator'
+
+const STALE_ARTIFACT_AGE_MS = 24 * 60 * 60 * 1000
 
 export interface RestorePreview {
   archive: InspectedBackupArchive
@@ -47,23 +50,23 @@ export class BackupUseCases {
   }
 
   async createBackup(): Promise<'saved' | 'cancelled'> {
-    return this.coordinator.withExclusiveDataAccess(async () => {
+    const prepared = await this.coordinator.withExclusiveDataAccess(async () => {
       const state = await this.snapshot.loadRestoreState()
       const context = { operationId: this.generateId(), appliedAtMs: this.now() }
-      const prepared = await this.archive.createArchive(
+      return this.archive.createArchive(
         state.data,
         context,
         state.mediaRelativePaths,
       )
-      try {
-        const saved = await this.archive.saveArchiveToUserFile(prepared)
-        if (!saved) return 'cancelled'
-        await this.metadata.setLastBackupAtMs(this.now())
-        return 'saved'
-      } finally {
-        await this.archive.cleanup(prepared)
-      }
     })
+    try {
+      const saved = await this.archive.saveArchiveToUserFile(prepared)
+      if (!saved) return 'cancelled'
+      await this.metadata.setLastBackupAtMs(this.now())
+      return 'saved'
+    } finally {
+      await this.cleanupArchive(prepared)
+    }
   }
 
   async inspectRestoreFile(): Promise<RestorePreview | null> {
@@ -98,10 +101,25 @@ export class BackupUseCases {
         recoveryContext,
         current.mediaRelativePaths,
       )
-      const stagedMedia = await this.archive.stageMedia(preview.archive, plan)
-      await this.snapshot.applyRestorePlan(plan, stagedMedia)
-      await this.archive.cleanup(preview.archive)
+      try {
+        const stagedMedia = await this.archive.stageMedia(preview.archive, plan)
+        await this.snapshot.applyRestorePlan(plan, stagedMedia)
+      } catch (error) {
+        await this.discardStagedMedia(plan.operationId)
+        throw error
+      }
+      await this.cleanupArchive(preview.archive)
       return { plan }
+    })
+  }
+
+  async cleanupStaleArtifacts(): Promise<void> {
+    await this.coordinator.withExclusiveDataAccess(async () => {
+      const state = await this.snapshot.loadRestoreState()
+      await this.archive.cleanupStaleArtifacts(
+        Object.values(state.mediaRelativePaths),
+        this.now() - STALE_ARTIFACT_AGE_MS,
+      )
     })
   }
 
@@ -124,6 +142,24 @@ export class BackupUseCases {
       replacePlan: planRestore(current, archive.data, 'replace-all', context),
       mergePlan: planRestore(current, archive.data, 'merge-local-first', context),
       source,
+    }
+  }
+
+  private async discardStagedMedia(operationId: string): Promise<void> {
+    try {
+      await this.archive.discardStagedMedia(operationId)
+    } catch (cleanupError) {
+      console.error('RecordLive failed to discard staged restore media', cleanupError)
+    }
+  }
+
+  private async cleanupArchive(
+    archive: PreparedBackupArchive | InspectedBackupArchive,
+  ): Promise<void> {
+    try {
+      await this.archive.cleanup(archive)
+    } catch (cleanupError) {
+      console.error('RecordLive failed to clean backup working files', cleanupError)
     }
   }
 }

@@ -88,3 +88,12 @@ export function availableBytes(
   success: (bytes: number) => void,
   fail: Fail,
 ): void
+export function cleanupStaleBackupArtifacts(
+  mediaRootPath: string,
+  workRootPath: string,
+  referencedMediaPaths: string[],
+  cutoffMs: number,
+  success: () => void,
+  fail: Fail,
+): void
+export function cancelPendingDocumentRequests(): void

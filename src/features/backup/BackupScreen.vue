@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import AppHeader from '@/components/AppHeader.vue'
 import type { RestoreMode, RestorePlan } from '@/domain/backup-restore-plan'
 import type { BackupSummary } from '@/features/backup/repository'
 import type { BackupUseCases, RestorePreview } from '@/features/backup/use-cases'
 import { getAppRepositories } from '@/platform/repositories/context'
+import * as nativeBackup from '@/uni_modules/recordlive-backup'
 
 const emit = defineEmits<{
   back: []
@@ -27,6 +28,7 @@ const selectedPlan = computed<RestorePlan | null>(() => {
 })
 
 onMounted(loadSummary)
+onBeforeUnmount(() => nativeBackup.cancelPendingDocumentRequests())
 
 async function loadSummary(): Promise<void> {
   try {

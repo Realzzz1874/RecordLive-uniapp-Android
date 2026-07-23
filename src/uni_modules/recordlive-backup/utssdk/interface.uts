@@ -67,3 +67,9 @@ export type Sha256File = (
 export type AvailableBytes = (
   path: string, success: (bytes: number) => void, fail: (message: string) => void
 ) => void
+export type CleanupStaleBackupArtifacts = (
+  mediaRootPath: string, workRootPath: string,
+  referencedMediaPaths: Array<string>, cutoffMs: number,
+  success: () => void, fail: (message: string) => void
+) => void
+export type CancelPendingDocumentRequests = () => void

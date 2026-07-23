@@ -55,16 +55,23 @@ export async function createAppRepositories(): Promise<AppRepositories> {
   archiveGateway = new AndroidBackupArchiveGateway()
   // #endif
   if (!archiveGateway) throw new Error('本地备份仅支持 Android App')
+  const backupSnapshot = new SQLiteBackupSnapshotRepository(driver)
+  const backup = new BackupUseCases(
+    backupSnapshot,
+    archiveGateway,
+    new UniStorageBackupMetadataRepository(),
+    coordinator,
+  )
+  try {
+    await backup.cleanupStaleArtifacts()
+  } catch (error) {
+    console.error('RecordLive stale backup cleanup will retry on next launch', error)
+  }
   return {
     performances: new SQLitePerformanceRepository(driver, {}, coordinator),
     referenceData: new SQLiteReferenceDataRepository(driver, {}, coordinator),
     settings,
-    backup: new BackupUseCases(
-      new SQLiteBackupSnapshotRepository(driver),
-      archiveGateway,
-      new UniStorageBackupMetadataRepository(),
-      coordinator,
-    ),
+    backup,
     runtime: 'android-sqlite',
   }
 }

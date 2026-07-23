@@ -60,6 +60,8 @@ export interface BackupArchiveGateway {
   inspectRecoveryPoint(): Promise<InspectedBackupArchive | null>
   deleteRecoveryPoint(): Promise<void>
   hasRecoveryPoint(): Promise<boolean>
+  discardStagedMedia(operationId: string): Promise<void>
+  cleanupStaleArtifacts(referencedMediaPaths: readonly string[], cutoffMs: number): Promise<void>
   cleanup(archive?: PreparedBackupArchive | InspectedBackupArchive): Promise<void>
 }
 

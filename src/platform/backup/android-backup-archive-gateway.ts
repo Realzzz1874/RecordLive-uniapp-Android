@@ -16,6 +16,7 @@ import type {
 import * as nativeBackup from '@/uni_modules/recordlive-backup'
 
 const WORK_ROOT = '_doc/recordlive/backup-work'
+const MEDIA_ROOT = '_doc/recordlive/media'
 const RECOVERY_PATH = '_doc/recordlive/recovery/last-before-restore.backup.zip'
 const LIMITS: nativeBackup.ZipLimits = {
   maxArchiveBytes: 2 * 1024 * 1024 * 1024,
@@ -157,6 +158,22 @@ export class AndroidBackupArchiveGateway implements BackupArchiveGateway {
 
   async hasRecoveryPoint(): Promise<boolean> {
     return fileExists(RECOVERY_PATH)
+  }
+
+  async discardStagedMedia(operationId: string): Promise<void> {
+    await removeEntry(`${MEDIA_ROOT}/restore-${operationId}`)
+  }
+
+  async cleanupStaleArtifacts(
+    referencedMediaPaths: readonly string[],
+    cutoffMs: number,
+  ): Promise<void> {
+    await cleanupStaleBackupArtifacts(
+      absolute(MEDIA_ROOT),
+      absolute(WORK_ROOT),
+      referencedMediaPaths.map(absolute),
+      cutoffMs,
+    )
   }
 
   async cleanup(archive?: PreparedBackupArchive | InspectedBackupArchive): Promise<void> {
@@ -314,6 +331,22 @@ function hashFile(path: string): Promise<string> {
 function availableBytes(path: string): Promise<number> {
   return new Promise((resolve, reject) => nativeBackup.availableBytes(
     path, resolve, (message) => reject(new Error(message)),
+  ))
+}
+
+function cleanupStaleBackupArtifacts(
+  mediaRoot: string,
+  workRoot: string,
+  referencedMediaPaths: string[],
+  cutoffMs: number,
+): Promise<void> {
+  return new Promise((resolve, reject) => nativeBackup.cleanupStaleBackupArtifacts(
+    mediaRoot,
+    workRoot,
+    referencedMediaPaths,
+    cutoffMs,
+    resolve,
+    (message) => reject(new Error(message)),
   ))
 }
 

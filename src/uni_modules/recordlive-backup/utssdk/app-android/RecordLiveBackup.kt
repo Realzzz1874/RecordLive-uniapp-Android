@@ -185,6 +185,44 @@ object RecordLiveBackup {
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
+    @JvmStatic
+    fun cleanupStaleBackupArtifacts(
+        mediaRootPath: String,
+        workRootPath: String,
+        referencedPathsJson: String,
+        cutoffMs: Long
+    ) {
+        val referenced = JSONArray(referencedPathsJson)
+        val referencedPaths = HashSet<String>()
+        for (index in 0 until referenced.length()) {
+            referencedPaths.add(File(referenced.getString(index)).canonicalPath)
+        }
+
+        val mediaRoot = File(mediaRootPath).canonicalFile
+        mediaRoot.listFiles()
+            ?.filter { it.isDirectory && it.name.startsWith("restore-") && it.lastModified() <= cutoffMs }
+            ?.filterNot { directory ->
+                val prefix = directory.canonicalPath + File.separator
+                referencedPaths.any { it == directory.canonicalPath || it.startsWith(prefix) }
+            }
+            ?.forEach { deleteChild(mediaRoot, it) }
+
+        val workRoot = File(workRootPath).canonicalFile
+        workRoot.listFiles()
+            ?.filter { it.lastModified() <= cutoffMs }
+            ?.forEach { deleteChild(workRoot, it) }
+    }
+
+    private fun deleteChild(root: File, child: File) {
+        val canonicalRoot = root.canonicalFile
+        val canonicalChild = child.canonicalFile
+        require(canonicalChild.path.startsWith(canonicalRoot.path + File.separator)) {
+            "拒绝清理备份目录之外的路径"
+        }
+        require(canonicalChild != canonicalRoot) { "拒绝清理备份根目录" }
+        require(canonicalChild.deleteRecursively()) { "无法清理旧备份临时目录：${canonicalChild.name}" }
+    }
+
     private fun validatePath(path: String) {
         require(path.isNotBlank()) { "ZIP 路径为空" }
         require(!path.startsWith("/") && !path.contains('\\') && !path.contains('\u0000')) {

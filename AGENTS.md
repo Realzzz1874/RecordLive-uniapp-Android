@@ -10,7 +10,7 @@
 | `AGENTS.md` | 规定长期有效的工程边界、分层职责、工作流程和最低验证要求 |
 | `docs/architecture.md` | 维护完整架构、产品范围、iOS 参考矩阵、各 Milestone 实施步骤、状态和完成门 |
 | `docs/milestone-*.md` | 记录单个阶段的设计细节、视觉规范或专项验收要求 |
-| `docs/android-backup-contract-v1.md` | 仅作为 Milestone 5 的 Android 本地备份契约，不代表当前已授权实现 |
+| `docs/android-backup-contract-v1.md` | 是已授权并实现的 Milestone 5 Android 本机备份 v1 契约；M5.6 真机验收状态仍以 `docs/architecture.md` 为准 |
 | 源码、Schema 与测试 | 是当前运行行为、数据结构和已验证能力的事实来源 |
 
 发生冲突时，先遵循用户当前明确指令，再遵循本文件的工程边界；架构或阶段设计发生变化时，更新 `docs/architecture.md`，不要在多个文档复制同一份阶段清单。
@@ -25,8 +25,8 @@
 - 禁止修改、格式化、生成、移动或删除 iOS 工程中的任何源码、资源、配置、测试和构建文件；禁止为 Android 适配而改造 iOS 数据结构或功能。
 - 查看 iOS 时只使用只读操作，例如 `rg`、`sed` 和 `git status --short`。不要在 iOS 工程中执行会产生缓存、依赖、构建产物或临时文件的命令。
 - 不实现 iOS 与 Android 之间的数据导入、导出、迁移、同步或兼容备份。该限制对当前及未来阶段都有效。
-- Android 本地备份只服务于 Android 应用自身，并且只有在用户明确恢复 Milestone 5 后才能实现。
-- Milestone 5 及之后阶段目前暂停。在用户明确说“继续 Milestone 5”前，只处理 Milestone 1–4 已实现功能的完善和 iOS 只读参考还原偏差。
+- Android 本地备份只服务于 Android 应用自身。Milestone 5 本机备份 v1 已获得用户授权并完成 M5.1–M5.5；不得借此扩展到 iOS 兼容、云同步或其它高级能力。
+- M5.1–M5.5 已实现；M5.6 Android 自定义基座与真机验收仍延期。Milestone 6 以及 WebDAV、分享、通知、系统日历、OCR、地图、桌面组件和购买等其它高级能力继续暂停，必须获得新的明确授权。
 - Android 真机验收当前延期。除非用户明确要求，否则只执行自动化、H5 交互和资源构建验证，不把这些结果描述成真机验证。
 - 不擅自清理、覆盖或回退工作区中的已有修改；不执行破坏性 Git 操作，不暂存、提交或推送，除非用户明确要求。
 
@@ -111,8 +111,8 @@ platform implementations -> domain
 
 ## 8. 阶段控制
 
-- Milestone 0–4 的详细完成情况和剩余验收项统一查看 `docs/architecture.md`。
+- Milestone 0–5 的详细完成情况和剩余验收项统一查看 `docs/architecture.md`。
 - M2.5 Android 真机验收保持延期，直至用户明确恢复。
-- 当前工作阶段是 M1–M4 功能还原校准，不自动推进下一 Milestone。
-- Milestone 5 包含 Android 本地备份等高级或原生能力；Milestone 6 包含发布准备。两者都必须经过用户新的明确授权。
+- 当前工作阶段是 M1–M5 已实现功能的还原校准、缺陷修复与自动化完善，不自动推进 Milestone 6。
+- Milestone 5 本机备份 v1 的 M5.1–M5.5 已完成；M5.6 真机验收、Milestone 6 发布准备和其它高级能力仍必须经过用户新的明确授权。
 - 新需求如果会跨越当前阶段边界，先说明影响并等待用户决定，不以“顺便完善”为理由提前实现。

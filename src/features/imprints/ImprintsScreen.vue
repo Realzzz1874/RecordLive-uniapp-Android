@@ -28,6 +28,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: [startedAtMs: number]
   open: [id: string]
+  openArtist: [name: string]
 }>()
 
 const imprintPreferencesStore = useImprintPreferencesStore()
@@ -156,6 +157,7 @@ function applyPreferences(
       :show-expense-amounts="showExpenseAmounts"
       @add="$emit('add', $event)"
       @open="$emit('open', $event)"
+      @open-artist="$emit('openArtist', $event)"
       @toggle-expense-amounts="imprintPreferencesStore.setShowExpenseAmounts(!showExpenseAmounts)"
     />
     <ImprintYearView

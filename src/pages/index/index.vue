@@ -204,7 +204,7 @@ onBackPress(() => {
     return true
   }
 
-  if (activeTab.value === 'records' && recordsDestination.value === 'artist') {
+  if ((activeTab.value === 'records' || activeTab.value === 'imprints') && recordsDestination.value === 'artist') {
     closeArtistDetail()
     return true
   }
@@ -273,7 +273,7 @@ watch(
         @saved="handlePerformanceSaved"
       />
       <ArtistDetailScreen
-        v-else-if="activeTab === 'records' && recordsDestination === 'artist'"
+        v-else-if="(activeTab === 'records' || activeTab === 'imprints') && recordsDestination === 'artist'"
         :artist-name="selectedArtistName"
         :refresh-key="recordsRefreshKey"
         @back="closeArtistDetail"
@@ -308,6 +308,7 @@ watch(
         :refresh-key="recordsRefreshKey"
         @add="openPerformanceEditorForDate"
         @open="openPerformanceDetail"
+        @open-artist="openArtistDetail"
       />
       <template v-else>
         <SettingsScreen

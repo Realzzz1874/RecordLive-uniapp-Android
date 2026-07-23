@@ -28,6 +28,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: [startedAtMs: number]
   open: [id: string]
+  openArtist: [name: string]
   'toggle-expense-amounts': []
 }>()
 
@@ -345,15 +346,17 @@ function startOfLocalDay(timestamp: number): number {
           <text>阵容</text>
         </view>
         <view class="artist-chips app-chip-list">
-          <view
+          <button
             v-for="artist in artistRanking"
             :key="artist.name"
             class="artist-chip app-chip"
             :class="`app-chip--level-${artistIntensityLevel(artist.times)}`"
-            :aria-label="`${artist.name}，共${artist.times}次`"
+            :aria-label="`查看${artist.name}的${artist.times}场演出统计`"
+            hover-class="app-chip--pressed"
+            @tap="$emit('openArtist', artist.name)"
           >
             <text>{{ artist.name }} ✘{{ artist.times }}</text>
-          </view>
+          </button>
         </view>
       </section>
     </view>

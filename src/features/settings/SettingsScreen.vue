@@ -136,7 +136,7 @@
 					</view>
 					<view class="settings-row__body">
 						<text class="settings-row__label">本地备份与恢复</text>
-						<text class="settings-row__supporting">仅保存在当前 Android 设备或用户选择的位置</text>
+						<!-- <text class="settings-row__supporting">开发中...</text> -->
 					</view>
 					<view class="settings-row__chevron">
 						<AppIcon name="chevron" />
@@ -153,7 +153,7 @@
 						<AppIcon name="info" />
 					</view>
 					<view class="settings-row__body">
-						<text class="settings-row__label">关于记录现场</text>
+						<text class="settings-row__label">关于开发者/意见反馈</text>
 					</view>
 					<view class="settings-row__chevron">
 						<AppIcon name="chevron" />

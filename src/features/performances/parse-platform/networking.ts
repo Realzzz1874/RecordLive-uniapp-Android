@@ -27,7 +27,6 @@ const MAITIX_API_HOST = 'client.maitix.com'
 const KLOOK_SHORT_HOST = 's.klook.cn'
 const KLOOK_LINK_HOST = 'short.klook.cn'
 const KLOOK_IMAGE_HOST = 'res.klook.com'
-const PAGE_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 const ANDROID_IMAGE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36'
 
 export const defaultParsePlatformHttpClient: ParsePlatformHttpClient = {
@@ -165,7 +164,6 @@ function requestText(url: string, sourceName: string): Promise<string> {
       timeout: 15_000,
       header: {
         Accept: 'text/html',
-        ...(isAppPlatform() ? { 'User-Agent': PAGE_USER_AGENT } : {}),
       },
       success: ({ statusCode, data }) => {
         if (statusCode < 200 || statusCode >= 300) {

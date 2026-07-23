@@ -210,7 +210,7 @@ describe('parse platform routing', () => {
 })
 
 describe('parse platform networking', () => {
-  it('uses a desktop user agent for App page requests to avoid Damai mobile redirects', async () => {
+  it('does not override the App runtime user agent for page requests', async () => {
     interface RequestOptions {
       url: string
       header: Record<string, string>
@@ -238,15 +238,22 @@ describe('parse platform networking', () => {
       await expect(defaultParsePlatformHttpClient.getText(url(
         'https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892',
       ))).resolves.toBe(fixture)
+      await expect(defaultParsePlatformHttpClient.getText(url(
+        'https://m.0368.com/ticket/20/23943.html?orgId=116&siteId=59',
+      ))).resolves.toBe(fixture)
 
       const damaiOptions = request.mock.calls[0]?.[0]
       expect(damaiOptions?.url).toBe('https://detail.damai.cn/item.htm?id=1061626307208')
-      expect(damaiOptions?.header['User-Agent']).toContain('Linux x86_64')
-      expect(damaiOptions?.header['User-Agent']).not.toContain('Mobile')
       expect(request.mock.calls[1]?.[0].url).toBe('https://www.gewara.com/detail/387805')
       expect(request.mock.calls[2]?.[0].url).toBe('https://www.showstart.com/event/299543')
       expect(request.mock.calls[3]?.[0].url)
         .toBe('https://m.shcstheatre.com/Program/ProgramDetailsWeChat.aspx?id=41892')
+      expect(request.mock.calls[4]?.[0].url)
+        .toBe('https://m.0368.com/ticket/20/23943.html?orgId=116&siteId=59')
+      for (const [options] of request.mock.calls) {
+        expect(options.header).toEqual({ Accept: 'text/html' })
+        expect(options.header).not.toHaveProperty('User-Agent')
+      }
     } finally {
       vi.unstubAllGlobals()
     }

@@ -136,6 +136,7 @@
 					</view>
 				</button>
 
+				<!-- #ifdef APP-PLUS -->
 				<button class="settings-row settings-row--supporting" aria-label="本地备份与恢复"
 					hover-class="settings-row--pressed" @tap="$emit('openBackup')">
 					<view class="settings-row__icon">
@@ -149,6 +150,7 @@
 						<AppIcon name="chevron" />
 					</view>
 				</button>
+				<!-- #endif -->
 			</view>
 
 			<view class="settings-section">

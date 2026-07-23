@@ -12,8 +12,6 @@ import { UniStorageAppSettingsRepository } from './uni-storage-app-settings-repo
 import { BackupUseCases } from '@/features/backup/use-cases'
 import type { BackupArchiveGateway } from '@/features/backup/repository'
 import { DefaultDataOperationCoordinator } from '@/platform/backup/data-operation-coordinator'
-import { H5BackupArchiveGateway } from '@/platform/backup/h5-backup-archive-gateway'
-import { H5BackupSnapshotRepository } from '@/platform/backup/h5-backup-snapshot-repository'
 import { migrateLegacyLocalSettings } from '@/platform/backup/migrate-local-settings'
 import { SQLiteBackupSnapshotRepository } from '@/platform/backup/sqlite-backup-snapshot-repository'
 import { UniStorageBackupMetadataRepository } from '@/platform/backup/uni-storage-backup-metadata-repository'
@@ -25,7 +23,7 @@ export interface AppRepositories {
   performances: PerformanceRepository
   referenceData: ReferenceDataRepository
   settings: AppSettingsRepository
-  backup: BackupUseCases
+  backup: BackupUseCases | null
   runtime: 'android-sqlite' | 'h5-memory'
 }
 
@@ -35,17 +33,11 @@ export async function createAppRepositories(): Promise<AppRepositories> {
     const performances = new InMemoryPerformanceRepository()
     const referenceData = new InMemoryReferenceDataRepository()
     const settings = new UniStorageAppSettingsRepository()
-    const coordinator = new DefaultDataOperationCoordinator()
     return {
       performances,
       referenceData,
       settings,
-      backup: new BackupUseCases(
-        new H5BackupSnapshotRepository(performances, referenceData, settings),
-        new H5BackupArchiveGateway(),
-        new UniStorageBackupMetadataRepository(),
-        coordinator,
-      ),
+      backup: null,
       runtime: 'h5-memory',
     }
   }
@@ -58,13 +50,11 @@ export async function createAppRepositories(): Promise<AppRepositories> {
   } catch (error) {
     console.error('RecordLive local settings migration will retry on next launch', error)
   }
-  let archiveGateway: BackupArchiveGateway
+  let archiveGateway: BackupArchiveGateway | null = null
   // #ifdef APP-PLUS
   archiveGateway = new AndroidBackupArchiveGateway()
   // #endif
-  // #ifndef APP-PLUS
-  archiveGateway = new H5BackupArchiveGateway()
-  // #endif
+  if (!archiveGateway) throw new Error('本地备份仅支持 Android App')
   return {
     performances: new SQLitePerformanceRepository(driver, {}, coordinator),
     referenceData: new SQLiteReferenceDataRepository(driver, {}, coordinator),

@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import type { RestoreMode, RestorePlan } from '@/domain/backup-restore-plan'
 import type { BackupSummary } from '@/features/backup/repository'
-import type { RestorePreview } from '@/features/backup/use-cases'
+import type { BackupUseCases, RestorePreview } from '@/features/backup/use-cases'
 import { getAppRepositories } from '@/platform/repositories/context'
 
 const emit = defineEmits<{
@@ -18,7 +18,6 @@ const mode = ref<RestoreMode>('merge-local-first')
 const busy = ref(false)
 const busyLabel = ref('')
 const errorMessage = ref('')
-const runtime = ref<'android' | 'h5-fake'>('android')
 
 const selectedPlan = computed<RestorePlan | null>(() => {
   if (!preview.value) return null
@@ -31,9 +30,8 @@ onMounted(loadSummary)
 
 async function loadSummary(): Promise<void> {
   try {
-    const repositories = await getAppRepositories()
-    runtime.value = repositories.backup.runtime
-    summary.value = await repositories.backup.getSummary()
+    const backup = await getBackupUseCases()
+    summary.value = await backup.getSummary()
   } catch (error) {
     showError(error)
   }
@@ -48,37 +46,32 @@ async function createBackup(): Promise<void> {
   if (!confirmed) return
   let saved = false
   await run('正在生成备份…', async () => {
-    const repositories = await getAppRepositories()
-    const result = await repositories.backup.createBackup()
+    const backup = await getBackupUseCases()
+    const result = await backup.createBackup()
     if (result === 'saved') {
       saved = true
       await loadSummary()
     }
   })
   if (saved) {
-    uni.showToast({ title: runtime.value === 'h5-fake' ? 'H5 模拟备份完成' : '备份已保存', icon: 'success' })
+    uni.showToast({ title: '备份已保存', icon: 'success' })
   }
 }
 
 async function chooseRestore(): Promise<void> {
-  let noFile = false
   await run('正在校验备份…', async () => {
-    const repositories = await getAppRepositories()
-    const inspected = await repositories.backup.inspectRestoreFile()
-    if (!inspected) {
-      noFile = runtime.value === 'h5-fake'
-      return
-    }
+    const backup = await getBackupUseCases()
+    const inspected = await backup.inspectRestoreFile()
+    if (!inspected) return
     preview.value = inspected
     mode.value = 'merge-local-first'
   })
-  if (noFile) uni.showToast({ title: '请先执行一次 H5 模拟备份', icon: 'none' })
 }
 
 async function chooseRecoveryPoint(): Promise<void> {
   await run('正在校验恢复点…', async () => {
-    const repositories = await getAppRepositories()
-    preview.value = await repositories.backup.inspectRecoveryPoint()
+    const backup = await getBackupUseCases()
+    preview.value = await backup.inspectRecoveryPoint()
     mode.value = 'replace-all'
   })
 }
@@ -100,8 +93,8 @@ async function restore(): Promise<void> {
 
   let restored = false
   await run('正在恢复，请勿关闭应用…', async () => {
-    const repositories = await getAppRepositories()
-    await repositories.backup.restore(currentPreview, mode.value)
+    const backup = await getBackupUseCases()
+    await backup.restore(currentPreview, mode.value)
     preview.value = null
     await loadSummary()
     restored = true
@@ -119,8 +112,8 @@ async function deleteRecoveryPoint(): Promise<void> {
   })
   if (!confirmed) return
   await run('正在删除…', async () => {
-    const repositories = await getAppRepositories()
-    await repositories.backup.deleteRecoveryPoint()
+    const backup = await getBackupUseCases()
+    await backup.deleteRecoveryPoint()
     await loadSummary()
   })
 }
@@ -145,6 +138,12 @@ async function run(label: string, operation: () => Promise<void>): Promise<void>
 function showError(error: unknown): void {
   errorMessage.value = error instanceof Error ? error.message : '本地备份操作失败'
   uni.showToast({ title: errorMessage.value, icon: 'none', duration: 3200 })
+}
+
+async function getBackupUseCases(): Promise<BackupUseCases> {
+  const repositories = await getAppRepositories()
+  if (!repositories.backup) throw new Error('本地备份仅支持 Android App')
+  return repositories.backup
 }
 
 function confirm(options: {
@@ -279,7 +278,6 @@ function formatDate(value: number | null): string {
 <style scoped>
 .backup-screen { min-height: 100vh; background: var(--color-background); color: var(--color-text); }
 .backup-content { box-sizing: border-box; height: calc(100vh - var(--app-header-height)); padding: 30rpx 30rpx calc(70rpx + env(safe-area-inset-bottom)); }
-.preview-notice { margin-bottom: 24rpx; padding: 18rpx 22rpx; border-radius: 16rpx; background: var(--color-accent-soft); color: var(--color-accent); font-size: 23rpx; line-height: 1.55; }
 .summary-card, .preview-card, .recovery-card, .privacy-card { padding: 30rpx; border: var(--app-border-width) solid var(--color-border); border-radius: 24rpx; background: var(--color-surface); }
 .summary-card__heading { display: flex; align-items: center; justify-content: space-between; }
 .summary-card__title, .preview-card__title, .recovery-card__title, .privacy-card__title { display: block; font-size: 30rpx; font-weight: 650; }

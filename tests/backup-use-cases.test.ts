@@ -88,7 +88,6 @@ class FakeSnapshot implements BackupSnapshotRepository {
 }
 
 class FakeArchive implements BackupArchiveGateway {
-  readonly runtime = 'h5-fake' as const
   failRecovery = false
 
   constructor(private readonly events: string[]) {}

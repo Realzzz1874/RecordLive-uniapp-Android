@@ -25,8 +25,6 @@ const LIMITS: nativeBackup.ZipLimits = {
 }
 
 export class AndroidBackupArchiveGateway implements BackupArchiveGateway {
-  readonly runtime = 'android' as const
-
   async createArchive(
     data: AndroidBackupDataV1,
     context: RestorePlanContext,

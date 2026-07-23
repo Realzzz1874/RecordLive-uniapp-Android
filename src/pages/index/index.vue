@@ -15,7 +15,9 @@ import type { Performance } from '@/domain/performance'
 import ReferenceDataScreen from '@/features/reference-data/ReferenceDataScreen.vue'
 import QuickAddSettingsScreen from '@/features/settings/QuickAddSettingsScreen.vue'
 import SettingsScreen from '@/features/settings/SettingsScreen.vue'
+// #ifdef APP-PLUS
 import BackupScreen from '@/features/backup/BackupScreen.vue'
+// #endif
 import WantSeeScreen from '@/features/want-see/WantSeeScreen.vue'
 import {
   PERFORMANCE_DISPLAY_MODE_LABELS,
@@ -343,11 +345,13 @@ watch(
           @open-quick-add-settings="openQuickAddSettings"
           @open-backup="openBackup"
         />
+        <!-- #ifdef APP-PLUS -->
         <BackupScreen
           v-else-if="settingsDestination === 'backup'"
           @back="closeReferenceData"
           @restored="handleBackupRestored"
         />
+        <!-- #endif -->
         <QuickAddSettingsScreen
           v-else-if="settingsDestination === 'quick-add'"
           @back="closeReferenceData"

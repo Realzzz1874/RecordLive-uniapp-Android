@@ -41,7 +41,6 @@ export interface InspectedBackupArchive {
 }
 
 export interface BackupArchiveGateway {
-  readonly runtime: 'android' | 'h5-fake'
   createArchive(
     data: AndroidBackupDataV1,
     context: RestorePlanContext,

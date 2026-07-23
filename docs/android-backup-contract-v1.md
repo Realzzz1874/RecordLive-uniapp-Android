@@ -1,6 +1,6 @@
 # RecordLive Android Local Backup Contract v1
 
-状态：Milestone 5 本机备份与恢复 v1 的 M5.2–M5.5 已实现并通过自动化、H5 资源构建和 Android App 资源构建；Android 自定义基座与真机验收仍待用户授权。
+状态：Milestone 5 本机备份与恢复 v1 的 M5.2–M5.5 已实现并通过自动化与 Android App 资源构建；备份功能仅在 Android App 注册，Android 自定义基座与真机验收仍待用户授权。
 
 本契约只用于 RecordLive Android 应用自身的本机数据备份和恢复。它不用于 iOS 与 Android 之间的数据迁移、导入、导出或同步，也不定义 WebDAV、网盘、自动备份或跨设备同步。
 
@@ -131,7 +131,7 @@ uni-app 的 `uni.chooseFile` 不作为 App 端实现，因为该 API 不支持 A
 
 ZIP 不直接交给无条目预检能力的解压接口。UTS 插件使用 Android 标准 `ZipFile`、`ZipInputStream` 和 `ZipOutputStream`，先枚举并验证全部条目，再把允许的文件写入应用临时目录。
 
-H5 只提供假的文件网关用于页面和流程自动化，不读写真实备份，不得把 H5 结果描述成 Android 备份已完成。
+H5 不注册备份 Repository、不提供假文件网关，也不显示备份入口。H5 构建仅用于确认 Android 条件编译边界没有破坏项目其它页面。
 
 ### 3.1 UTS 插件可执行形态
 
@@ -368,8 +368,6 @@ src/platform/backup/sqlite-backup-snapshot-repository.ts
   当前状态读取、快照导出和计划事务执行
 src/platform/backup/android-backup-archive-gateway.ts
   UTS API 的 TypeScript 适配
-src/platform/backup/h5-backup-archive-gateway.ts
-  只用于 H5 自动化的假实现
 src/platform/backup/data-operation-coordinator.ts
   普通写入与备份恢复互斥
 src/uni_modules/recordlive-backup/
@@ -381,7 +379,7 @@ tests/backup-*.test.ts
 现有接入点：
 
 - `SettingsScreen.vue` 把当前计划提示改为 `openBackup` 事件；
-- `src/pages/index/index.vue` 复用现有内部 screen 导航打开 `BackupScreen`，不新增 H5 专用路由；
+- `src/pages/index/index.vue` 复用现有内部 screen 导航打开 `BackupScreen`，入口和页面装配使用 `APP-PLUS` 条件编译；
 - Repository factory 注入同一个 `DataOperationCoordinator`；
 - `src/manifest.json` 不增加外部存储权限、Share 模块或云端 SDK；
 - 恢复成功后清空详情/编辑 screen，回到“记录”Tab，并让浏览、待观看、印记和设置 Store 从 Repository 重新加载。
@@ -814,7 +812,7 @@ v1 上限：
 3. **M5.3 Android 文件能力（已完成代码与资源构建）**：已实现 UTS SAF/ZIP 网关、临时目录、受限解压、哈希验证和恶意 ZIP 基础防护；
 4. **M5.4 手动备份（已完成代码与资源构建）**：已实现页面摘要、备份进度、系统新建文档和导出前回读校验；
 5. **M5.5 双模式恢复（已完成代码与资源构建）**：已实现选择文件、模式与计划预览、内部恢复点、媒体 generation、SQLite 覆盖/合并事务和撤销恢复；
-6. **M5.6 验收（进行中）**：自动化、H5 交互和 App 资源构建属于本轮范围；Android 自定义基座和真机矩阵仍需用户另行授权。
+6. **M5.6 验收（进行中）**：纯领域自动化、H5 边界构建和 App 资源构建属于本轮范围；备份交互只在 Android 验证，Android 自定义基座和真机矩阵仍需用户另行授权。
 
 ## 11. 验收矩阵
 
@@ -839,7 +837,7 @@ v1 上限：
 - 提交后清理失败只留下无引用文件；
 - 进程在恢复各阶段退出后的启动清理；
 - 可备份设置恢复、未知设置忽略和敏感设置排除；
-- H5 假网关不访问真实文件系统。
+- H5 不注入备份服务、不显示入口且产物不包含 H5 备份模拟流程。
 
 Android 自定义基座或真机至少验证：
 

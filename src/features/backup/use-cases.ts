@@ -31,10 +31,6 @@ export class BackupUseCases {
     private readonly generateId: () => string = createOperationId,
   ) {}
 
-  get runtime(): BackupArchiveGateway['runtime'] {
-    return this.archive.runtime
-  }
-
   async getSummary(): Promise<BackupSummary> {
     const [data, lastBackupAtMs, hasRecoveryPoint] = await Promise.all([
       this.snapshot.exportSnapshot(),
